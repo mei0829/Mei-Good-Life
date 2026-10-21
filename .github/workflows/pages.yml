@@ -1,0 +1,42 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  # 每小時更新一次新聞和股價（GitHub 只會在預設分支上跑排程，時間可能晚幾分鐘）
+  schedule:
+    - cron: '7 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare site
+        run: mkdir _site && cp index.html money.html auth.js firebase-config.js money.webmanifest money.svg sw.js _site/
+      - name: Fetch news and quotes
+        # 抓不到也照樣部署，網頁會顯示「新聞還沒更新」
+        continue-on-error: true
+        timeout-minutes: 6
+        env:
+          US_SYMBOLS: ${{ vars.US_SYMBOLS }}
+        run: python3 scripts/fetch_news.py _site/news.json
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
