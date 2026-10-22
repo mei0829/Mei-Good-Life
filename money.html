@@ -298,7 +298,7 @@ function monthCard(){let h='';
  return h}
 function vHome(){
  const F=forecast(U.h),keep=+S.keep||0,short=Math.max(0,keep-F.min),reserve=Math.max(0,F.liq-F.min)+keep;
- let h=`<h1>我的記帳</h1>${guideCard()}${subCard()}${weekCard()}${ckCard()}${spendCard()}${budgetAlert()}
+ let h=`<h1>我的記帳</h1>${guideCard()}${lotCard()}${subCard()}${weekCard()}${ckCard()}${spendCard()}${budgetAlert()}
  ${assetCard(F.liq)}<div class="row" style="gap:8px;margin:-2px 0 10px"><button class="go g sp" data-a="tab" data-i="wallet">我的錢一覽</button><button class="go g sp" data-a="tab" data-i="ask">要不要買？</button></div>${monthCard()}${iouCard()}${saveCard()}
  <h2>未來要準備多少錢</h2>
  <div class="chips" style="margin-bottom:8px">${[30,60,90].map(n=>`<button class="chip ${U.h===n?'on':''}" data-a="h" data-i="${n}">${n} 天</button>`).join('')}</div>
@@ -331,6 +331,7 @@ function lendField(o){const L=o.lend||[],sum=L.reduce((a,x)=>a+(pAmt(x.amt)||0),
  <div class="row" style="gap:8px;margin-top:6px"><button class="go q" data-a="lendadd">＋ 幫朋友代墊</button>${L.length?`<span class="sub">之後在「代墊與欠款」按「還了」</span>`:''}</div></div>`}
 function shopField(o){const used=shopUsed(),top=[...new Set(used.concat(['7-ELEVEN','全家','全聯','家樂福','好市多','麥當勞','台灣中油','蝦皮']))].slice(0,8),all=[...new Set(used.concat(ALLSHOP))];
  return`<label class="fl" style="margin-top:8px"><span>在哪裡買（店家／地點，選填）</span><input id="fshop" value="${E(o.shop||'')}" data-m="sheet.o.shop" data-g="1" list="shoplist" placeholder="打字搜尋，或直接輸入其他地方"><datalist id="shoplist">${all.map(n=>`<option value="${E(n)}">`).join('')}</datalist></label>
+ <label class="fl" style="margin-top:8px"><span>發票號碼（選填，會自動對獎）</span><input value="${E(o.inv||'')}" data-m="sheet.o.inv" placeholder="例：AB12345678" autocapitalize="characters" autocomplete="off"></label>
  <div class="chips" style="margin-top:4px">${top.map(n=>`<button class="chip ${o.shop===n?'on':''}" data-a="shop" data-i="${E(n)}">${E(n)}</button>`).join('')}<button class="chip" data-a="shopall">${U.shopAll?'收起 ▴':'更多店家 ▾'}</button></div>
  ${U.shopAll?SHOPS.map(([g,ns])=>`<div class="sub" style="margin:8px 0 2px">${g}</div><div class="chips">${ns.map(n=>`<button class="chip ${o.shop===n?'on':''}" data-a="shop" data-i="${E(n)}">${E(n)}</button>`).join('')}</div>`).join(''):''}`}
 function txLine(t){
@@ -639,6 +640,7 @@ const HELP=[
  ['add','記一筆（花錢、收入、轉帳）',['tx','home','cal'],`按右下角「<b>＋</b>」：<br>・<b>支出</b>：打金額、選帳戶和分類。說明裡有「全家」「中油」這類字會自動選分類。<br>・<b>收入</b>：薪水選「收入」，帳戶選銀行（不能選信用卡），日期是入帳日。<br>・<b>轉帳／繳卡費</b>：自己帳戶之間搬錢、繳信用卡費都用這個，<b>不算收入支出</b>。`],
  ['card','信用卡：刷卡到繳清的 4 個階段',['card','tx','home'],`刷卡時用「刷卡那天」記，網站會標出：<br><b>… 未入帳</b> 銀行還沒收到 → <b>○ 未出帳</b> 等結帳日 → <b>● 已出帳</b> 要繳 → <b>✓ 已繳清</b><br>匯入銀行明細時會自動跟你記的那筆配對、補上入帳日，不會重複。繳卡費時在總覽點那張卡 →「<b>記錄繳卡費</b>」。`],
  ['cycle','結帳日、繳款日某個月不一樣',['card','set'],`平常照「每月幾號」自動算。銀行某一期因為假日改日期時：<br>總覽點那張卡 →「<b>接下來的日期</b>」→ 按「<b>修改</b>」，照帳單上的日期填，<b>只會改那一期</b>。<br>建議每次收到帳單時看一眼，跟網站一樣就不用管。銀行永久改日期的話，到「設定 → 帳戶」改每月固定日。`],
+ ['lotto','發票自動對獎',['lotto','home','imp'],`「更多 → <b>發票對獎</b>」：有發票號碼的花費會自動對獎。<br>・載具發票：匯入財政部的<b>載具消費明細 CSV</b>，號碼會一起存進來（以前匯入過的再匯一次，會補上號碼）。<br>・紙本發票：記一筆時填「<b>發票號碼</b>」。<br>每逢單月 25 日開獎，大約 1 小時內自動對完；中了總覽最上面會出現「<b>🧧 發票中獎了！</b>」，告訴你中了多少、什麼時候前要領。領到後可以按「領到了，記收入」。`],
  ['sub','訂閱（Netflix、Spotify…）：續約提醒、取消',['bills','home'],`「固定收支 → 新增固定項目 → <b>訂閱</b>」：填名稱、金額、每月或每年、<b>下次續約日</b>、扣哪張信用卡。扣款會自動算進那張卡的帳單。<br>續約前幾天（預設 3 天，可以改）總覽最上面會出現「<b>🔔 訂閱快續約了</b>」：<br>・要繼續用 → 按「<b>繼續訂</b>」，下次續約前再提醒<br>・已經取消 → 按「<b>我已經取消了</b>」，之後就不會再算這筆錢<br>試用期或不想續的，勾「<b>我打算取消</b>」，會提早 7 天提醒你。<br>固定收支最上面會顯示訂閱總共每月、每年花多少；取消的訂閱收在最下面，按「恢復」可以改回來。`],
  ['week','每週報告',['week','home'],`每個<b>星期日晚上 10 點</b>起，總覽最上面會出現「這週報告」：這週（週一到週日）和上週各花了多少。週一到週日晚上 10 點前，還沒看的話會顯示「<b>上週報告</b>」。按「<b>知道了</b>」就收起來，下週日晚上再出現新的。<br>按「點開來看」或「更多 → <b>每週報告</b>」可以看兩週的總數、每個分類比較，每一筆明細要看再點開；按「‹ ›」看以前的週。<br>最下面可以「<b>請 AI 看看這兩週</b>」，AI 會給你 3 點鼓勵和提醒。`],
  ['idea','賺錢點子筆記',['idea'],`「更多 → <b>賺錢點子</b>」：想到、看到能賺錢的方法，在黃色便條打一句話按「記下」就好。<br>點進去可以補預估每月可賺、要先花多少、每週幾小時（會算時薪，跟正職比）、下一步、筆記。<br>進度：想法 → 研究中 → 進行中 → 有在賺；不做的改「先放著」。上面會顯示進行中的點子每月預估可以多賺多少。<br>不知道值不值得做？點進去按「<b>🔎 請 AI 幫我研究這個點子</b>」：AI 會上網查行情，告訴你大概能賺多少、要先花多少、每週要幾小時、怎麼開始、要注意什麼。看完按「<b>把結果填進下面</b>」，數字和下一步就會自動填好，再按「儲存」。`],
@@ -804,6 +806,39 @@ function subCard(){const xs=subDue();if(!xs.length)return'';
  return`<div class="card warn"><b>🔔 訂閱快續約了</b>${xs.map(b=>{const n=dleft(b.next),a=A(b.acct);return`<div style="padding-top:8px;margin-top:8px;border-top:1px solid var(--line)"><div class="row"><span class="sp"><b>${E(b.name)}</b>${b.quit?' <span class="pill y">打算取消</span>':''}<div class="sub">${md(b.next)}（${n<0?'<span class="late">已過續約日</span>':n===0?'今天':n+' 天後'}）續約・${E(a?nm(a):'未指定帳戶')}</div></span><b class="num">${MC(b.amt,bcur(b))}</b></div>
   <div class="row" style="gap:8px;margin-top:8px"><button class="go g sp" data-a="subok" data-i="${b.id}">繼續訂</button><button class="go q sp" data-a="subquit" data-i="${b.id}">我已經取消了</button></div></div>`}).join('')}
  ${xs.some(b=>b.quit)?'<div class="sub" style="margin-top:8px">打算取消的，記得在續約日前到那個 App 或網站取消，取消完再按「我已經取消了」。</div>':''}</div>`}
+
+// ── 發票對獎：中獎號碼由 GitHub Actions 每小時抓好放在 invoice.json，存一份在 S.lotto（抓不到時還能用） ──
+// 期別用「西元年-單月」：2025-07 = 7～8 月。單月 25 日開獎，開獎隔月 6 日起可以領 3 個月
+const isInvNo=s=>/^[A-Z]{2}\d{8}$/.test(s);
+const lotKey=d=>{const m=+d.slice(5,7);return d.slice(0,4)+'-'+String(m%2?m:m-1).padStart(2,'0')};
+const lotLab=k=>(+k.slice(0,4)-1911)+' 年 '+ +k.slice(5,7)+'～'+(+k.slice(5,7)+1)+' 月';
+const lotDraw=k=>ymd(+k.slice(0,4),+k.slice(5,7)+1,25),lotFrom=k=>ymd(+k.slice(0,4),+k.slice(5,7)+2,6),lotTo=k=>ymd(+k.slice(0,4),+k.slice(5,7)+5,5);
+const LOTP={8:[200000,'頭獎'],7:[40000,'二獎'],6:[10000,'三獎'],5:[4000,'四獎'],4:[1000,'五獎'],3:[200,'六獎']};
+function lotPrize(no,P){const n=no.slice(-8);if(n===P.special)return[10000000,'特別獎'];if(n===P.grand)return[2000000,'特獎'];
+ let best=0;(P.first||[]).forEach(f=>{for(let k=8;k>=3;k--)if(n.slice(-k)===String(f).slice(-k)){best=Math.max(best,k);break}});
+ if(best)return LOTP[best];if((P.extra||[]).includes(n.slice(-3)))return[200,'增開六獎'];return null}
+const LOT=()=>S.lotto||(S.lotto={p:{},seen:{}});
+// 每一張有號碼的發票：期別、開獎了沒、中了什麼
+function lotAll(){const P=LOT().p;return S.tx.filter(t=>t.inv&&t.type==='out').map(t=>{const k=lotKey(t.d),p=P[k],w=p?lotPrize(t.inv,p):null;return{t,k,p,w,amt:w?w[0]:0}})}
+// 還在領獎期限內、還沒按「知道了」的中獎發票
+const lotNew=()=>lotAll().filter(x=>x.w&&today()<=lotTo(x.k)&&!LOT().seen[x.t.inv]);
+async function lotLoad(){try{const r=await fetch('invoice.json?t='+Math.floor(Date.now()/36e5),{cache:'no-cache'});if(!r.ok)return;const j=await r.json(),L=LOT();let ch=0;
+ Object.keys(j.periods||{}).forEach(k=>{const v=j.periods[k];if(v&&v.special&&v.grand&&(v.first||[]).length>=3&&JSON.stringify(L.p[k])!==JSON.stringify(v)){L.p[k]=v;ch=1}});
+ Object.keys(L.p).sort().reverse().slice(8).forEach(k=>{delete L.p[k];ch=1});
+ if(ch){save();render()}}catch(e){}}
+function lotCard(){const xs=lotNew();if(!xs.length)return'';const tot=xs.reduce((a,x)=>a+x.amt,0);
+ return`<div class="card" style="border-color:var(--amber)"><b>🧧 發票中獎了！共 ${M(tot)}</b>${xs.map(x=>`<div class="row" style="padding-top:8px;margin-top:8px;border-top:1px solid var(--line)"><span class="sp"><b>${E(x.w[1])}</b>　${E(x.t.inv)}<div class="sub">${md(x.t.d)} ${E(x.t.shop||x.t.note||'')}・${md(lotTo(x.k))} 前要領</div></span><b class="num in">${M(x.amt)}</b></div>`).join('')}
+ <div class="row" style="gap:8px;margin-top:10px"><button class="go sp" data-a="tab" data-i="lotto">怎麼領？</button><button class="go g sp" data-a="lotseen">知道了</button></div></div>`}
+function vLotto(){const all=lotAll(),P=LOT().p,ks=[...new Set(Object.keys(P).concat(all.map(x=>x.k)))].sort().reverse().slice(0,6);
+ let h=`<h1>發票對獎</h1>`;
+ const wins=all.filter(x=>x.w&&today()<=lotTo(x.k)).sort((a,b)=>b.amt-a.amt);
+ if(wins.length)h+=`<h2>🎉 中獎的發票</h2><div class="card">${wins.map(x=>`<div class="row" style="padding:5px 0;flex-wrap:wrap"><span class="sp"><b>${E(x.w[1])}</b>　${E(x.t.inv)}<div class="sub">${md(x.t.d)} ${E(x.t.shop||x.t.note||'')}・${md(lotFrom(x.k))}～${md(lotTo(x.k))} 可以領</div></span><b class="num in">${M(x.amt)}</b>${x.t.lotGot?'<span class="sub" style="width:100%;text-align:right">✓ 已記收入</span>':`<button class="go q" style="margin-left:6px" data-a="lotgot" data-i="${x.t.id}">領到了，記收入</button>`}</div>`).join('')}
+  <div class="note" data-t="怎麼領？">・<b>手機條碼載具</b>的發票：如果在財政部「統一發票兌獎」App 或電子發票平台設好<b>領獎帳戶</b>，獎金會自動匯進去，不用做任何事。沒設定的話，用 App 或到 7-ELEVEN、全家、萊爾富、OK 的機台列印領獎。<br>・<b>紙本發票</b>：200～1,000 元到超商或郵局領；更大的獎到郵局。<br>・獎金超過 5,000 元會先扣 20% 所得稅和 0.4% 印花稅。</div></div>`;
+ h+=ks.length?ks.map(k=>{const p=P[k],xs=all.filter(x=>x.k===k),w=xs.filter(x=>x.w);
+  return`<h2>${lotLab(k)}</h2><div class="card"><div class="row"><span class="sp">你有 <b>${xs.length}</b> 張有號碼的發票</span><span class="sub">${p?w.length?`中 ${w.length} 張，共 <b class="in">${M(w.reduce((a,x)=>a+x.amt,0))}</b>`:'都沒中':today()<lotDraw(k)?md(lotDraw(k))+' 開獎':'等號碼更新中'}</span></div>
+  ${p?`<details class="tip" style="margin-top:6px"><summary>看中獎號碼 ▾</summary><div class="sub" style="line-height:1.9;margin-top:4px">特別獎（1,000 萬）<b class="num">${E(p.special)}</b><br>特獎（200 萬）<b class="num">${E(p.grand)}</b><br>頭獎（20 萬）<b class="num">${p.first.map(E).join('、')}</b><br>二～六獎：跟頭獎末 7～3 碼相同${p.extra&&p.extra.length?`<br>增開六獎（末 3 碼）<b class="num">${p.extra.map(E).join('、')}</b>`:''}<br>領獎期間 ${md(lotFrom(k))}～${md(lotTo(k))}</div></details>`:''}</div>`}).join(''):'<div class="card sub">還沒有發票可以對。</div>';
+ h+=`<div class="note" data-t="發票怎麼放進來？">・<b>手機條碼載具</b>：到「更多 → 匯入明細」匯入財政部電子發票平台下載的<b>載具消費明細 CSV</b>，發票號碼會一起存進來。以前匯入過的再匯一次，會幫舊的那筆補上號碼，不會重複。<br>・<b>紙本發票</b>：記一筆的時候，在「發票號碼」填上 2 個英文字母加 8 個數字。<br>開獎後（單月 25 日）大約 1 小時內會自動對獎，中了總覽最上面會跳出來。號碼來自財政部網站，領獎前請再到財政部「統一發票兌獎」App 確認一次。</div>`;
+ return h}
 
 // ── 每週報告：一週算週一到週日；週日晚上 10 點起，總覽最上面出現這週的報告，按「知道了」就收起來 ──
 const wkLast=()=>{const n=new Date(),d=n.getDay(),t=today();return d===0&&n.getHours()>=22?t:shiftD(t,d===0?-7:-d)}; // 最近一份已經可以看的報告（那週的週日）
@@ -1232,7 +1267,7 @@ function sheetAcct(o){
 const STK=[['stock','我的持股'],['news','股價與新聞'],['calc','複利計算']];
 const stkSeg=()=>`<div class="chips" style="margin:0 0 12px">${STK.map(([k,n])=>`<button class="chip ${U.tab===k?'on':''}" data-a="tab" data-i="${k}">${n}</button>`).join('')}</div>`;
 const TABS=[['home','◎','總覽'],['tx','✎','記帳'],['cal','▦','月曆'],['bills','◷','固定收支'],['stock','↗','股票'],['more','⋯','更多']];
-const MORE=[['week','✉','每週報告','這週和上一週花了多少，週日晚上 10 點出爐'],['idea','✧','賺錢點子','想到能賺錢的方法，先記下來慢慢研究'],['check','☑','對帳便條','每週打開網銀看一次，看過就打勾'],['book','▣','獨立帳本','爸媽帳戶、副業：收入和投資另外算'],['iou','⇄','代墊與欠款','幫朋友代墊、誰欠我、我欠誰'],['wallet','◉','我的錢一覽','總餘額、信用卡、每天該存多少、時薪'],['ask','？','要不要買？','想買東西時，像聊天一樣問問看'],['perk','✦','刷卡優惠','在哪裡刷用哪張卡、CUBE 要切哪個權益'],['plan','◫','分帳戶','薪水進來先分好：固定支出、生活費、存錢、投資'],['budget','◔','預算','每個分類一個月能花多少，快超過會提醒'],['chart','▥','圖表','每個月花多少、錢都花在哪'],['imp','⇣','匯入明細','信用卡、銀行、電子發票、截圖'],['set','⚙︎','設定與風格','帳戶、顏色、深色模式、備份'],['guide','?','新手教學','從頭一步一步開始']];
+const MORE=[['lotto','🧧','發票對獎','載具和紙本發票自動對獎，中了會提醒你'],['week','✉','每週報告','這週和上一週花了多少，週日晚上 10 點出爐'],['idea','✧','賺錢點子','想到能賺錢的方法，先記下來慢慢研究'],['check','☑','對帳便條','每週打開網銀看一次，看過就打勾'],['book','▣','獨立帳本','爸媽帳戶、副業：收入和投資另外算'],['iou','⇄','代墊與欠款','幫朋友代墊、誰欠我、我欠誰'],['wallet','◉','我的錢一覽','總餘額、信用卡、每天該存多少、時薪'],['ask','？','要不要買？','想買東西時，像聊天一樣問問看'],['perk','✦','刷卡優惠','在哪裡刷用哪張卡、CUBE 要切哪個權益'],['plan','◫','分帳戶','薪水進來先分好：固定支出、生活費、存錢、投資'],['budget','◔','預算','每個分類一個月能花多少，快超過會提醒'],['chart','▥','圖表','每個月花多少、錢都花在哪'],['imp','⇣','匯入明細','信用卡、銀行、電子發票、截圖'],['set','⚙︎','設定與風格','帳戶、顏色、深色模式、備份'],['guide','?','新手教學','從頭一步一步開始']];
 let RD=0,RD2=0,KF=0;
 function render(){
  // 換掉畫面時，正在輸入的欄位失焦會觸發 change；那次重畫延後到這次畫完再做
@@ -1244,7 +1279,7 @@ function render(){
 function calmNotes(){document.querySelectorAll('#app .note,#sheet .note').forEach(n=>{const st=n.getAttribute('style')||'';if(n.id||n.classList.contains('keep')||st.includes('--bad')||n.querySelector('input,select,button,textarea'))return;
  const d=document.createElement('details');d.className='tip'+(n.classList.contains('w')?' w':'');d.innerHTML=`<summary>ⓘ ${E(n.dataset.t||'說明')}</summary><div></div>`;d.lastChild.innerHTML=n.innerHTML;n.replaceWith(d)})}
 function renderNow(){
- const y=window.scrollY,V={week:vWeek,idea:vIdea,check:vCheck,book:vBook,iou:vIou,wallet:vWallet,ask:vAsk,perk:vPerk,plan:vPlan,card:vCard,home:vHome,tx:vTx,cal:vCal,bills:vBills,more:vMore,budget:vBudget,chart:vChart,stock:vStock,news:vNews,calc:vCalc,imp:vImp,set:vSet,guide:vGuide},sub=MORE.some(m=>m[0]===U.tab),ae=KF&&document.activeElement,am=ae&&ae.dataset&&ae.dataset.m,cp=am&&ae.selectionStart;KF=0;
+ const y=window.scrollY,V={lotto:vLotto,week:vWeek,idea:vIdea,check:vCheck,book:vBook,iou:vIou,wallet:vWallet,ask:vAsk,perk:vPerk,plan:vPlan,card:vCard,home:vHome,tx:vTx,cal:vCal,bills:vBills,more:vMore,budget:vBudget,chart:vChart,stock:vStock,news:vNews,calc:vCalc,imp:vImp,set:vSet,guide:vGuide},sub=MORE.some(m=>m[0]===U.tab),ae=KF&&document.activeElement,am=ae&&ae.dataset&&ae.dataset.m,cp=am&&ae.selectionStart;KF=0;
  CI={};LM=null;normAcct();$('tip').style.display='none';$('eye').textContent='•••• 已隱藏・點兩下顯示';$('eye').classList.toggle('on',HIDE);$('eye').setAttribute('aria-label',HIDE?'顯示金額':'隱藏金額');
  $('app').innerHTML=`<div class="row" style="gap:10px;padding-right:44px;min-height:32px">${sub?'<button class="back" data-a="tab" data-i="more">‹ 更多</button>':''}<span class="sp"></span><b class="today">今天 ${todayLab()}</b></div>`+V[U.tab]();
  $('nav').innerHTML=TABS.map(([k,i,n])=>`<button class="${U.tab===k||(k==='more'&&sub)||(k==='stock'&&STK.some(x=>x[0]===U.tab))?'on':''}" data-a="tab" data-i="${k}"><b>${i}</b>${n}</button>`).join('');
@@ -1291,7 +1326,7 @@ function parseEinv(text){
  const inv={},out=[];
  text.split(/\r?\n/).forEach(ln=>{ln=ln.replace(/^﻿/,'').trim();if(!ln)return;
   const f=ln.split(ln.includes('|')?'|':',').map(x=>x.trim().replace(/^"|"$/g,''));
-  if(f[0]==='M'){if(/作廢|折讓/.test(f[8]||''))return;const d=pDate(f[3]),a=pAmt(f[7]);if(!d||isNaN(a))return;inv[f[6]]={d,shop:f[5],amt:a,items:[]};out.push(inv[f[6]])}
+  if(f[0]==='M'){if(/作廢|折讓/.test(f[8]||''))return;const d=pDate(f[3]),a=pAmt(f[7]);if(!d||isNaN(a))return;inv[f[6]]={no:String(f[6]||'').toUpperCase().replace(/[^A-Z0-9]/g,''),d,shop:f[5],amt:a,items:[]};out.push(inv[f[6]])}
   else if(f[0]==='D'&&inv[f[1]])inv[f[1]].items.push(f[3])});
  return out;
 }
@@ -1350,7 +1385,10 @@ function impParse(){
  if(!t)return toast('請先選檔案或貼上內容');
  if(/^﻿?(表頭=)?M[|,]/m.test(t)){
   const inv=parseEinv(t);if(!inv.length)return toast('讀不到發票資料');
-  I._pair=null;I.items=inv.map(x=>mkItem(x.d,x.shop.replace(/股份有限公司|有限公司/g,' ')+(x.items.length?'｜'+x.items.slice(0,3).join('、'):''),x.amt,'einv'));I.step='pre';return render();
+  I._pair=null;I.items=inv.map(x=>{const it=mkItem(x.d,x.shop.replace(/股份有限公司|有限公司/g,' ')+(x.items.length?'｜'+x.items.slice(0,3).join('、'):''),x.amt,'einv');if(!isInvNo(x.no))return it;it.inv=x.no;
+   // 已經匯入過：同一張發票不重複；以前匯入、還沒有發票號碼的那筆，幫它補上號碼（對獎用）
+   const same=S.tx.find(t=>t.inv===x.no);if(same){it.on=false;it.why='已經匯入過這張發票';return it}
+   const old=!it.on&&S.tx.find(t=>!t.inv&&t.src==='einv'&&t.d===it.d&&Math.abs(t.amt-it.amt)<0.01);if(old){it.addInv=old.id;it.why='已經匯入過，這次幫它補上發票號碼（對獎用）'}return it});I.step='pre';return render();
  }
  const R=csv(t);
  if(R.length<1||Math.max(...R.map(r=>r.length))<2||!R.some(r=>r.some(c=>pDate(c)))){toast('看不出表格格式，改用 AI 辨識試試');return}
@@ -1663,6 +1701,10 @@ const ACT={
  bsug1:i=>{const r=(budgetSug().rows||[]).find(x=>x.c===i);if(!r)return;S.budget.cats[i]=r.sug;save();render();toast(i+' 預算設成 '+M(r.sug))},
  bsugall:()=>{const G=budgetSug();if(!G.rows)return;if(!confirm('把建議的預算全部套用？（之後還可以自己改）'))return;G.rows.forEach(r=>{S.budget.cats[r.c]=r.sug});S.budget.total=G.tot;save();render();toast('已套用，總預算 '+M(G.tot))},
  wkopen:i=>{U.wk=i;if(i===wkLast()){S.wkSeen=i;save()}U.tab='week';U.sheet=null;render();window.scrollTo(0,0)},
+ lotseen:()=>{const L=LOT();lotNew().forEach(x=>{L.seen[x.t.inv]=1});save();render()},
+ lotgot:i=>{const t=S.tx.find(x=>x.id===i),k=t&&lotKey(t.d),p=k&&LOT().p[k],w=p&&lotPrize(t.inv,p);if(!w)return;const net=w[0]>5000?Math.round(w[0]*(1-0.2-0.004)):w[0];
+  if(!confirm('記一筆收入 '+M(net)+'（'+w[1]+'）到「'+nm(A(firstBank()))+'」？'+(net<w[0]?'\n超過 5,000 元已先扣 20% 所得稅和 0.4% 印花稅。':'')))return;
+  S.tx.push({id:nid(),d:today(),type:'in',amt:net,acct:firstBank(),cat:S.cats.in.includes('其他收入')?'其他收入':S.cats.in[0],note:'發票中獎 '+w[1]+' '+t.inv,src:'m',ts:Date.now()});t.lotGot=1;LOT().seen[t.inv]=1;save();render();toast('已記收入 '+M(net)+' 🎉')},
  subok:i=>{const b=S.bills.find(x=>x.id===i);if(!b)return;b.subOk=b.next;save();render();toast('好，下次續約前再提醒你')},
  subquit:i=>{const b=S.bills.find(x=>x.id===i);if(!b||!confirm('確定已經取消「'+b.name+'」了嗎？之後就不會再算進固定支出和卡費。'))return;b.cancelled=today();b.end=shiftD(b.next,-1);b.quit=false;save();render();toast('已取消 '+b.name+'，每月省下 '+M(+b.freq?conv(b.amt,bcur(b),'TWD')/b.freq:0))},
  subback:i=>{const b=S.bills.find(x=>x.id===i);if(!b)return;delete b.cancelled;b.end='';while(+b.freq&&b.next<today())b.next=addM(b.next,+b.freq,b.day);save();render();toast('已恢復 '+b.name)},
@@ -1718,12 +1760,12 @@ const ACT={
  shopall:()=>{U.shopAll=!U.shopAll;render()},
  cat:i=>{const o=U.sheet.o;o.cat=i;o.catSet=1;render()},
  rule:()=>{const o=U.sheet.o,k=o.note.trim().slice(0,12);S.rules=S.rules.filter(r=>r.k!==k);S.rules.unshift({k,c:o.cat});save();render();toast('已新增規則：'+k+' → '+o.cat)},
- savetx:()=>{const o=U.sheet.o,amt=pAmt(o.amt);
+ savetx:()=>{const o=U.sheet.o,amt=pAmt(o.amt),iv=String(o.inv||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(o.type==='out'&&iv&&!isInvNo(iv))return toast('發票號碼是 2 個英文字母加 8 個數字，例如 AB12345678');
   if(!(amt>0))return toast('請輸入金額');if(!o.d)return toast('請選日期');
   if(o.type==='xfer'&&(!o.to||o.to===o.acct))return toast('請選不同的轉出、轉入帳戶');
   const fee=o.type==='out'&&isCard(A(o.acct))?pAmt(o.fee)||0:0;if(fee<0)return toast('手續費不正確');
   const t={id:o.id||nid(),d:o.d,type:o.type,amt:amt+fee,acct:o.acct,cat:o.type==='xfer'?'':(o.cat||guess(o.note+' '+(o.shop||''),o.type)||(o.type==='in'?'其他收入':'其他')),note:(o.note||'').trim(),src:o.src||'m',ts:o.ts||Date.now()};
-  if(fee>0)t.fee=fee;if(o.iou)t.iou=1;if(o.type==='xfer')t.to=o.to;else{const sh=String(o.shop||'').trim();if(sh)t.shop=sh}if(o.bill)t.bill=o.bill;if(o.type==='out'&&isCard(A(o.acct))&&o.pd)t.pd=o.pd;
+  if(fee>0)t.fee=fee;if(o.iou)t.iou=1;if(o.type==='xfer')t.to=o.to;else{const sh=String(o.shop||'').trim();if(sh)t.shop=sh}if(o.bill)t.bill=o.bill;if(o.type==='out'&&isCard(A(o.acct))&&o.pd)t.pd=o.pd;if(o.type==='out'&&iv)t.inv=iv;
   const L=o.type==='out'?(o.lend||[]).map(x=>({iid:x.iid,who:String(x.who||'').trim(),amt:pAmt(x.amt)||0})).filter(x=>x.who||x.amt):[];
   if(L.some(x=>!x.who||!(x.amt>0)))return toast('代墊要填是誰和金額');if(L.reduce((a,x)=>a+x.amt,0)>amt+0.001)return toast('代墊的錢不能比這筆還多');
   const keep=new Set(L.map(x=>x.iid).filter(Boolean));S.iou=S.iou.filter(x=>!(x.tx===t.id&&x.dir==='in'&&!keep.has(x.id)));
@@ -1785,8 +1827,8 @@ const ACT={
  impmap:()=>{const rs=buildRows();if(!rs.length)return toast('對不到資料，請換欄位');U.imp._pair=null;U.imp.items=rs.map(r=>mkItem(r.d,r.desc,r.v,'csv',r.pd));U.imp.step='pre';render();window.scrollTo(0,0)},
  impon:i=>{const x=U.imp.items[+i];x.on=!x.on;render()},
  impall:()=>{const its=U.imp.items,all=its.every(x=>x.on);its.forEach(x=>x.on=!all);render()},
- impdo:()=>{const its=U.imp.items.filter(x=>x.on),ts=Date.now();let pr=0;
-  its.forEach((x,k)=>{if(x.pair){const m=S.tx.find(t=>t.id===x.pair);if(m){m.pd=x.pd;pr++;return}}const t={id:nid()+k,d:x.d,type:x.type,amt:x.amt,acct:x.acct,cat:x.cat,note:x.desc,src:x.src,ts:ts+k};if(x.type==='xfer')t.to=x.to;if(x.pd)t.pd=x.pd;S.tx.push(t)});
+ impdo:()=>{U.imp.items.forEach(x=>{const m=x.addInv&&S.tx.find(t=>t.id===x.addInv);if(m&&!m.inv)m.inv=x.inv});const its=U.imp.items.filter(x=>x.on),ts=Date.now();let pr=0;
+  its.forEach((x,k)=>{if(x.pair){const m=S.tx.find(t=>t.id===x.pair);if(m){m.pd=x.pd;pr++;return}}const t={id:nid()+k,d:x.d,type:x.type,amt:x.amt,acct:x.acct,cat:x.cat,note:x.desc,src:x.src,ts:ts+k};if(x.type==='xfer')t.to=x.to;if(x.pd)t.pd=x.pd;if(x.inv&&x.type==='out')t.inv=x.inv;S.tx.push(t)});
   const last=its.reduce((m,x)=>x.d>m?x.d:m,'');U.imp=null;U.tab='tx';U.fa='';U.q='';if(last)U.mon=last.slice(0,7);save();render();window.scrollTo(0,0);toast('已匯入 '+(its.length-pr)+' 筆'+(pr?'，配對 '+pr+' 筆':''))},
  export:()=>{const b=new Blob([JSON.stringify({v:1,money:S})],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='記帳備份-'+today()+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)},
  importjson:()=>$('bkf').click(),
@@ -1956,6 +1998,7 @@ async function cloudPush(){
  CL.busy=0;if(CL.again){CL.again=0;cloudQ()}
 }
 applyTheme(S.skin,S.mode);
+lotLoad();
 try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(S.mode==='auto'){applyTheme(S.skin,S.mode);render()}})}catch(e){}
 (async()=>{
  try{

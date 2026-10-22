@@ -34,6 +34,11 @@ jobs:
         env:
           US_SYMBOLS: ${{ vars.US_SYMBOLS }}
         run: python3 scripts/fetch_news.py _site/news.json
+      - name: Fetch invoice winning numbers
+        # 發票中獎號碼；抓不到也照樣部署，網頁會用上次存的號碼
+        continue-on-error: true
+        timeout-minutes: 3
+        run: python3 scripts/fetch_invoice.py _site/invoice.json
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
