@@ -634,7 +634,7 @@ const HELP=[
  ['add','記一筆（花錢、收入、轉帳）',['tx','home','cal'],`按右下角「<b>＋</b>」：<br>・<b>支出</b>：打金額、選帳戶和分類。說明裡有「全家」「中油」這類字會自動選分類。<br>・<b>收入</b>：薪水選「收入」，帳戶選銀行（不能選信用卡），日期是入帳日。<br>・<b>轉帳／繳卡費</b>：自己帳戶之間搬錢、繳信用卡費都用這個，<b>不算收入支出</b>。`],
  ['card','信用卡：刷卡到繳清的 4 個階段',['card','tx','home'],`刷卡時用「刷卡那天」記，網站會標出：<br><b>… 未入帳</b> 銀行還沒收到 → <b>○ 未出帳</b> 等結帳日 → <b>● 已出帳</b> 要繳 → <b>✓ 已繳清</b><br>匯入銀行明細時會自動跟你記的那筆配對、補上入帳日，不會重複。繳卡費時在總覽點那張卡 →「<b>記錄繳卡費</b>」。`],
  ['cycle','結帳日、繳款日某個月不一樣',['card','set'],`平常照「每月幾號」自動算。銀行某一期因為假日改日期時：<br>總覽點那張卡 →「<b>接下來的日期</b>」→ 按「<b>修改</b>」，照帳單上的日期填，<b>只會改那一期</b>。<br>建議每次收到帳單時看一眼，跟網站一樣就不用管。銀行永久改日期的話，到「設定 → 帳戶」改每月固定日。`],
- ['week','每週報告',['week','home'],`每個星期日開始，<b>總覽最上面</b>會出現「上週報告」：上週花了多少、跟前一週比、接下來 7 天要繳什麼。按「<b>知道了</b>」就收起來，下週日再出現新的。<br>按「看完整報告」或「更多 → <b>每週報告</b>」可以看：每天花多少、錢花在哪、最大的幾筆、這個月預算、接下來要繳的錢；按「‹ ›」看以前的週。<br>最下面可以「<b>請 AI 寫一段話</b>」，AI 會看這週的數字給你 3 點鼓勵和提醒。`],
+ ['week','每週報告',['week','home'],`每個<b>星期日晚上 10 點</b>起，總覽最上面會出現「這週報告」：這週（週一到週日）和上一週各花了多少。按「<b>知道了</b>」就收起來，下週日晚上再出現新的。<br>按「點開來看」或「更多 → <b>每週報告</b>」可以看兩週的總數、每個分類比較，每一筆明細要看再點開；按「‹ ›」看以前的週。<br>最下面可以「<b>請 AI 看看這兩週</b>」，AI 會給你 3 點鼓勵和提醒。`],
  ['idea','賺錢點子筆記',['idea'],`「更多 → <b>賺錢點子</b>」：想到、看到能賺錢的方法，在黃色便條打一句話按「記下」就好。<br>點進去可以補預估每月可賺、要先花多少、每週幾小時（會算時薪，跟正職比）、下一步、筆記。<br>進度：想法 → 研究中 → 進行中 → 有在賺；不做的改「先放著」。上面會顯示進行中的點子每月預估可以多賺多少。`],
  ['check','對帳便條（每週看一次真實帳戶）',['check','home'],`「更多 → <b>對帳便條</b>」：像便條紙一樣列出所有帳戶。打開網銀 App，看過一個、數字對了就點一下打勾；點錯再點一下就取消。<br>數字不對就按「更新餘額」改成真的數字。<br>全部勾完會自動記下檢核時間，下面有檢核紀錄。超過 7 天沒對帳，總覽會出現黃色便條提醒。`],
  ['trip','旅遊、買東西要預存（單次目標）',['bills'],`想為一次旅遊、一個大東西先存錢：<br>1. 設定 → 帳戶 → 新增一個帳戶（例如「國泰 旅遊」，網銀子帳戶最好），勾「<b>📦 預存帳戶</b>」，這筆錢就不會被當成可以花的。<br>2. 固定收支 → 新增「<b>旅遊基金</b>」：從薪水帳戶轉到旅遊帳戶、每次存多少、<b>目標金額</b>、<b>存到哪天</b>（出發日）。<br>3. 進度條會顯示存了多少，還會算「還有幾次、每次要存多少」，不夠會提醒你。<br>4. 出發後在旅遊帳戶記花費，那時才算支出。玩完把這個固定項目刪掉就好。`],
@@ -792,57 +792,35 @@ function vChart(){
  return h;
 }
 
-// ── 每週報告：一週算週一到週日；週日起首頁會出現上一份報告，按「知道了」就收起來 ──
-const wkLast=()=>{const t=today();return shiftD(t,-pd(t).getDay())};  // 最近一個已經到的週日（今天是週日就是今天）
+// ── 每週報告：一週算週一到週日；週日晚上 10 點起，總覽最上面出現這週的報告，按「知道了」就收起來 ──
+const wkLast=()=>{const n=new Date(),d=n.getDay(),t=today();return d===0&&n.getHours()>=22?t:shiftD(t,d===0?-7:-d)}; // 最近一份已經可以看的報告（那週的週日）
 const wkNow=()=>{const t=today();return shiftD(t,(7-pd(t).getDay())%7)}; // 這一週的週日
 const wkLab=end=>md(shiftD(end,-6))+'–'+md(end);
-function wkData(end){
- const st=shiftD(end,-6),ps=shiftD(st,-7),pe=shiftD(st,-1),by={},day={},big=[];let tot=0,prev=0,inc=0;
- S.tx.forEach(t=>{
-  if(t.type==='out'){const v=myA(t);if(v<=0)return;
-   if(t.d>=st&&t.d<=end){tot+=v;by[t.cat||'其他']=(by[t.cat||'其他']||0)+v;day[t.d]=(day[t.d]||0)+v;big.push(t)}
-   else if(t.d>=ps&&t.d<=pe)prev+=v}
-  else if(isInc(t)&&t.d>=st&&t.d<=end)inc+=t.amt});
- big.sort((a,b)=>myA(b)-myA(a));
- return{st,end,tot,prev,inc,day,big:big.slice(0,3),cats:Object.keys(by).map(c=>[c,by[c]]).sort((a,b)=>b[1]-a[1])};
-}
-const wkCmp=W=>!W.prev?'前一週沒有紀錄可以比':Math.abs(W.tot-W.prev)<1?'跟前一週差不多':W.tot<W.prev?`👍 比前一週少花 <b>${M(W.prev-W.tot)}</b>`:`⚠︎ 比前一週多花 <b class="neg">${M(W.tot-W.prev)}</b>`;
-// 接下來 7 天要繳的錢
-function wkDue(){const F=forecast(7),keep=+S.keep||0;return{ev:F.ev.filter(e=>e.amt<0),inc:F.inc,reserve:Math.max(0,F.liq-F.min)+keep,short:Math.max(0,keep-F.min),minD:F.minD}}
+// 一週的花費：不算代墊、獨立帳本、轉帳和繳卡費（刷卡在刷的那天就算）
+function wkSpend(end){const st=shiftD(end,-6),by={},xs=[];let tot=0;
+ S.tx.forEach(t=>{if(t.type!=='out'||t.d<st||t.d>end)return;const v=myA(t);if(v<=0)return;tot+=v;by[t.cat||'其他']=(by[t.cat||'其他']||0)+v;xs.push(t)});
+ xs.sort((a,b)=>myA(b)-myA(a));return{st,end,tot,by,xs}}
+const wkCmp=(A,B)=>!B.tot?'上一週沒有紀錄可以比':Math.abs(A.tot-B.tot)<1?'跟上一週差不多':A.tot<B.tot?`👍 比上一週少花 <b>${M(B.tot-A.tot)}</b>`:`⚠︎ 比上一週多花 <b class="neg">${M(A.tot-B.tot)}</b>`;
 function weekCard(){
  const end=wkLast();if(S.wkSeen===end||!S.tx.length)return'';
- const W=wkData(end),D=wkDue(),out=D.ev.reduce((s,e)=>s-e.amt,0);
- return`<div class="card" style="border-color:var(--acc)"><div class="row"><b class="sp">✉ 上週報告（${wkLab(end)}）</b></div>
- <div class="msg">上週花了 <b>${M(W.tot)}</b>${W.cats.length?`，最多是「${E(W.cats[0][0])}」`:''}。${wkCmp(W)}。</div>
- <div class="msg">${D.ev.length?`接下來 7 天要繳 <b>${D.ev.length}</b> 筆，共 <b>${M(out)}</b>。`:'接下來 7 天沒有要繳的錢。'}${D.short>0?` <span class="neg">⚠︎ 錢不太夠，看看完整報告。</span>`:''}</div>
- <div class="row" style="gap:8px;margin-top:10px"><button class="go sp" data-a="wkopen" data-i="${end}">看完整報告</button><button class="go g sp" data-a="wkseen" data-i="${end}">知道了</button></div></div>`;
+ const A=wkSpend(end),B=wkSpend(shiftD(end,-7));
+ return`<div class="card" style="border-color:var(--acc)"><b>✉ 這週報告（${wkLab(end)}）</b>
+ <div class="msg">這週花了 <b>${M(A.tot)}</b>，上一週 ${M(B.tot)}。${wkCmp(A,B)}</div>
+ <div class="row" style="gap:8px;margin-top:10px"><button class="go sp" data-a="wkopen" data-i="${end}">點開來看</button><button class="go g sp" data-a="wkseen" data-i="${end}">知道了</button></div></div>`;
 }
 function vWeek(){
- const end=U.wk||wkLast(),W=wkData(end),now=wkNow(),part=end>=today(),latest=end>=wkLast();
- let h=`<div class="mh"><button class="go q" data-a="wknav" data-i="-1">‹</button><b>${wkLab(end)} 週報${part?'（到今天）':''}</b><button class="go q" data-a="wknav" data-i="1" ${end>=now?'disabled':''}>›</button></div>`;
- // ① 這週花了多少
- const mx=Math.max(1,...Object.values(W.day));
- h+=`<h2>① 這週花了多少</h2><div class="card"><div class="row"><div class="sp"><div class="sub">一共花了</div><div class="big">${M(W.tot)}</div></div><div style="text-align:right"><div class="sub">收入</div><b class="num in">${M(W.inc)}</b></div></div>
- <div class="msg" style="margin:6px 0 10px">${wkCmp(W)}${W.prev?`（前一週 ${M(W.prev)}）`:''}</div>
- <div style="display:flex;gap:4px;align-items:flex-end;height:70px">${[0,1,2,3,4,5,6].map(i=>{const d=shiftD(W.st,i),v=W.day[d]||0;return`<div style="flex:1;text-align:center"><div style="height:${Math.round(v/mx*50)}px;min-height:2px;background:${d>today()?'var(--line)':'var(--acc)'};border-radius:3px 3px 0 0"></div><div class="sub" style="font-size:11px">${WD[pd(d).getDay()]}</div></div>`}).join('')}</div></div>`;
- // ② 花在哪
- h+=`<h2>② 錢花在哪</h2><div class="card">${W.cats.length?hbars(W.cats.slice(0,5),W.tot):'<div class="sub">這週沒有支出紀錄。</div>'}
- ${W.big.length?`<div class="sub" style="margin-top:10px">最大的 ${W.big.length} 筆</div>${W.big.map(t=>`<div class="row" style="padding:3px 0"><span class="sp">${md(t.d)} ${E(t.shop||t.note||t.cat||'')}</span><span class="num">${M(myA(t))}</span></div>`).join('')}`:''}</div>`;
- // ③ 這個月的預算
- const m=end.slice(0,7),sp=spentBy(m),B=S.budget,bx=[];
- const btot=Object.values(sp).reduce((a,b)=>a+b,0);if(+B.total)bx.push(['總預算',btot,+B.total]);
- Object.keys(B.cats).forEach(c=>{const b=+B.cats[c];if(b)bx.push([c,sp[c]||0,b])});
- const warn=bx.filter(([,v,b])=>v>=b*.8);
- h+=`<h2>③ ${+m.slice(5)} 月預算</h2><div class="card" data-a="tab" data-i="budget" style="cursor:pointer">${!bx.length?'<div class="sub">還沒設預算。到「更多 → 預算」可以設定，這裡就會提醒你哪個快超過 ›</div>':warn.length?warn.map(([c,v,b])=>`<div class="row" style="padding:3px 0"><span class="sp">${lvl(v/b)[1]}　${E(c)}</span><span class="num sub">${M(v)} / ${M(b)}</span></div>`).join(''):'<div class="msg">✓ 每個預算都還在安全範圍內</div>'}</div>`;
- // ④ 接下來 7 天要繳的（只有最新一週才看）
- if(latest){const D=wkDue();
-  h+=`<h2>④ 接下來 7 天要繳的</h2><div class="card ${D.short>0?'warn':''}">${D.ev.length?D.ev.map(e=>`<div class="row" style="padding:4px 0"><span class="dt" style="min-width:52px">${md(e.d)}<small> 週${WD[pd(e.d).getDay()]}</small></span><span class="sp">${E(e.name)}${e.late?' <span class="late">已過期</span>':''}</span><span class="num">${M(-e.amt)}</span></div>`).join(''):'<div class="sub">沒有要繳的錢。</div>'}
-  <div class="msg" style="margin-top:8px">${D.short>0?`⚠︎ 錢不太夠：<b>${md(D.minD)}</b> 前還差 <b class="neg">${M(D.short)}</b>，記得先轉錢進去。`:`戶頭至少留 <b>${M(D.reserve)}</b> 就夠用。`}</div></div>`}
- // AI 寫一段話
+ const end=U.wk||wkLast(),A=wkSpend(end),B=wkSpend(shiftD(end,-7)),part=end>today();
+ let h=`<div class="mh"><button class="go q" data-a="wknav" data-i="-1">‹</button><b>${wkLab(end)} 週報${part?'（到今天）':''}</b><button class="go q" data-a="wknav" data-i="1" ${end>=wkNow()?'disabled':''}>›</button></div>`;
+ h+=`<div class="card"><div class="tiles" style="margin-top:0"><div><span class="sub">這週</span><b>${M(A.tot)}</b><span class="sub">${wkLab(end)}</span></div><div><span class="sub">上一週</span><b>${M(B.tot)}</b><span class="sub">${wkLab(B.end)}</span></div><div><span class="sub">差多少</span><b class="${A.tot>B.tot?'neg':''}">${A.tot>B.tot?'+':A.tot<B.tot?'−':''}${M(Math.abs(A.tot-B.tot))}</b></div></div><div class="msg">${wkCmp(A,B)}</div></div>`;
+ // 每個分類：這週 vs 上一週
+ const cs=[...new Set([...Object.keys(A.by),...Object.keys(B.by)])].sort((x,y)=>(A.by[y]||0)-(A.by[x]||0)||(B.by[y]||0)-(B.by[x]||0));
+ h+=`<h2>每個分類</h2><div class="card">${cs.length?`<table class="pv"><tr><th>分類</th><th style="text-align:right">這週</th><th style="text-align:right">上一週</th></tr>${cs.map(c=>{const a=A.by[c]||0,b=B.by[c]||0;return`<tr><td>${E(c)}</td><td class="num ${a>b&&b?'neg':''}" style="text-align:right">${M(a)}</td><td class="num sub" style="text-align:right">${M(b)}</td></tr>`}).join('')}</table>`:'<div class="sub">這兩週都沒有支出紀錄。</div>'}</div>`;
+ // 明細收起來，想看再點開
+ const list=(W,t)=>W.xs.length?`<details class="tip" style="margin-top:10px"><summary>${t}的每一筆（${W.xs.length} 筆）▾</summary><div class="card" style="margin-top:6px">${W.xs.map(t=>`<div class="row" style="padding:3px 0"><span class="sp">${md(t.d)} 週${WD[pd(t.d).getDay()]}　${E(t.shop||t.note||t.cat||'')}</span><span class="num">${M(myA(t))}</span></div>`).join('')}</div></details>`:'';
+ h+=list(A,'這週')+list(B,'上一週');
  const ai=(U.wai||{})[end];
- h+=`<h2>${latest?'⑤':'④'} AI 小老師的話</h2><div class="card">${ai?`<div class="msg">${ai}</div>`:`<div class="sub">請 AI 看看這週的數字，用幾句話告訴你做得好的地方和下週可以注意什麼。</div><button class="go q" style="margin-top:8px" data-a="wkai" data-i="${end}">請 AI 寫一段話</button>`}</div>`;
- h+=`<div class="note" data-t="這份報告怎麼算的？">一週是週一到週日。花費不算幫朋友代墊的部分、不算獨立帳本、不算轉帳和繳卡費（刷卡在刷的那天就算花了）。每週日打開記帳網站，總覽最上面就會出現這份報告。</div>`;
- return h;
+ h+=`<div class="card" style="margin-top:12px">${ai?`<b>AI 小老師的話</b><div class="msg">${ai}</div>`:`<button class="go q" data-a="wkai" data-i="${end}">請 AI 看看這兩週</button>`}</div>`;
+ return h+`<div class="note" data-t="這份報告怎麼算的？">一週是週一到週日，每週日晚上 10 點起總覽會出現這週的報告。花費不算幫朋友代墊的部分、不算獨立帳本、不算轉帳和繳卡費（刷卡在刷的那天就算花了）。</div>`;
 }
 
 // ── 股票 ──
@@ -1225,7 +1203,7 @@ function sheetAcct(o){
 const STK=[['stock','我的持股'],['news','股價與新聞'],['calc','複利計算']];
 const stkSeg=()=>`<div class="chips" style="margin:0 0 12px">${STK.map(([k,n])=>`<button class="chip ${U.tab===k?'on':''}" data-a="tab" data-i="${k}">${n}</button>`).join('')}</div>`;
 const TABS=[['home','◎','總覽'],['tx','✎','記帳'],['cal','▦','月曆'],['bills','◷','固定收支'],['stock','↗','股票'],['more','⋯','更多']];
-const MORE=[['week','✉','每週報告','每週日整理：花了多少、錢花在哪、下週要繳什麼'],['idea','✧','賺錢點子','想到能賺錢的方法，先記下來慢慢研究'],['check','☑','對帳便條','每週打開網銀看一次，看過就打勾'],['book','▣','獨立帳本','爸媽帳戶、副業：收入和投資另外算'],['iou','⇄','代墊與欠款','幫朋友代墊、誰欠我、我欠誰'],['wallet','◉','我的錢一覽','總餘額、信用卡、每天該存多少、時薪'],['ask','？','要不要買？','想買東西時，像聊天一樣問問看'],['perk','✦','刷卡優惠','在哪裡刷用哪張卡、CUBE 要切哪個權益'],['plan','◫','分帳戶','薪水進來先分好：固定支出、生活費、存錢、投資'],['budget','◔','預算','每個分類一個月能花多少，快超過會提醒'],['chart','▥','圖表','每個月花多少、錢都花在哪'],['imp','⇣','匯入明細','信用卡、銀行、電子發票、截圖'],['set','⚙︎','設定與風格','帳戶、顏色、深色模式、備份'],['guide','?','新手教學','從頭一步一步開始']];
+const MORE=[['week','✉','每週報告','這週和上一週花了多少，週日晚上 10 點出爐'],['idea','✧','賺錢點子','想到能賺錢的方法，先記下來慢慢研究'],['check','☑','對帳便條','每週打開網銀看一次，看過就打勾'],['book','▣','獨立帳本','爸媽帳戶、副業：收入和投資另外算'],['iou','⇄','代墊與欠款','幫朋友代墊、誰欠我、我欠誰'],['wallet','◉','我的錢一覽','總餘額、信用卡、每天該存多少、時薪'],['ask','？','要不要買？','想買東西時，像聊天一樣問問看'],['perk','✦','刷卡優惠','在哪裡刷用哪張卡、CUBE 要切哪個權益'],['plan','◫','分帳戶','薪水進來先分好：固定支出、生活費、存錢、投資'],['budget','◔','預算','每個分類一個月能花多少，快超過會提醒'],['chart','▥','圖表','每個月花多少、錢都花在哪'],['imp','⇣','匯入明細','信用卡、銀行、電子發票、截圖'],['set','⚙︎','設定與風格','帳戶、顏色、深色模式、備份'],['guide','?','新手教學','從頭一步一步開始']];
 let RD=0,RD2=0,KF=0;
 function render(){
  // 換掉畫面時，正在輸入的欄位失焦會觸發 change；那次重畫延後到這次畫完再做
@@ -1658,8 +1636,8 @@ const ACT={
  wkopen:i=>{U.wk=i;if(i===wkLast()){S.wkSeen=i;save()}U.tab='week';U.sheet=null;render();window.scrollTo(0,0)},
  wkseen:i=>{S.wkSeen=i;save();render()},
  wknav:i=>{const e=shiftD(U.wk||wkLast(),7*i);if(e>wkNow())return;U.wk=e;render()},
- wkai:async i=>{const W=wkData(i);(U.wai=U.wai||{})[i]='AI 看看中…';render();
-  try{const r=await askAI(`你是溫暖、務實的理財小老師，用繁體中文（台灣用語）、口語、像跟朋友聊天，條列 3 點，每點一句話，不要說教。看這位使用者 ${wkLab(i)} 這一週的記帳，先稱讚做得好的地方，再說下週可以注意什麼。只用提供的數字，不要編造。\n這週花費：${Math.round(W.tot)}\n前一週花費：${Math.round(W.prev)||'沒有紀錄'}\n這週收入：${Math.round(W.inc)}\n各分類：${JSON.stringify(Object.fromEntries(W.cats.map(([c,v])=>[c,Math.round(v)])))}\n只回 JSON：{"tips":["...","...","..."]}`);
+ wkai:async i=>{const A=wkSpend(i),B=wkSpend(shiftD(i,-7)),R=o=>JSON.stringify(Object.fromEntries(Object.keys(o).map(c=>[c,Math.round(o[c])])));(U.wai=U.wai||{})[i]='AI 看看中…';render();
+  try{const r=await askAI(`你是溫暖、務實的理財小老師，用繁體中文（台灣用語）、口語、像跟朋友聊天，條列 3 點，每點一句話，不要說教。比較這位使用者這週（${wkLab(i)}）和上一週（${wkLab(B.end)}）的花費，先稱讚做得好的地方，再說下週可以注意什麼。只用提供的數字，不要編造。\n這週花費：${Math.round(A.tot)}，各分類：${R(A.by)}\n上一週花費：${Math.round(B.tot)}，各分類：${R(B.by)}\n只回 JSON：{"tips":["...","...","..."]}`);
    U.wai[i]=r&&r.tips&&r.tips.length?r.tips.map(t=>'・'+E(String(t))).join('<br>'):''}catch(e){U.wai[i]='';toast(e&&String(e.code||'').indexOf('quota')===0?'AI 今天的免費額度用完了，明天再試':'現在連不到 AI，等一下再試試')}
   if(U.tab==='week')render()},
  bsugai:async()=>{const G=budgetSug();if(!G.rows)return;U.bai='AI 看看中…';render();
