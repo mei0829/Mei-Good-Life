@@ -94,6 +94,7 @@ table.pv{width:100%;border-collapse:collapse;font-size:12px}table.pv td,table.pv
 .it select{height:32px!important;padding:4px 6px;font-size:13px}
 .st{display:inline-block;font-size:11px;line-height:1.6;padding:0 7px;border-radius:9px;border:1px solid var(--line);color:var(--sub);white-space:nowrap;margin-top:2px}
 .st.pending{border-style:dashed}.st.pre{opacity:.7}.st.open{color:var(--acc);border-color:var(--acc)}.st.billed{color:var(--amber);border-color:var(--amber)}.st.paid{color:var(--ok);border-color:var(--ok)}
+#app .today{font-size:15px;color:var(--ink);white-space:nowrap}
 #helpb{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));right:max(12px,calc(50% - 248px));z-index:8;width:32px;height:32px;border-radius:50%;border:1.5px solid var(--line);background:var(--card);color:var(--acc);font:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,.1);padding:0}
 .hp{border-top:1px solid var(--line)}.hp>button{width:100%;text-align:left;border:0;background:none;font:inherit;color:var(--ink);padding:11px 2px;cursor:pointer;display:flex;justify-content:space-between;font-weight:700}.hp>div{font-size:14px;line-height:1.75;padding:0 2px 12px;color:var(--ink)}.hp>div b{color:var(--acc)}
 body{touch-action:manipulation}
@@ -161,7 +162,7 @@ const conv=(v,f,t)=>(f||'TWD')===(t||'TWD')?v:v*rate(f)/rate(t);
 const MC=(v,c)=>c==='USD'?(HIDE?'US$ ••••':(v<-0.005?'-':'')+'US$'+Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})):M(v);
 const MA=a=>MC(bal(a),a.cur);
 const md=s=>s==='init'?'期初':+s.slice(5,7)+'/'+ +s.slice(8,10);
-const WD='日一二三四五六',nid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const WD='日一二三四五六',todayLab=()=>{const d=new Date();return(d.getMonth()+1)+'/'+d.getDate()+'（'+WD[d.getDay()]+'）'},nid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const dim=(y,m)=>new Date(y,m+1,0).getDate();
 const ymd=(y,m,d)=>{const x=new Date(y,m,1),Y=x.getFullYear(),Mo=x.getMonth();return iso(new Date(Y,Mo,Math.min(d,dim(Y,Mo))))};
 const addM=(s,n,day)=>{const d=pd(s);return ymd(d.getFullYear(),d.getMonth()+n,day||d.getDate())};
@@ -639,7 +640,7 @@ const HELP=[
  ['card','信用卡：刷卡到繳清的 4 個階段',['card','tx','home'],`刷卡時用「刷卡那天」記，網站會標出：<br><b>… 未入帳</b> 銀行還沒收到 → <b>○ 未出帳</b> 等結帳日 → <b>● 已出帳</b> 要繳 → <b>✓ 已繳清</b><br>匯入銀行明細時會自動跟你記的那筆配對、補上入帳日，不會重複。繳卡費時在總覽點那張卡 →「<b>記錄繳卡費</b>」。`],
  ['cycle','結帳日、繳款日某個月不一樣',['card','set'],`平常照「每月幾號」自動算。銀行某一期因為假日改日期時：<br>總覽點那張卡 →「<b>接下來的日期</b>」→ 按「<b>修改</b>」，照帳單上的日期填，<b>只會改那一期</b>。<br>建議每次收到帳單時看一眼，跟網站一樣就不用管。銀行永久改日期的話，到「設定 → 帳戶」改每月固定日。`],
  ['sub','訂閱（Netflix、Spotify…）：續約提醒、取消',['bills','home'],`「固定收支 → 新增固定項目 → <b>訂閱</b>」：填名稱、金額、每月或每年、<b>下次續約日</b>、扣哪張信用卡。扣款會自動算進那張卡的帳單。<br>續約前幾天（預設 3 天，可以改）總覽最上面會出現「<b>🔔 訂閱快續約了</b>」：<br>・要繼續用 → 按「<b>繼續訂</b>」，下次續約前再提醒<br>・已經取消 → 按「<b>我已經取消了</b>」，之後就不會再算這筆錢<br>試用期或不想續的，勾「<b>我打算取消</b>」，會提早 7 天提醒你。<br>固定收支最上面會顯示訂閱總共每月、每年花多少；取消的訂閱收在最下面，按「恢復」可以改回來。`],
- ['week','每週報告',['week','home'],`每個<b>星期日晚上 10 點</b>起，總覽最上面會出現「這週報告」：這週（週一到週日）和上一週各花了多少。按「<b>知道了</b>」就收起來，下週日晚上再出現新的。<br>按「點開來看」或「更多 → <b>每週報告</b>」可以看兩週的總數、每個分類比較，每一筆明細要看再點開；按「‹ ›」看以前的週。<br>最下面可以「<b>請 AI 看看這兩週</b>」，AI 會給你 3 點鼓勵和提醒。`],
+ ['week','每週報告',['week','home'],`每個<b>星期日晚上 10 點</b>起，總覽最上面會出現「這週報告」：這週（週一到週日）和上週各花了多少。週一到週日晚上 10 點前，還沒看的話會顯示「<b>上週報告</b>」。按「<b>知道了</b>」就收起來，下週日晚上再出現新的。<br>按「點開來看」或「更多 → <b>每週報告</b>」可以看兩週的總數、每個分類比較，每一筆明細要看再點開；按「‹ ›」看以前的週。<br>最下面可以「<b>請 AI 看看這兩週</b>」，AI 會給你 3 點鼓勵和提醒。`],
  ['idea','賺錢點子筆記',['idea'],`「更多 → <b>賺錢點子</b>」：想到、看到能賺錢的方法，在黃色便條打一句話按「記下」就好。<br>點進去可以補預估每月可賺、要先花多少、每週幾小時（會算時薪，跟正職比）、下一步、筆記。<br>進度：想法 → 研究中 → 進行中 → 有在賺；不做的改「先放著」。上面會顯示進行中的點子每月預估可以多賺多少。<br>不知道值不值得做？點進去按「<b>🔎 請 AI 幫我研究這個點子</b>」：AI 會上網查行情，告訴你大概能賺多少、要先花多少、每週要幾小時、怎麼開始、要注意什麼。看完按「<b>把結果填進下面</b>」，數字和下一步就會自動填好，再按「儲存」。`],
  ['check','對帳便條（每週看一次真實帳戶）',['check','home'],`「更多 → <b>對帳便條</b>」：像便條紙一樣列出所有帳戶。打開網銀 App，看過一個、數字對了就點一下打勾；點錯再點一下就取消。<br>數字不對就按「更新餘額」改成真的數字。<br>全部勾完會自動記下檢核時間，下面有檢核紀錄。超過 7 天沒對帳，總覽會出現黃色便條提醒。`],
  ['trip','旅遊、買東西要預存（單次目標）',['bills'],`想為一次旅遊、一個大東西先存錢：<br>1. 設定 → 帳戶 → 新增一個帳戶（例如「國泰 旅遊」，網銀子帳戶最好），勾「<b>📦 預存帳戶</b>」，這筆錢就不會被當成可以花的。<br>2. 固定收支 → 新增「<b>旅遊基金</b>」：從薪水帳戶轉到旅遊帳戶、每次存多少、<b>目標金額</b>、<b>存到哪天</b>（出發日）。<br>3. 進度條會顯示存了多少，還會算「還有幾次、每次要存多少」，不夠會提醒你。<br>4. 出發後在旅遊帳戶記花費，那時才算支出。玩完把這個固定項目刪掉就好。`],
@@ -808,28 +809,29 @@ function subCard(){const xs=subDue();if(!xs.length)return'';
 const wkLast=()=>{const n=new Date(),d=n.getDay(),t=today();return d===0&&n.getHours()>=22?t:shiftD(t,d===0?-7:-d)}; // 最近一份已經可以看的報告（那週的週日）
 const wkNow=()=>{const t=today();return shiftD(t,(7-pd(t).getDay())%7)}; // 這一週的週日
 const wkLab=end=>md(shiftD(end,-6))+'–'+md(end);
+const wkNm=end=>end>=wkNow()?['這週','上週']:end===shiftD(wkNow(),-7)?['上週','上上週']:['那週','前一週'];
 // 一週的花費：不算代墊、獨立帳本、轉帳和繳卡費（刷卡在刷的那天就算）
 function wkSpend(end){const st=shiftD(end,-6),by={},xs=[];let tot=0;
  S.tx.forEach(t=>{if(t.type!=='out'||t.d<st||t.d>end)return;const v=myA(t);if(v<=0)return;tot+=v;by[t.cat||'其他']=(by[t.cat||'其他']||0)+v;xs.push(t)});
  xs.sort((a,b)=>myA(b)-myA(a));return{st,end,tot,by,xs}}
-const wkCmp=(A,B)=>!B.tot?'上一週沒有紀錄可以比':Math.abs(A.tot-B.tot)<1?'跟上一週差不多':A.tot<B.tot?`👍 比上一週少花 <b>${M(B.tot-A.tot)}</b>`:`⚠︎ 比上一週多花 <b class="neg">${M(A.tot-B.tot)}</b>`;
+const wkCmp=(A,B)=>{const p=wkNm(A.end)[1];return!B.tot?p+'沒有紀錄可以比':Math.abs(A.tot-B.tot)<1?'跟'+p+'差不多':A.tot<B.tot?`👍 比${p}少花 <b>${M(B.tot-A.tot)}</b>`:`⚠︎ 比${p}多花 <b class="neg">${M(A.tot-B.tot)}</b>`};
 function weekCard(){
  const end=wkLast();if(S.wkSeen===end||!S.tx.length)return'';
- const A=wkSpend(end),B=wkSpend(shiftD(end,-7));
- return`<div class="card" style="border-color:var(--acc)"><b>✉ 這週報告（${wkLab(end)}）</b>
- <div class="msg">這週花了 <b>${M(A.tot)}</b>，上一週 ${M(B.tot)}。${wkCmp(A,B)}</div>
+ const A=wkSpend(end),B=wkSpend(shiftD(end,-7)),[n1,n2]=wkNm(end);
+ return`<div class="card" style="border-color:var(--acc)"><b>✉ ${n1}報告（${wkLab(end)}）</b>
+ <div class="msg">${n1}花了 <b>${M(A.tot)}</b>，${n2} ${M(B.tot)}。${wkCmp(A,B)}</div>
  <div class="row" style="gap:8px;margin-top:10px"><button class="go sp" data-a="wkopen" data-i="${end}">點開來看</button><button class="go g sp" data-a="wkseen" data-i="${end}">知道了</button></div></div>`;
 }
 function vWeek(){
- const end=U.wk||wkLast(),A=wkSpend(end),B=wkSpend(shiftD(end,-7)),part=end>today();
+ const end=U.wk||wkLast(),A=wkSpend(end),B=wkSpend(shiftD(end,-7)),part=end>today(),[n1,n2]=wkNm(end);
  let h=`<div class="mh"><button class="go q" data-a="wknav" data-i="-1">‹</button><b>${wkLab(end)} 週報${part?'（到今天）':''}</b><button class="go q" data-a="wknav" data-i="1" ${end>=wkNow()?'disabled':''}>›</button></div>`;
- h+=`<div class="card"><div class="tiles" style="margin-top:0"><div><span class="sub">這週</span><b>${M(A.tot)}</b><span class="sub">${wkLab(end)}</span></div><div><span class="sub">上一週</span><b>${M(B.tot)}</b><span class="sub">${wkLab(B.end)}</span></div><div><span class="sub">差多少</span><b class="${A.tot>B.tot?'neg':''}">${A.tot>B.tot?'+':A.tot<B.tot?'−':''}${M(Math.abs(A.tot-B.tot))}</b></div></div><div class="msg">${wkCmp(A,B)}</div></div>`;
+ h+=`<div class="card"><div class="tiles" style="margin-top:0"><div><span class="sub">${n1}</span><b>${M(A.tot)}</b><span class="sub">${wkLab(end)}</span></div><div><span class="sub">${n2}</span><b>${M(B.tot)}</b><span class="sub">${wkLab(B.end)}</span></div><div><span class="sub">差多少</span><b class="${A.tot>B.tot?'neg':''}">${A.tot>B.tot?'+':A.tot<B.tot?'−':''}${M(Math.abs(A.tot-B.tot))}</b></div></div><div class="msg">${wkCmp(A,B)}</div></div>`;
  // 每個分類：這週 vs 上一週
  const cs=[...new Set([...Object.keys(A.by),...Object.keys(B.by)])].sort((x,y)=>(A.by[y]||0)-(A.by[x]||0)||(B.by[y]||0)-(B.by[x]||0));
- h+=`<h2>每個分類</h2><div class="card">${cs.length?`<table class="pv"><tr><th>分類</th><th style="text-align:right">這週</th><th style="text-align:right">上一週</th></tr>${cs.map(c=>{const a=A.by[c]||0,b=B.by[c]||0;return`<tr><td>${E(c)}</td><td class="num ${a>b&&b?'neg':''}" style="text-align:right">${M(a)}</td><td class="num sub" style="text-align:right">${M(b)}</td></tr>`}).join('')}</table>`:'<div class="sub">這兩週都沒有支出紀錄。</div>'}</div>`;
+ h+=`<h2>每個分類</h2><div class="card">${cs.length?`<table class="pv"><tr><th>分類</th><th style="text-align:right">${n1}</th><th style="text-align:right">${n2}</th></tr>${cs.map(c=>{const a=A.by[c]||0,b=B.by[c]||0;return`<tr><td>${E(c)}</td><td class="num ${a>b&&b?'neg':''}" style="text-align:right">${M(a)}</td><td class="num sub" style="text-align:right">${M(b)}</td></tr>`}).join('')}</table>`:'<div class="sub">這兩週都沒有支出紀錄。</div>'}</div>`;
  // 明細收起來，想看再點開
  const list=(W,t)=>W.xs.length?`<details class="tip" style="margin-top:10px"><summary>${t}的每一筆（${W.xs.length} 筆）▾</summary><div class="card" style="margin-top:6px">${W.xs.map(t=>`<div class="row" style="padding:3px 0"><span class="sp">${md(t.d)} 週${WD[pd(t.d).getDay()]}　${E(t.shop||t.note||t.cat||'')}</span><span class="num">${M(myA(t))}</span></div>`).join('')}</div></details>`:'';
- h+=list(A,'這週')+list(B,'上一週');
+ h+=list(A,n1)+list(B,n2);
  const ai=(U.wai||{})[end];
  h+=`<div class="card" style="margin-top:12px">${ai?`<b>AI 小老師的話</b><div class="msg">${ai}</div>`:`<button class="go q" data-a="wkai" data-i="${end}">請 AI 看看這兩週</button>`}</div>`;
  return h+`<div class="note" data-t="這份報告怎麼算的？">一週是週一到週日，每週日晚上 10 點起總覽會出現這週的報告。花費不算幫朋友代墊的部分、不算獨立帳本、不算轉帳和繳卡費（刷卡在刷的那天就算花了）。</div>`;
@@ -1244,7 +1246,7 @@ function calmNotes(){document.querySelectorAll('#app .note,#sheet .note').forEac
 function renderNow(){
  const y=window.scrollY,V={week:vWeek,idea:vIdea,check:vCheck,book:vBook,iou:vIou,wallet:vWallet,ask:vAsk,perk:vPerk,plan:vPlan,card:vCard,home:vHome,tx:vTx,cal:vCal,bills:vBills,more:vMore,budget:vBudget,chart:vChart,stock:vStock,news:vNews,calc:vCalc,imp:vImp,set:vSet,guide:vGuide},sub=MORE.some(m=>m[0]===U.tab),ae=KF&&document.activeElement,am=ae&&ae.dataset&&ae.dataset.m,cp=am&&ae.selectionStart;KF=0;
  CI={};LM=null;normAcct();$('tip').style.display='none';$('eye').textContent='•••• 已隱藏・點兩下顯示';$('eye').classList.toggle('on',HIDE);$('eye').setAttribute('aria-label',HIDE?'顯示金額':'隱藏金額');
- $('app').innerHTML=(sub?'<button class="back" data-a="tab" data-i="more">‹ 更多</button>':'')+V[U.tab]();
+ $('app').innerHTML=`<div class="row" style="gap:10px;padding-right:44px;min-height:32px">${sub?'<button class="back" data-a="tab" data-i="more">‹ 更多</button>':''}<span class="sp"></span><b class="today">今天 ${todayLab()}</b></div>`+V[U.tab]();
  $('nav').innerHTML=TABS.map(([k,i,n])=>`<button class="${U.tab===k||(k==='more'&&sub)||(k==='stock'&&STK.some(x=>x[0]===U.tab))?'on':''}" data-a="tab" data-i="${k}"><b>${i}</b>${n}</button>`).join('');
  const sh=U.sheet,SH={idea:sheetIdea,broker:sheetBroker,pay:sheetPay,acctv:sheetAcctV,iou:sheetIou,iback:sheetIback,help:sheetHelp,cyc:sheetCyc,pcard:sheetPCard,pitem:sheetPItem,payee:sheetPayee,start:sheetStart,tx:sheetTx,bill:sheetBill,acct:sheetAcct,trade:sheetTrade,recon:sheetRecon,hold:sheetHold};$('sheet').innerHTML=sh?`<div class="sheet" data-a="bg"><div>${SH[sh.k](sh.o)}</div></div>`:'';
  calmNotes();window.scrollTo(0,y);
@@ -1668,7 +1670,7 @@ const ACT={
  wkseen:i=>{S.wkSeen=i;save();render()},
  wknav:i=>{const e=shiftD(U.wk||wkLast(),7*i);if(e>wkNow())return;U.wk=e;render()},
  wkai:async i=>{const A=wkSpend(i),B=wkSpend(shiftD(i,-7)),R=o=>JSON.stringify(Object.fromEntries(Object.keys(o).map(c=>[c,Math.round(o[c])])));(U.wai=U.wai||{})[i]='AI 看看中…';render();
-  try{const r=await askAI(`你是溫暖、務實的理財小老師，用繁體中文（台灣用語）、口語、像跟朋友聊天，條列 3 點，每點一句話，不要說教。比較這位使用者這週（${wkLab(i)}）和上一週（${wkLab(B.end)}）的花費，先稱讚做得好的地方，再說下週可以注意什麼。只用提供的數字，不要編造。\n這週花費：${Math.round(A.tot)}，各分類：${R(A.by)}\n上一週花費：${Math.round(B.tot)}，各分類：${R(B.by)}\n只回 JSON：{"tips":["...","...","..."]}`);
+  try{const r=await askAI(`你是溫暖、務實的理財小老師，用繁體中文（台灣用語）、口語、像跟朋友聊天，條列 3 點，每點一句話，不要說教。比較這位使用者${wkNm(i)[0]}（${wkLab(i)}）和${wkNm(i)[1]}（${wkLab(B.end)}）的花費，先稱讚做得好的地方，再說下週可以注意什麼。只用提供的數字，不要編造。\n${wkNm(i)[0]}花費：${Math.round(A.tot)}，各分類：${R(A.by)}\n${wkNm(i)[1]}花費：${Math.round(B.tot)}，各分類：${R(B.by)}\n只回 JSON：{"tips":["...","...","..."]}`);
    U.wai[i]=r&&r.tips&&r.tips.length?r.tips.map(t=>'・'+E(String(t))).join('<br>'):''}catch(e){U.wai[i]='';toast(e&&String(e.code||'').indexOf('quota')===0?'AI 今天的免費額度用完了，明天再試':'現在連不到 AI，等一下再試試')}
   if(U.tab==='week')render()},
  bsugai:async()=>{const G=budgetSug();if(!G.rows)return;U.bai='AI 看看中…';render();
