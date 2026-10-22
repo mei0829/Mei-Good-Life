@@ -639,7 +639,7 @@ const HELP=[
  ['add','記一筆（花錢、收入、轉帳）',['tx','home','cal'],`按右下角「<b>＋</b>」：<br>・<b>支出</b>：打金額、選帳戶和分類。說明裡有「全家」「中油」這類字會自動選分類。<br>・<b>收入</b>：薪水選「收入」，帳戶選銀行（不能選信用卡），日期是入帳日。<br>・<b>轉帳／繳卡費</b>：自己帳戶之間搬錢、繳信用卡費都用這個，<b>不算收入支出</b>。`],
  ['card','信用卡：刷卡到繳清的 4 個階段',['card','tx','home'],`刷卡時用「刷卡那天」記，網站會標出：<br><b>… 未入帳</b> 銀行還沒收到 → <b>○ 未出帳</b> 等結帳日 → <b>● 已出帳</b> 要繳 → <b>✓ 已繳清</b><br>匯入銀行明細時會自動跟你記的那筆配對、補上入帳日，不會重複。繳卡費時在總覽點那張卡 →「<b>記錄繳卡費</b>」。`],
  ['cycle','結帳日、繳款日某個月不一樣',['card','set'],`平常照「每月幾號」自動算。銀行某一期因為假日改日期時：<br>總覽點那張卡 →「<b>接下來的日期</b>」→ 按「<b>修改</b>」，照帳單上的日期填，<b>只會改那一期</b>。<br>建議每次收到帳單時看一眼，跟網站一樣就不用管。銀行永久改日期的話，到「設定 → 帳戶」改每月固定日。`],
- ['trip','旅行花費',['trip','home'],`「更多 → <b>旅行</b>」：每次旅行新增一筆，填名稱和<b>出發、回家的日期</b>（預算、幾個人選填）。<br>旅行時照平常一樣記帳，或回來後匯入信用卡明細，<b>那幾天的花費會自動算進去</b>。出發前付的機票、訂房，到那次旅行按「<b>加入出發前的花費</b>」挑進來；那幾天裡跟旅行無關的，按「整理明細」→「不算」。<br>可以看到總共花多少、每天平均、每人多少、錢花在哪、每一天的明細。旅行中或 3 天內要出發，總覽也會顯示。`],
+ ['trip','旅行花費',['trip','home'],`「更多 → <b>旅行</b>」：每次旅行新增一筆，填名稱和<b>出發、回家的日期</b>（預算、幾個人選填）。<br>旅行時照平常一樣記帳，或回來後匯入信用卡明細，<b>那幾天的花費會自動算進去</b>。出發前付的機票、訂房，到那次旅行按「<b>加入出發前的花費</b>」挑進來；那幾天裡跟旅行無關的，按「整理明細」→「不算」。<br>可以看到總共花多少、每天平均、每人多少、錢花在哪、每一天的明細。旅行中或 3 天內要出發，總覽也會顯示。<br><b>👥 分帳</b>：跟朋友一起去的話，在旅行設定填「同行的人」和當地貨幣、匯率。每一筆記誰付的、大家平分／只有某些人／<b>不列入平分</b>，最後自動算出<b>誰要還誰多少</b>（當地貨幣和台幣都有），可以一鍵記到「代墊與欠款」。`],
  ['sub','訂閱（Netflix、Spotify…）：續約提醒、取消',['bills','home'],`「固定收支 → 新增固定項目 → <b>訂閱</b>」：填名稱、金額、每月或每年、<b>下次續約日</b>、扣哪張信用卡。扣款會自動算進那張卡的帳單。<br>續約前幾天（預設 3 天，可以改）總覽最上面會出現「<b>🔔 訂閱快續約了</b>」：<br>・要繼續用 → 按「<b>繼續訂</b>」，下次續約前再提醒<br>・已經取消 → 按「<b>我已經取消了</b>」，之後就不會再算這筆錢<br>試用期或不想續的，勾「<b>我打算取消</b>」，會提早 7 天提醒你。<br>固定收支最上面會顯示訂閱總共每月、每年花多少；取消的訂閱收在最下面，按「恢復」可以改回來。`],
  ['week','每週報告',['week','home'],`每個<b>星期日晚上 10 點</b>起，總覽最上面會出現「這週報告」：這週（週一到週日）和上週各花了多少。週一到週日晚上 10 點前，還沒看的話會顯示「<b>上週報告</b>」。按「<b>知道了</b>」就收起來，下週日晚上再出現新的。<br>按「點開來看」或「更多 → <b>每週報告</b>」可以看兩週的總數、每個分類比較，每一筆明細要看再點開；按「‹ ›」看以前的週。<br>最下面可以「<b>請 AI 看看這兩週</b>」，AI 會給你 3 點鼓勵和提醒。`],
  ['idea','賺錢點子筆記',['idea'],`「更多 → <b>賺錢點子</b>」：想到、看到能賺錢的方法，在黃色便條打一句話按「記下」就好。<br>點進去可以補預估每月可賺、要先花多少、每週幾小時（會算時薪，跟正職比）、下一步、筆記。<br>進度：想法 → 研究中 → 進行中 → 有在賺；不做的改「先放著」。上面會顯示進行中的點子每月預估可以多賺多少。<br>不知道值不值得做？點進去按「<b>🔎 請 AI 幫我研究這個點子</b>」：AI 會上網查行情，告訴你大概能賺多少、要先花多少、每週要幾小時、怎麼開始、要注意什麼。看完按「<b>把結果填進下面</b>」，數字和下一步就會自動填好，再按「儲存」。`],
@@ -833,6 +833,8 @@ function vTripOne(T){
  const xs=tripTx(T),tot=xs.reduce((a,t)=>a+myA(t),0),n=tripDays(T),pp=+T.ppl>1?+T.ppl:0,st=tripSt(T),ed=!!U.tripEd;
  let h=`<div class="row"><h1 class="sp" style="margin-bottom:4px">✈ ${E(T.name)}</h1><button class="go q" data-a="tripedit">修改</button></div>
  <div class="sub" style="margin:0 2px 10px">${T.from.slice(0,4)}・${tripRange(T)}・${st[0]}${st[1]?'（'+st[1]+'）':''}${T.note?'<br>'+E(T.note):''}</div>`;
+ h+=`<div class="chips" style="margin:0 0 10px">${[['spend','我的花費'],['split','👥 分帳']].map(([k,n])=>`<button class="chip ${(U.tripV||'spend')===k?'on':''}" data-a="tripv" data-i="${k}">${n}</button>`).join('')}</div>`;
+ if(U.tripV==='split')return h+vTripSplit(T);
  h+=`<div class="card"><div class="sub">一共花了</div><div class="big">${M(tot)}</div>${tripBar(T,tot)}
   <div class="tiles"><div><span class="sub">每天平均</span><b>${M(tot/n)}</b></div><div><span class="sub">${pp?'每人':'筆數'}</span><b>${pp?M(tot/pp):xs.length+' 筆'}</b></div><div><span class="sub">最大一筆</span><b>${xs.length?M(Math.max(...xs.map(myA))):'—'}</b></div></div></div>`;
  if(xs.length){const by={};xs.forEach(t=>{by[t.cat||'其他']=(by[t.cat||'其他']||0)+myA(t)});
@@ -850,13 +852,54 @@ function vTripOne(T){
   h+=`<input style="width:100%;margin-top:8px" placeholder="搜尋：機票、飯店、Agoda…" value="${E(U.tripQ||'')}" data-m="tripQ" data-r="1"><div class="card" style="margin-top:6px">${cs.length?cs.map(t=>`<div class="row" style="padding:6px 0;border-top:1px solid var(--line);gap:8px"><span class="sp">${md(t.d)} ${E(t.note||t.cat||'')}<div class="sub">${E(t.cat||'')}・${E(nm(A(t.acct)))}${t.trip&&tripOf(t.trip)?'・已算在「'+E(tripOf(t.trip).name)+'」':''}</div></span><b class="num">${M(myA(t))}</b><button class="go q" style="padding:3px 10px;font-size:12px" data-a="tripin" data-i="${t.id}">加入</button></div>`).join(''):'<div class="sub">找不到其他花費。</div>'}</div>`}
  return h;
 }
+// ── 旅行分帳：T.mem=同行的人（不含「我」）、T.cur 當地貨幣、T.rate 1 元當地貨幣＝幾元台幣
+// T.sp=[{id,d,what,amt,cur,by 誰付的,mode:'all' 大家平分|'some' 只有某些人|'none' 不列入平分（付的人自己的）,among}]
+const ME='我',CURS=[['TWD','台幣'],['JPY','日圓'],['KRW','韓元'],['USD','美元'],['EUR','歐元'],['THB','泰銖'],['HKD','港幣'],['CNY','人民幣'],['VND','越南盾'],['SGD','新加坡幣'],['MYR','馬幣'],['PHP','菲律賓披索'],['GBP','英鎊'],['AUD','澳幣']];
+const curNm=c=>(CURS.find(x=>x[0]===c)||[c,c])[1];
+const fmtC=(v,c)=>!c||c==='TWD'?M(v):HIDE?'•••• '+curNm(c):(v<0?'-':'')+Math.abs(v).toLocaleString('zh-TW',{maximumFractionDigits:['USD','EUR','GBP','AUD','SGD','MYR','HKD','CNY'].includes(c)?2:0})+' '+curNm(c);
+const tripPpl=T=>{const ps=[ME].concat(T.mem||[]);(T.sp||[]).forEach(x=>[x.by].concat(x.among||[]).forEach(p=>{if(p&&!ps.includes(p))ps.push(p)}));return ps};
+const spTW=(T,x)=>x.cur&&x.cur!=='TWD'?x.amt*(+T.rate||0):x.amt;
+const spWho=(T,x)=>x.mode==='none'?[x.by]:x.mode==='some'?(x.among||[]):tripPpl(T);
+function tripSettle(T){const ps=tripPpl(T),paid={},share={};ps.forEach(p=>{paid[p]=0;share[p]=0});
+ (T.sp||[]).forEach(x=>{const v=spTW(T,x),w=spWho(T,x);if(!(v>0)||!w.length)return;paid[x.by]+=v;w.forEach(p=>{share[p]+=v/w.length})});
+ const net=ps.map(p=>({p,v:paid[p]-share[p]})),cr=net.filter(x=>x.v>0.5).sort((a,b)=>b.v-a.v),db=net.filter(x=>x.v<-0.5).map(x=>({p:x.p,v:-x.v})).sort((a,b)=>b.v-a.v),tr=[];
+ // 欠最多的先還給被欠最多的，轉帳次數最少
+ let i=0,j=0;while(i<db.length&&j<cr.length){const a=Math.min(db[i].v,cr[j].v);if(a>=0.5)tr.push({from:db[i].p,to:cr[j].p,v:a});db[i].v-=a;cr[j].v-=a;if(db[i].v<0.5)i++;if(cr[j].v<0.5)j++}
+ return{ps,paid,share,tr}}
+function vTripSplit(T){const ps=tripPpl(T),fx=T.cur&&T.cur!=='TWD',xs=(T.sp||[]).slice().sort((a,b)=>a.d<b.d?1:a.d>b.d?-1:0);
+ if(!(T.mem||[]).length)return`<div class="card"><b>跟朋友一起去嗎？</b><div class="sub" style="margin-top:4px">加上同行的人，就可以記「誰付了什麼」，最後自動算出誰要還誰多少。</div><button class="go" style="margin-top:10px" data-a="tripedit">設定同行的人和當地貨幣</button></div>`;
+ let h=`<div class="card"><div class="row"><span class="sp">👥 ${ps.map(E).join('、')}</span><button class="go q" style="padding:3px 10px;font-size:12px" data-a="tripedit">修改</button></div>${fx?`<div class="sub" style="margin-top:4px">1 ${curNm(T.cur)} ＝ ${+T.rate?'<b>'+(+T.rate)+'</b> 台幣':'<span class="neg">還沒填匯率</span>'}</div>`:''}</div>
+ <button class="go" style="width:100%;margin:4px 0 10px" data-a="spadd">＋ 記一筆分帳</button>`;
+ if(fx&&!(+T.rate)&&xs.some(x=>x.cur!=='TWD'))h+=`<div class="card warn"><b>先填匯率才能算台幣</b><div class="sub">按上面「修改」填 1 ${curNm(T.cur)} 等於幾元台幣，或按「查今天匯率」。</div></div>`;
+ if(xs.length){const R=tripSettle(T),tot=xs.reduce((a,x)=>a+spTW(T,x),0),c=fx?T.cur:'TWD',toC=v=>fx&&+T.rate?v/T.rate:v;
+  h+=`<h2>💰 結算：誰要還誰</h2><div class="card" style="border-color:var(--acc)">${R.tr.length?R.tr.map(t=>`<div class="row" style="padding:6px 0;border-top:1px solid var(--line)"><span class="sp"><b>${E(t.from)}</b> 要給 <b>${E(t.to)}</b></span><span style="text-align:right">${fx?`<b class="num">${fmtC(toC(t.v),c)}</b><div class="sub">約 ${M(t.v)}</div>`:`<b class="num">${M(t.v)}</b>`}</span></div>`).join(''):'<div class="msg">✓ 大家都算清了，不用還錢</div>'}
+   ${R.tr.some(t=>t.from===ME||t.to===ME)?`<button class="go q" style="margin-top:10px" data-a="spiou">${T.iou&&T.iou.length?'重新記到「代墊與欠款」':'記到「代墊與欠款」'}</button><div class="sub" style="margin-top:4px">${T.iou&&T.iou.length?'已經記過了；帳有改的話再按一次會更新。':'記過去之後，對方還錢時到「代墊與欠款」按「還了」。'}</div>`:''}</div>
+  <div class="card"><table class="pv"><tr><th></th><th style="text-align:right">付了</th><th style="text-align:right">該出</th><th style="text-align:right">差額</th></tr>${R.ps.map(p=>{const d=R.paid[p]-R.share[p];return`<tr><td>${E(p)}</td><td class="num" style="text-align:right">${M(R.paid[p])}</td><td class="num" style="text-align:right">${M(R.share[p])}</td><td class="num ${d<-0.5?'neg':d>0.5?'in':''}" style="text-align:right">${d>0.5?'+':''}${M(d)}</td></tr>`}).join('')}</table>
+   <div class="sub" style="margin-top:6px">全部 ${M(tot)}${fx&&+T.rate?'（金額都換成台幣算）':''}。差額是正的＝別人要還你，負的＝你要還別人。</div></div>`;
+  h+=`<h2>分帳明細</h2><div class="card">${xs.map(x=>{const w=spWho(T,x);return`<div class="li" data-a="spedit" data-i="${x.id}"><div class="dt">${md(x.d)}<small>週${WD[pd(x.d).getDay()]}</small></div><div class="sp"><div>${E(x.what||'')}</div><div class="sub">${E(x.by)} 付・${x.mode==='none'?'<b>不列入平分</b>':x.mode==='some'?w.map(E).join('、')+' 分':'大家平分'}${w.length>1?'，每人 '+fmtC(x.amt/w.length,x.cur):''}</div></div><div style="text-align:right"><div class="num">${fmtC(x.amt,x.cur)}</div>${x.cur&&x.cur!=='TWD'&&+T.rate?`<div class="sub">約 ${M(spTW(T,x))}</div>`:''}</div></div>`}).join('')}</div>`}
+ else h+=`<div class="card sub">還沒有分帳紀錄。誰付了大家的錢（餐廳、車票、住宿），就按上面「記一筆分帳」。</div>`;
+ return h+`<div class="note" data-t="分帳怎麼記？">・<b>大家平分</b>：例如晚餐 6,000 日圓，小美付的，3 個人平分。<br>・<b>只有某些人</b>：例如只有你跟媽媽去的按摩。<br>・<b>不列入平分</b>：付錢的人買給自己的東西，記下來看得到，但不會算進誰欠誰。<br>金額可以填當地貨幣或台幣，結算時都會換成台幣算，也會顯示當地貨幣。<br>這裡是用來算「誰欠誰」，不會改到你自己的記帳；你自己付的錢，照平常一樣記帳就好。</div>`}
+function sheetSp(o){const T=tripOf(U.trip)||{},ps=tripPpl(T),fx=T.cur&&T.cur!=='TWD';
+ return`<div class="row"><b class="sp" style="font-size:17px">${o.id?'修改分帳':'記一筆分帳'}</b><button class="x" data-a="close">×</button></div>
+ <div class="grid"><label class="fl w"><span>買了什麼</span><input value="${E(o.what||'')}" data-m="sheet.o.what" placeholder="例：晚餐燒肉、新幹線車票"></label>
+ <label class="fl"><span>金額</span><input inputmode="decimal" value="${E(o.amt||'')}" data-m="sheet.o.amt"></label>
+ <label class="fl"><span>日期</span><input type="date" value="${o.d||''}" data-m="sheet.o.d"></label>
+ ${fx?`<div class="fl w"><span>幣別</span><div class="chips">${[T.cur,'TWD'].map(c=>`<button class="chip ${o.cur===c?'on':''}" data-a="spcur" data-i="${c}">${curNm(c)}</button>`).join('')}</div></div>`:''}
+ <div class="fl w"><span>誰付的</span><div class="chips">${ps.map(p=>`<button class="chip ${o.by===p?'on':''}" data-a="spby" data-i="${E(p)}">${E(p)}</button>`).join('')}</div></div>
+ <div class="fl w"><span>怎麼分</span><div class="chips">${[['all','大家平分'],['some','只有某些人'],['none','不列入平分']].map(([k,n])=>`<button class="chip ${o.mode===k?'on':''}" data-a="spmode" data-i="${k}">${n}</button>`).join('')}</div></div>
+ ${o.mode==='some'?`<div class="fl w"><span>誰要分（點選）</span><div class="chips">${ps.map(p=>`<button class="chip ${(o.among||[]).includes(p)?'on':''}" data-a="spam" data-i="${E(p)}">${(o.among||[]).includes(p)?'✓ ':''}${E(p)}</button>`).join('')}</div></div>`:''}
+ ${o.mode==='none'?`<div class="sub w">${E(o.by||'付錢的人')}自己的，記下來看得到，但不算進誰欠誰。</div>`:''}</div>
+ <div class="row" style="margin-top:14px;gap:8px">${o.id?'<button class="go r" data-a="spdel">刪除</button>':''}<span class="sp"></span><button class="go" data-a="spsave">儲存</button></div>`}
 function sheetTrip(o){return`<div class="row"><b class="sp" style="font-size:17px">${o.id?'修改旅行':'新增一次旅行'}</b><button class="x" data-a="close">×</button></div>
  <div class="grid"><label class="fl w"><span>名稱</span><input value="${E(o.name)}" data-m="sheet.o.name" placeholder="例：東京 5 天、墾丁家族旅行"></label>
  <label class="fl"><span>出發日</span><input type="date" value="${o.from||''}" data-m="sheet.o.from"></label>
  <label class="fl"><span>回家日</span><input type="date" value="${o.to||''}" data-m="sheet.o.to"></label>
  <label class="fl"><span>預算（選填）</span><input inputmode="numeric" value="${E(o.budget||'')}" data-m="sheet.o.budget" placeholder="例：40000"></label>
- <label class="fl"><span>幾個人（選填，算每人）</span><input inputmode="numeric" value="${E(o.ppl||'')}" data-m="sheet.o.ppl" placeholder="例：2"></label>
- <label class="fl w"><span>備註（選填）</span><input value="${E(o.note||'')}" data-m="sheet.o.note" placeholder="例：跟家人、住新宿"></label></div>
+ <label class="fl"><span>幾個人（選填，算每人；有填同行的人會自動算）</span><input inputmode="numeric" value="${E(o.ppl||'')}" data-m="sheet.o.ppl" placeholder="例：2"></label>
+ <label class="fl w"><span>備註（選填）</span><input value="${E(o.note||'')}" data-m="sheet.o.note" placeholder="例：跟家人、住新宿"></label>
+ <label class="fl w"><span>同行的人（要分帳才填，用逗號或空白分開，不用寫自己）</span><input value="${E(o.memS==null?(o.mem||[]).join('、'):o.memS)}" data-m="sheet.o.memS" placeholder="例：媽媽、小美"></label>
+ <label class="fl"><span>當地貨幣</span><select data-m="sheet.o.cur" data-r="1">${CURS.map(([c,n])=>`<option value="${c}" ${(o.cur||'TWD')===c?'selected':''}>${n}</option>`).join('')}</select></label>
+ ${o.cur&&o.cur!=='TWD'?`<label class="fl"><span>1 ${curNm(o.cur)} ＝ 幾元台幣</span><input inputmode="decimal" value="${E(o.rate||'')}" data-m="sheet.o.rate" placeholder="${o.cur==='JPY'?'例：0.21':''}"></label><div class="fl w"><button class="go q" data-a="triprate" ${o.rBusy?'disabled':''}>${o.rBusy?'查詢中…':'🔎 查今天匯率'}</button></div>`:'<span></span>'}</div>
  <div class="sub" style="margin-top:6px">出發到回家這幾天的花費會自動算進去。</div>
  <div class="row" style="margin-top:14px;gap:8px">${o.id?'<button class="go r" data-a="tripdel">刪除</button>':''}<span class="sp"></span><button class="go" data-a="tripsave">儲存</button></div>`}
 
@@ -1303,7 +1346,7 @@ function renderNow(){
  CI={};LM=null;normAcct();$('tip').style.display='none';$('eye').textContent='•••• 已隱藏・點兩下顯示';$('eye').classList.toggle('on',HIDE);$('eye').setAttribute('aria-label',HIDE?'顯示金額':'隱藏金額');
  $('app').innerHTML=`<div class="row" style="gap:10px;padding-right:44px;min-height:32px;margin-top:calc(16px + env(safe-area-inset-top,0px))">${U.tab==='trip'&&tripOf(U.trip)?'<button class="back" data-a="tripx">‹ 所有旅行</button>':sub?'<button class="back" data-a="tab" data-i="more">‹ 更多</button>':''}<span class="sp"></span><b class="today">今天 ${todayLab()}</b></div>`+V[U.tab]();
  $('nav').innerHTML=TABS.map(([k,i,n])=>`<button class="${U.tab===k||(k==='more'&&sub)||(k==='stock'&&STK.some(x=>x[0]===U.tab))?'on':''}" data-a="tab" data-i="${k}"><b>${i}</b>${n}</button>`).join('');
- const sh=U.sheet,SH={trip:sheetTrip,idea:sheetIdea,broker:sheetBroker,pay:sheetPay,acctv:sheetAcctV,iou:sheetIou,iback:sheetIback,help:sheetHelp,cyc:sheetCyc,pcard:sheetPCard,pitem:sheetPItem,payee:sheetPayee,start:sheetStart,tx:sheetTx,bill:sheetBill,acct:sheetAcct,trade:sheetTrade,recon:sheetRecon,hold:sheetHold};$('sheet').innerHTML=sh?`<div class="sheet" data-a="bg"><div>${SH[sh.k](sh.o)}</div></div>`:'';
+ const sh=U.sheet,SH={tsp:sheetSp,trip:sheetTrip,idea:sheetIdea,broker:sheetBroker,pay:sheetPay,acctv:sheetAcctV,iou:sheetIou,iback:sheetIback,help:sheetHelp,cyc:sheetCyc,pcard:sheetPCard,pitem:sheetPItem,payee:sheetPayee,start:sheetStart,tx:sheetTx,bill:sheetBill,acct:sheetAcct,trade:sheetTrade,recon:sheetRecon,hold:sheetHold};$('sheet').innerHTML=sh?`<div class="sheet" data-a="bg"><div>${SH[sh.k](sh.o)}</div></div>`:'';
  calmNotes();window.scrollTo(0,y);
  document.querySelectorAll('[data-entry]').forEach(el=>{const k=el.dataset.entry,P=S.perk||{},r=k==='sum'?P.sum&&P.sum.r:k==='idea'?(((U.sheet||{}).o||{}).ai||{}).r:(P.cache[pkKey(P.q,P.amt)]||{}).r,html=r&&r._entry;if(html){try{el.attachShadow({mode:'open'}).innerHTML=html}catch(e){}}});
  if(am){const f=document.querySelector(`[data-m="${am}"]`);if(f&&f.tagName!=='SELECT'){f.focus();try{f.setSelectionRange(cp,cp)}catch(e){}}}
@@ -1719,13 +1762,37 @@ const ACT={
  bsugall:()=>{const G=budgetSug();if(!G.rows)return;if(!confirm('把建議的預算全部套用？（之後還可以自己改）'))return;G.rows.forEach(r=>{S.budget.cats[r.c]=r.sug});S.budget.total=G.tot;save();render();toast('已套用，總預算 '+M(G.tot))},
  wkopen:i=>{U.wk=i;if(i===wkLast()){S.wkSeen=i;save()}U.tab='week';U.sheet=null;render();window.scrollTo(0,0)},
  tripadd:()=>{U.sheet={k:'trip',o:{name:'',from:'',to:'',budget:'',ppl:'',note:''}};render()},
- tripopen:i=>{U.tab='trip';U.trip=i;U.tripEd=0;U.tripAdd=0;U.tripQ='';U.sheet=null;render();window.scrollTo(0,0)},
+ tripopen:i=>{U.tab='trip';U.trip=i;U.tripV='spend';U.tripEd=0;U.tripAdd=0;U.tripQ='';U.sheet=null;render();window.scrollTo(0,0)},
  tripx:()=>{U.trip='';render();window.scrollTo(0,0)},
- tripedit:()=>{const T=tripOf(U.trip);if(T){U.sheet={k:'trip',o:Object.assign({},T)};render()}},
+ tripedit:()=>{const T=tripOf(U.trip);if(T){U.sheet={k:'trip',o:Object.assign({},T,{memS:null})};render()}},
  tripsave:()=>{const o=U.sheet.o,name=String(o.name||'').trim();if(!name)return toast('請輸入名稱');if(!o.from||!o.to)return toast('請選出發日和回家日');if(o.to<o.from)return toast('回家日不能早於出發日');
-  const T=o.id&&tripOf(o.id)||{id:'tr'+nid(),ex:[]};Object.assign(T,{name,from:o.from,to:o.to,budget:pAmt(o.budget)>0?pAmt(o.budget):'',ppl:pAmt(o.ppl)>1?Math.round(pAmt(o.ppl)):'',note:String(o.note||'').trim()});
+  const T=o.id&&tripOf(o.id)||{id:'tr'+nid(),ex:[]};const mem=o.memS==null?(o.mem||[]):[...new Set(String(o.memS).split(/[,，、\s]+/).map(x=>x.trim()).filter(x=>x&&x!==ME))];
+  Object.assign(T,{name,from:o.from,to:o.to,budget:pAmt(o.budget)>0?pAmt(o.budget):'',ppl:mem.length?mem.length+1:pAmt(o.ppl)>1?Math.round(pAmt(o.ppl)):'',note:String(o.note||'').trim(),mem,cur:o.cur||'TWD',rate:o.cur&&o.cur!=='TWD'&&pAmt(o.rate)>0?pAmt(o.rate):''});
   if(!TRIPS().includes(T))TRIPS().push(T);U.sheet=null;U.tab='trip';U.trip=T.id;save();render();toast('已儲存 '+name)},
  tripdel:()=>{const id=U.sheet.o.id,T=tripOf(id);if(!T||!confirm('刪除「'+T.name+'」？（記帳紀錄不會刪，只是不再分到這次旅行）'))return;S.trips=TRIPS().filter(x=>x!==T);S.tx.forEach(t=>{if(t.trip===id)delete t.trip});U.sheet=null;U.trip='';save();render()},
+ tripv:i=>{U.tripV=i;render()},
+ triprate:async()=>{const o=U.sheet.o;if(!o.cur||o.cur==='TWD')return;o.rBusy=1;render();
+  try{const r=await askAI(`今天是 ${today()}。請用 Google 搜尋查台灣銀行或可靠來源今天的匯率：1 ${curNm(o.cur)}（${o.cur}）等於多少新台幣（用現金賣出或即期賣出價）。只回傳 JSON：{"rate":數字,"src":"來源名稱"}`,null,true);
+   const v=r&&+r.rate;if(v>0){o.rate=String(+v.toFixed(v<1?4:3));toast('1 '+curNm(o.cur)+' ≈ '+o.rate+' 台幣'+(r.src?'（'+r.src+'）':''))}else toast('查不到匯率，請自己填')}catch(e){toast(aiErr(e))}
+  o.rBusy=0;if(U.sheet&&U.sheet.o===o)render()},
+ spadd:()=>{const T=tripOf(U.trip);if(!T)return;const t0=today();U.sheet={k:'tsp',o:{what:'',amt:'',d:t0<T.from?T.from:t0>T.to?T.to:t0,cur:T.cur||'TWD',by:ME,mode:'all',among:tripPpl(T)}};render()},
+ spedit:i=>{const T=tripOf(U.trip),x=T&&(T.sp||[]).find(y=>y.id===i);if(x){U.sheet={k:'tsp',o:Object.assign({},x,{amt:String(x.amt),among:(x.among||[]).slice()})};render()}},
+ spcur:i=>{U.sheet.o.cur=i;render()},
+ spby:i=>{U.sheet.o.by=i;render()},
+ spmode:i=>{const o=U.sheet.o;o.mode=i;if(i==='some'&&!(o.among||[]).length)o.among=tripPpl(tripOf(U.trip)||{});render()},
+ spam:i=>{const o=U.sheet.o,a=o.among=o.among||[];if(a.includes(i))o.among=a.filter(x=>x!==i);else a.push(i);render()},
+ spsave:()=>{const T=tripOf(U.trip),o=U.sheet.o,amt=pAmt(o.amt);if(!T)return;if(!(amt>0))return toast('請輸入金額');if(!o.d)return toast('請選日期');if(!o.by)return toast('請選誰付的');
+  if(o.mode==='some'&&!(o.among||[]).length)return toast('請選誰要分');
+  const x=o.id&&(T.sp||[]).find(y=>y.id===o.id)||{id:'sp'+nid()};Object.assign(x,{d:o.d,what:String(o.what||'').trim(),amt,cur:o.cur||'TWD',by:o.by,mode:o.mode||'all',among:o.mode==='some'?o.among.slice():[]});
+  if(!(T.sp=T.sp||[]).includes(x))T.sp.push(x);U.sheet=null;save();render()},
+ spdel:()=>{const T=tripOf(U.trip);if(!T||!confirm('刪除這筆分帳？'))return;T.sp=(T.sp||[]).filter(y=>y.id!==U.sheet.o.id);U.sheet=null;save();render()},
+ // 結算裡跟「我」有關的，記到「代墊與欠款」；再按一次會換成最新的（已經還了一部分的不動）
+ spiou:()=>{const T=tripOf(U.trip);if(!T)return;const R=tripSettle(T),mine=R.tr.filter(t=>t.from===ME||t.to===ME);if(!mine.length)return;
+  const old=(T.iou||[]).map(id=>(S.iou||[]).find(x=>x.id===id)).filter(Boolean),paidBack=old.filter(x=>(x.back||[]).length);
+  if(paidBack.length&&!confirm('有人已經還了一部分，那幾筆會保留不動，其他的換成最新結算。要繼續嗎？'))return;
+  S.iou=(S.iou||[]).filter(x=>!old.includes(x)||paidBack.includes(x));
+  T.iou=paidBack.map(x=>x.id).concat(mine.filter(t=>!paidBack.some(x=>x.who===(t.from===ME?t.to:t.from))).map(t=>{const x={id:nid()+Math.random().toString(36).slice(2,5),who:t.from===ME?t.to:t.from,amt:Math.round(t.v),dir:t.from===ME?'out':'in',note:T.name+' 分帳',cat:'其他',d:today(),back:[]};S.iou.push(x);return x.id}));
+  save();render();toast('已記到「代墊與欠款」')},
  tripmode:()=>{U.tripEd=!U.tripEd;render()},
  tripmore:()=>{U.tripAdd=!U.tripAdd;render()},
  triptog:i=>{const T=tripOf(U.trip),t=S.tx.find(x=>x.id===i);if(!T||!t)return;if(t.trip===T.id)delete t.trip;if(t.d>=T.from&&t.d<=T.to&&!(T.ex=T.ex||[]).includes(i))T.ex.push(i);save();render();toast('這筆不算進「'+T.name+'」了')},
