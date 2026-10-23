@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F2EFE9">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="櫃子">
+<link rel="manifest" href="cabinet.webmanifest">
+<link rel="icon" href="cabinet.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="cabinet.svg">
+<title>我的櫃子</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F2EFE9;--card:#fff;--ink:#2B2A27;--sub:#7A766E;--line:#E2DDD3;--acc:#5E7A6A;--on:#fff;--ok:#3F8A5F;--bad:#C94A4A;
+ --sage-h:#E3E9DF;--sage-c:#F4F6F1;--sage-k:#C3CFBC;--blue-h:#E1E7EF;--blue-c:#F1F4F8;--blue-k:#C2CEDD;--sand-h:#F0E7DA;--sand-c:#FAF5EE;--sand-k:#DCCBB3;
+ --rose-h:#F3E2E1;--rose-c:#FBF3F2;--rose-k:#E2C2BF;--lilac-h:#E9E3F0;--lilac-c:#F6F3F9;--lilac-k:#CFC3DE;--gray-h:#E7E6E3;--gray-c:#F6F5F3;--gray-k:#CDCAC4}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171614;--card:#22211E;--ink:#EDEAE4;--sub:#A29D94;--line:#34322E;--acc:#9DC0AC;--on:#171614;--ok:#7CC49A;--bad:#F07070;
+ --sage-h:#2C3329;--sage-c:#1F231D;--sage-k:#46523F;--blue-h:#29303A;--blue-c:#1D2128;--blue-k:#424E5E;--sand-h:#36301F;--sand-c:#25221B;--sand-k:#574C38;
+ --rose-h:#3A2B2A;--rose-c:#271E1E;--rose-k:#5C4543;--lilac-h:#322C3A;--lilac-c:#221F28;--lilac-k:#4E4560;--gray-h:#302F2C;--gray-c:#22211F;--gray-k:#4A4843}}
+:root[data-theme="dark"]{--bg:#171614;--card:#22211E;--ink:#EDEAE4;--sub:#A29D94;--line:#34322E;--acc:#9DC0AC;--on:#171614;--ok:#7CC49A;--bad:#F07070;
+ --sage-h:#2C3329;--sage-c:#1F231D;--sage-k:#46523F;--blue-h:#29303A;--blue-c:#1D2128;--blue-k:#424E5E;--sand-h:#36301F;--sand-c:#25221B;--sand-k:#574C38;
+ --rose-h:#3A2B2A;--rose-c:#271E1E;--rose-k:#5C4543;--lilac-h:#322C3A;--lilac-c:#221F28;--lilac-k:#4E4560;--gray-h:#302F2C;--gray-c:#22211F;--gray-k:#4A4843}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Noto Sans TC","PingFang TC",-apple-system,"Microsoft JhengHei",sans-serif}
+#app{max-width:760px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top)) 16px 90px}
+#app::after{content:"© 2026 mei0829 版權所有";display:block;text-align:center;font-size:11px;color:var(--sub);margin-top:28px;opacity:.8}
+h1{font-size:24px;margin:4px 0 0;font-weight:700}
+h2{font-size:14px;margin:18px 2px 8px;color:var(--sub);font-weight:500}
+a{color:var(--acc)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;touch-action:manipulation}
+input,select,textarea{font-size:16px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 10px;width:100%}
+textarea{min-height:64px;resize:vertical}
+.card{background:var(--card);border-radius:16px;padding:12px 14px;margin-bottom:10px;border:1px solid var(--line)}
+.sub{font-size:13px;color:var(--sub)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.go{background:var(--acc);color:var(--on);border:0;border-radius:12px;padding:10px 16px;font-weight:700}
+.bt{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 12px}
+.bad{color:var(--bad)}
+#authwrap{max-width:420px;margin:0 auto;padding:40px 16px}#authwrap a{color:var(--acc)}
+.afl{display:block;margin-bottom:10px}.afl span{display:block;font-size:13px;color:var(--sub);margin-bottom:4px}
+
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.top .row{flex-wrap:nowrap}
+#st{font-size:12px;color:var(--sub);margin:2px 0 10px}
+.srch{position:relative}
+.srch input{padding-left:36px;border-radius:14px;height:44px}
+.srch svg{position:absolute;left:11px;top:12px;width:20px;height:20px;stroke:var(--sub)}
+.rooms{display:flex;gap:6px;overflow-x:auto;padding:10px 0 2px;scrollbar-width:none}
+.rooms::-webkit-scrollbar{display:none}
+.rooms button{flex:none;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:5px 13px;font-size:14px}
+.rooms button.on{background:var(--acc);border-color:var(--acc);color:var(--on)}
+.tip{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--sub);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin-top:10px}
+.tip button{border:0;background:none;color:var(--sub);padding:0 2px;font-size:16px;line-height:1}
+#res{margin-top:8px}
+#res .r{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin-bottom:6px}
+#res .r span{color:var(--sub);font-size:13px;text-align:right}
+
+.board{display:grid;gap:8px;overflow-x:auto;padding-bottom:4px;align-items:start}
+.cab{min-width:0}
+.ch{display:block;width:100%;border:0;border-radius:14px;padding:10px 6px 9px;margin-bottom:8px;background:var(--h);text-align:center}
+.ch b{display:block;font-size:17px;line-height:1.3}
+.ch span{display:block;font-size:12px;color:var(--sub);min-height:18px}
+.cells{display:grid;gap:6px}
+.cell{position:relative;min-height:74px;background:var(--c);border:1.5px solid var(--k);border-radius:12px;padding:6px 6px 7px;transition:background .12s,border-color .12s,opacity .12s}
+.cl{font-size:13px;font-weight:700;line-height:1.35;text-align:center;padding:1px 2px 4px;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overflow-wrap:anywhere}
+.cl i{font-style:normal;font-weight:500;font-size:11px;color:var(--sub);margin-right:3px}
+.its{display:flex;flex-wrap:wrap;gap:4px;justify-content:center}
+.it{display:inline-block;max-width:100%;font-size:12.5px;line-height:1.35;padding:3px 8px;border-radius:999px;background:var(--card);border:1px solid var(--k);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overflow-wrap:anywhere;cursor:grab}
+.it.ins{box-shadow:-3px 0 0 var(--acc)}
+.c-sage{--h:var(--sage-h);--c:var(--sage-c);--k:var(--sage-k)}.c-blue{--h:var(--blue-h);--c:var(--blue-c);--k:var(--blue-k)}
+.c-sand{--h:var(--sand-h);--c:var(--sand-c);--k:var(--sand-k)}.c-rose{--h:var(--rose-h);--c:var(--rose-c);--k:var(--rose-k)}
+.c-lilac{--h:var(--lilac-h);--c:var(--lilac-c);--k:var(--lilac-k)}.c-gray{--h:var(--gray-h);--c:var(--gray-c);--k:var(--gray-k)}
+.cell.over{border-color:var(--acc);border-style:dashed;background:var(--h)}
+.cell.dim{opacity:.35}
+.cell.hit{border-color:var(--acc)}
+.it.hit{background:var(--acc);color:var(--on);border-color:var(--acc)}
+.cell.flash{animation:fl 1.4s ease}
+@keyframes fl{0%,60%{box-shadow:0 0 0 4px var(--acc)}100%{box-shadow:0 0 0 0 transparent}}
+.lift{opacity:.3}
+.ghost{position:fixed;left:0;top:0;z-index:100;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.22);margin:0}
+.ghost.cl{background:var(--card);border-radius:10px;padding:6px 10px}
+body.dragging{-webkit-user-select:none;user-select:none;cursor:grabbing}
+.empty{text-align:center;padding:28px 12px;color:var(--sub)}
+
+#sheet{position:fixed;inset:0;z-index:50;display:none}
+#sheet.on{display:block}
+#sheet .bk{position:absolute;inset:0;background:rgba(0,0,0,.35)}
+#sheet .pn{position:absolute;left:0;right:0;bottom:0;margin:0 auto;max-width:520px;max-height:88vh;overflow:auto;background:var(--bg);border-radius:20px 20px 0 0;padding:16px 16px calc(18px + env(safe-area-inset-bottom))}
+#sheet h3{margin:0 0 12px;font-size:18px}
+.f{display:block;margin-bottom:12px}.f>span{display:block;font-size:13px;color:var(--sub);margin-bottom:4px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.li{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 6px 6px 12px;margin-bottom:6px}
+.li>span{flex:1;min-width:0;overflow-wrap:anywhere}.li small{display:block;color:var(--sub);font-size:12px}
+.li button{border:0;background:none;padding:6px 8px;color:var(--sub)}
+.add{display:flex;gap:8px;margin:10px 0 14px}.add input{flex:1}.add button{flex:none}
+.sw{display:flex;gap:8px}.sw label{flex:1}.sw input{display:none}
+.sw span{display:block;height:34px;border-radius:10px;background:var(--h);border:2px solid var(--k)}
+.sw input:checked+span{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc)}
+.foot{display:flex;gap:8px;justify-content:space-between;margin-top:14px}
+.log{font-size:13px;margin:0;padding:0;list-style:none}.log li{padding:5px 0;border-top:1px solid var(--line)}.log li:first-child{border-top:0}.log b{font-weight:500}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:60;background:var(--ink);color:var(--bg);border-radius:12px;padding:9px 14px;font-size:14px;display:none;align-items:center;gap:12px;max-width:calc(100% - 32px);box-shadow:0 6px 20px rgba(0,0,0,.25)}
+#toast.on{display:flex}
+#toast button{border:0;background:none;color:var(--acc);font-weight:700;padding:0;white-space:nowrap;filter:brightness(1.3)}
+</style>
+</head>
+<body>
+<div id="auth" data-title="我的櫃子"></div>
+<div id="app"></div><div id="sheet"></div><div id="toast"></div>
+<input type="file" id="impf" accept="application/json,.json" style="display:none">
+<script type="module" src="auth.js"></script>
+<script type="text/plain" id="app-src">
+const E=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const $=id=>document.getElementById(id);
+const nid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3);
+const COLORS=['sage','blue','sand','rose','lilac','gray'];
+const KEY='cab-v1',KT='cab-t',DOC='k_cabinet';
+
+// 第一次打開：照原本規劃的三座書櫃先建好
+function seed(){
+ const r=nid(),mk=(name,sub,color,ls)=>({id:nid(),name,sub,room:r,rows:6,cols:1,color,cells:ls.map(l=>({l,it:[]}))});
+ return {rooms:[{id:r,name:'書房'}],log:[],cabs:[
+  mk('左櫃 A','教學工作','sage',['備用教具／少用物品','小朋友印章','大型資料夾','常用教學工具','衛生紙／消耗品','待整理文件／收納盒']),
+  mk('中櫃 B','音樂教材','blue',['備用樂譜／參考書','音樂課本新書','幼兒音樂樂譜','鋼琴教本／樂理教材','教案／學習單','近期使用教材']),
+  mk('右櫃 C','個人展示','sand',['輕型紀念品／留白','大照片①','大照片②','超大鴨子置物盤','招財貓','水晶'])]};
+}
+function fix(o){
+ if(!o||!Array.isArray(o.cabs))throw new Error('bad');
+ o.rooms=Array.isArray(o.rooms)&&o.rooms.length?o.rooms:[{id:nid(),name:'我的家'}];
+ o.log=Array.isArray(o.log)?o.log:[];
+ o.cabs.forEach(c=>{
+  c.id=c.id||nid();c.rows=Math.max(1,+c.rows||1);c.cols=Math.max(1,+c.cols||1);
+  if(!COLORS.includes(c.color))c.color='gray';
+  if(!o.rooms.some(r=>r.id===c.room))c.room=o.rooms[0].id;
+  c.cells=Array.isArray(c.cells)?c.cells:[];
+  while(c.cells.length<c.rows*c.cols)c.cells.push({l:'',it:[]});
+  c.cells.forEach(x=>{x.l=x.l||'';x.it=(Array.isArray(x.it)?x.it:[]).filter(t=>t&&t.n).map(t=>({id:t.id||nid(),n:String(t.n),note:t.note||''}))});
+ });
+ return o;
+}
+let S=null,T=0;
+try{S=fix(JSON.parse(localStorage.getItem(KEY)));T=+localStorage.getItem(KT)||0}catch(e){S=null}
+if(!S){S=fix(seed());T=0}
+let ROOM='all';try{ROOM=localStorage.getItem('cab-room')||'all'}catch(e){}
+if(ROOM!=='all'&&!S.rooms.some(r=>r.id===ROOM))ROOM='all';
+
+const cab=id=>S.cabs.find(c=>c.id===id);
+const cname=(c,i)=>'第 '+(i+1)+' 格'+(c.cells[i].l?'（'+c.cells[i].l+'）':'');
+const where=(c,i)=>c.name+' › '+cname(c,i);
+function loc(itemId){for(const c of S.cabs)for(let i=0;i<c.cells.length;i++){const k=c.cells[i].it.findIndex(t=>t.id===itemId);if(k>=0)return{c,i,k,t:c.cells[i].it[k]}}return null}
+const count=()=>S.cabs.reduce((a,c)=>a+c.cells.reduce((b,x)=>b+x.it.length,0),0);
+
+// ---------- 儲存：先存手機，再同步到雲端 ----------
+const CL={col:null,tm:0,busy:false,again:false,dirty:false,st:''};
+function status(t){CL.st=t;const s=$('st');if(s)s.textContent=S.cabs.length+' 個櫃子 · '+count()+' 樣東西 · '+t}
+function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(S));localStorage.setItem(KT,String(T))}catch(e){}}
+function commit(){T=Date.now();saveLocal();render();CL.dirty=true;status('同步中…');clearTimeout(CL.tm);CL.tm=setTimeout(cloudPush,700)}
+async function cloudPush(){
+ if(!CL.col){status('⚠︎ 沒有連到雲端，資料只存在這支手機');return}
+ if(CL.busy){CL.again=true;return}
+ CL.busy=true;CL.dirty=false;
+ try{await CL.col.doc(DOC).set({j:JSON.stringify(S),t:T});status('✓ 已同步')}
+ catch(e){CL.dirty=true;status('⚠︎ 還沒同步，變更先存在這支手機，連上網路會再試')}
+ CL.busy=false;
+ if(CL.again){CL.again=false;cloudPush()}
+}
+async function cloudPull(){
+ if(!CL.col||CL.dirty||CL.busy)return;
+ try{
+  const d=await CL.col.doc(DOC).get(),ct=d?+d.t||0:0;
+  if(ct>T){S=fix(JSON.parse(d.j));T=ct;saveLocal();render()}
+  else if(ct<T){CL.dirty=true;return cloudPush()}
+  status('✓ 已同步');
+ }catch(e){status('⚠︎ 無法連線，先顯示這支手機上的資料')}
+}
+async function cloudInit(){
+ try{
+  const db=await claude.use('db'),us=await claude.use('user'),uid=us&&await us.id();
+  if(!db||!uid)return status('⚠︎ 沒有連到雲端（請重新登入），資料只存在這支手機');
+  CL.col=db.collection('data/users/'+uid);
+  if(CL.dirty)cloudPush();else await cloudPull();
+ }catch(e){status('⚠︎ 沒有連到雲端，資料只存在這支手機')}
+}
+addEventListener('online',()=>CL.dirty?cloudPush():cloudPull());
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible')return;CL.dirty?cloudPush():cloudPull()});
+
+// 每次變更都可以「復原」
+function op(fn,msg){const prev=JSON.stringify(S);fn();commit();if(msg)toast(msg,()=>{S=fix(JSON.parse(prev));commit();toast('已復原')})}
+let TT=0;
+function toast(msg,undo){
+ const t=$('toast');t.innerHTML=E(msg)+(undo?'<button>復原</button>':'');t.classList.add('on');
+ if(undo)t.querySelector('button').onclick=()=>{t.classList.remove('on');undo()};
+ clearTimeout(TT);TT=setTimeout(()=>t.classList.remove('on'),undo?5000:2200);
+}
+function logMove(n,from,to){S.log.unshift({t:Date.now(),n,f:from,to});S.log.length=Math.min(S.log.length,60)}
+function moveItem(itemId,cid,ci,beforeId){
+ const a=loc(itemId);if(!a)return null;
+ const t=a.c.cells[a.i].it.splice(a.k,1)[0],dst=cab(cid).cells[ci].it;
+ let k=beforeId?dst.findIndex(x=>x.id===beforeId):-1;if(k<0)k=dst.length;
+ dst.splice(k,0,t);
+ if(a.c.id!==cid||a.i!==ci)logMove(t.n,where(a.c,a.i),where(cab(cid),ci));
+ return t;
+}
+
+// ---------- 畫面 ----------
+const ICON_S='<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>';
+function shell(){
+ let tip=true;try{tip=localStorage.getItem('cab-tip')!=='0'}catch(e){}
+ $('app').innerHTML=`<div class="top"><h1>我的櫃子</h1><div class="row"><button class="bt" data-a="newcab">＋ 櫃子</button><button class="bt" data-a="set" aria-label="設定">⋯</button></div></div>
+ <div id="st"></div>
+ <div class="srch">${ICON_S}<input id="q" type="search" placeholder="找東西，例如：印章、樂譜" autocomplete="off"></div>
+ ${tip?'<div class="tip" id="tip"><span>點一下格子可以新增東西。<b>按住東西</b>拖到別格就能換位置；按住格子的<b>名稱</b>拖到別格，兩格會整格交換。</span><button data-a="tipx" aria-label="關閉">×</button></div>':''}
+ <div id="res"></div><div class="rooms" id="rooms"></div><div id="board"></div>`;
+ $('q').addEventListener('input',render);
+}
+function match(q){
+ const hits=new Set(),cells=new Set(),res=[];
+ S.cabs.forEach(c=>c.cells.forEach((x,i)=>{
+  const k=c.id+':'+i;
+  if(x.l.toLowerCase().includes(q)){cells.add(k);res.push({k,n:x.l,w:c.name+' › 第 '+(i+1)+' 格'})}
+  x.it.forEach(t=>{if(t.n.toLowerCase().includes(q)||t.note.toLowerCase().includes(q)){hits.add(t.id);cells.add(k);res.push({k,n:t.n,w:where(c,i)})}});
+ }));
+ return{hits,cells,res};
+}
+function render(){
+ if(!$('board'))return;
+ const q=($('q').value||'').trim().toLowerCase(),m=q?match(q):null;
+ $('res').innerHTML=m?(m.res.length?m.res.slice(0,30).map(r=>`<button class="r" data-a="goto" data-k="${r.k}"><b>${E(r.n)}</b><span>${E(r.w)}</span></button>`).join(''):'<div class="sub" style="padding:4px 2px">找不到「'+E(q)+'」</div>'):'';
+ $('rooms').innerHTML=[['all','全部'],...S.rooms.map(r=>[r.id,r.name])].map(([id,n])=>`<button data-a="room" data-id="${id}" class="${!q&&ROOM===id?'on':''}">${E(n)}</button>`).join('')+'<button data-a="addroom">＋ 地點</button>';
+ const rooms=q||ROOM==='all'?S.rooms:S.rooms.filter(r=>r.id===ROOM),multi=rooms.length>1;
+ let h='';
+ rooms.forEach(r=>{
+  const cs=S.cabs.filter(c=>c.room===r.id);
+  if(multi&&!cs.length)return;
+  if(multi)h+=`<h2>${E(r.name)}</h2>`;else h+='<div style="height:10px"></div>';
+  if(!cs.length){h+=`<div class="empty">「${E(r.name)}」還沒有櫃子<br><br><button class="go" data-a="newcab">＋ 新增櫃子</button></div>`;return}
+  h+=`<div class="board" style="grid-template-columns:${cs.map(c=>`minmax(${c.cols*100}px,${c.cols}fr)`).join(' ')}">`+cs.map(c=>
+   `<section class="cab c-${c.color}"><button class="ch" data-a="cab" data-id="${c.id}"><b>${E(c.name)}</b><span>${E(c.sub)}</span></button>
+   <div class="cells" style="grid-template-columns:repeat(${c.cols},1fr)">`+c.cells.map((x,i)=>{
+    const k=c.id+':'+i,cls=m?(m.cells.has(k)?' hit':' dim'):'';
+    return `<div class="cell${cls}" data-cell="${k}"><div class="cl" data-drag="cell"><i>${i+1}</i>${E(x.l)}</div><div class="its">${x.it.map(t=>`<span class="it${m&&m.hits.has(t.id)?' hit':''}" data-drag="it" data-it="${t.id}">${E(t.n)}</span>`).join('')}</div></div>`;
+   }).join('')+'</div></section>').join('')+'</div>';
+ });
+ if(!rooms.length||!S.cabs.length&&!multi&&!h)h='<div class="empty">還沒有櫃子</div>';
+ $('board').innerHTML=h;
+ status(CL.st||(CL.col?'✓ 已同步':'連線中…'));
+}
+
+// ---------- 拖曳（電腦用滑鼠拖；手機要先按住一下再拖，才不會跟捲動打架）----------
+let press=null,drag=null,noClick=0;
+function begin(el,x,y){
+ const r=el.getBoundingClientRect(),g=el.cloneNode(true);
+ g.classList.add('ghost');g.classList.remove('hit');g.style.width=r.width+'px';
+ const cabEl=el.closest('.cab');if(cabEl)g.classList.add(...[...cabEl.classList].filter(k=>k.startsWith('c-')));
+ document.body.appendChild(g);
+ drag={el,g,ox:x-r.left,oy:y-r.top,type:el.dataset.drag,from:el.closest('.cell').dataset.cell,over:null,before:null,ins:null,x,y};
+ el.classList.add('lift');document.body.classList.add('dragging');
+ if(navigator.vibrate)try{navigator.vibrate(12)}catch(e){}
+ track(x,y);requestAnimationFrame(autoScroll);
+}
+function track(x,y){
+ const d=drag;d.x=x;d.y=y;
+ d.g.style.transform=`translate(${x-d.ox}px,${y-d.oy}px) scale(1.06)`;
+ const t=document.elementFromPoint(x,y),cell=t&&t.closest('.cell');
+ if(d.over!==cell){if(d.over)d.over.classList.remove('over');if(cell)cell.classList.add('over');d.over=cell}
+ const chip=d.type==='it'&&t&&t.closest('.it');
+ const ins=chip&&chip!==d.el&&cell&&cell.contains(chip)?chip:null;
+ if(d.ins!==ins){if(d.ins)d.ins.classList.remove('ins');if(ins)ins.classList.add('ins');d.ins=ins}
+ d.before=ins?ins.dataset.it:null;
+}
+function autoScroll(){
+ if(!drag)return;
+ const {x,y}=drag,h=innerHeight,e=70;
+ let moved=false;
+ const dy=y<e?-(e-y)/3:y>h-e?(y-(h-e))/3:0;
+ if(dy){const b=scrollY;scrollBy(0,dy);moved=scrollY!==b}
+ const under=document.elementFromPoint(x,y),bd=under&&under.closest('.board');
+ if(bd&&bd.scrollWidth>bd.clientWidth){const r=bd.getBoundingClientRect(),dx=x<r.left+40?-8:x>r.right-40?8:0;if(dx){const b=bd.scrollLeft;bd.scrollLeft+=dx;moved=moved||bd.scrollLeft!==b}}
+ if(moved)track(x,y);
+ requestAnimationFrame(autoScroll);
+}
+function finish(ok){
+ const d=drag;drag=null;noClick=Date.now();
+ d.g.remove();d.el.classList.remove('lift');document.body.classList.remove('dragging');
+ if(d.over)d.over.classList.remove('over');if(d.ins)d.ins.classList.remove('ins');
+ if(!ok||!d.over)return;
+ const [tc,ti]=d.over.dataset.cell.split(':'),[fc,fi]=d.from.split(':'),to=cab(tc);
+ if(d.type==='it'){
+  const id=d.el.dataset.it,same=tc===fc&&+ti===+fi;
+  if(same&&!d.before)return;
+  const n=loc(id).t.n;
+  op(()=>moveItem(id,tc,+ti,d.before),same?'':'「'+n+'」→ '+where(to,+ti));
+ }else{
+  if(tc===fc&&+ti===+fi)return;
+  const A=cab(fc);
+  op(()=>{const a=A.cells[+fi];A.cells[+fi]=to.cells[+ti];to.cells[+ti]=a;logMove('整格交換',where(A,+fi),where(to,+ti))},'已交換兩格');
+ }
+}
+function cancelPress(){if(press){clearTimeout(press.tm);press=null}}
+function bindDrag(){
+ const app=$('app');
+ app.addEventListener('mousedown',e=>{if(e.button)return;const el=e.target.closest('[data-drag]');if(el){e.preventDefault();press={el,x:e.clientX,y:e.clientY}}});
+ addEventListener('mousemove',e=>{
+  if(drag)return track(e.clientX,e.clientY);
+  if(press&&Math.hypot(e.clientX-press.x,e.clientY-press.y)>5){const p=press;press=null;begin(p.el,p.x,p.y);track(e.clientX,e.clientY)}
+ });
+ addEventListener('mouseup',()=>{press=null;if(drag)finish(true)});
+ addEventListener('keydown',e=>{if(e.key==='Escape'){if(drag)finish(false);else closeSheet()}});
+ app.addEventListener('touchstart',e=>{
+  cancelPress();if(e.touches.length>1)return;
+  const el=e.target.closest('[data-drag]');if(!el)return;
+  const t=e.touches[0];
+  press={el,x:t.clientX,y:t.clientY,tm:setTimeout(()=>{const p=press;press=null;if(p)begin(p.el,p.x,p.y)},280)};
+ },{passive:true});
+ addEventListener('touchmove',e=>{
+  const t=e.touches[0];
+  if(drag){e.preventDefault();track(t.clientX,t.clientY);return}
+  if(press&&Math.hypot(t.clientX-press.x,t.clientY-press.y)>8)cancelPress();
+ },{passive:false});
+ addEventListener('touchend',e=>{cancelPress();if(drag){e.preventDefault();finish(true)}},{passive:false});
+ addEventListener('touchcancel',()=>{cancelPress();if(drag)finish(false)});
+ app.addEventListener('contextmenu',e=>{if(e.target.closest('[data-drag]'))e.preventDefault()});
+}
+
+// ---------- 下方彈出視窗 ----------
+function sheet(html,bind){
+ const s=$('sheet');s.innerHTML=`<div class="bk"></div><div class="pn">${html}</div>`;s.classList.add('on');
+ s.querySelector('.bk').onclick=closeSheet;
+ s.querySelectorAll('[data-x]').forEach(b=>b.onclick=closeSheet);
+ if(bind)bind(s.querySelector('.pn'));
+}
+function closeSheet(){const s=$('sheet');s.classList.remove('on');s.innerHTML=''}
+const splitNames=s=>String(s).split(/[、,，\n]+/).map(x=>x.trim()).filter(Boolean);
+
+function cellSheet(cid,i,focusAdd){
+ const c=cab(cid),x=c.cells[i];
+ sheet(`<h3>${E(c.name)} · 第 ${i+1} 格</h3>
+  <label class="f"><span>這格的名稱／分類</span><input id="sl" value="${E(x.l)}" placeholder="例如：小朋友印章"></label>
+  <div class="sub" style="margin-bottom:6px">裡面有（${x.it.length}）</div>
+  ${x.it.map(t=>`<div class="li"><span>${E(t.n)}${t.note?`<small>${E(t.note)}</small>`:''}</span><button data-ed="${t.id}">編輯</button><button data-del="${t.id}" aria-label="刪除">✕</button></div>`).join('')||'<div class="sub" style="padding:4px 2px 2px">這格還是空的</div>'}
+  <div class="add"><input id="sa" placeholder="新增東西（用、或逗號可一次加很多）" enterkeyhint="done"><button class="go" id="sab">加入</button></div>
+  <div class="foot"><button class="bt bad" id="sclr" ${x.it.length?'':'disabled style="opacity:.4"'}>清空這格</button><button class="go" data-x>完成</button></div>`,p=>{
+  const sl=p.querySelector('#sl');
+  sl.onchange=()=>{const v=sl.value.trim();if(v!==x.l)op(()=>{x.l=v})};
+  const add=()=>{const ns=splitNames(p.querySelector('#sa').value);if(!ns.length)return;
+   if(sl.value.trim()!==x.l)x.l=sl.value.trim();
+   op(()=>ns.forEach(n=>x.it.push({id:nid(),n,note:''})));cellSheet(cid,i,true)};
+  p.querySelector('#sab').onclick=add;
+  p.querySelector('#sa').onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();add()}};
+  p.querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>itemSheet(b.dataset.ed,()=>cellSheet(cid,i)));
+  p.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{const a=loc(b.dataset.del);op(()=>x.it.splice(a.k,1),'已刪除「'+a.t.n+'」');cellSheet(cid,i)});
+  p.querySelector('#sclr').onclick=()=>{if(!x.it.length)return;op(()=>{x.it=[]},'已清空 '+where(c,i));cellSheet(cid,i)};
+  if(focusAdd)p.querySelector('#sa').focus();
+ });
+}
+function cabOptions(sel){return S.rooms.map(r=>{const cs=S.cabs.filter(c=>c.room===r.id);return cs.length?`<optgroup label="${E(r.name)}">${cs.map(c=>`<option value="${c.id}"${c.id===sel?' selected':''}>${E(c.name)}</option>`).join('')}</optgroup>`:''}).join('')}
+function cellOptions(c,sel){return c.cells.map((x,i)=>`<option value="${i}"${i===sel?' selected':''}>第 ${i+1} 格${x.l?' · '+E(x.l):''}</option>`).join('')}
+function itemSheet(id,back){
+ const a=loc(id);if(!a)return;
+ const done=()=>back?back():closeSheet();
+ sheet(`<h3>編輯東西</h3>
+  <label class="f"><span>名稱</span><input id="in" value="${E(a.t.n)}"></label>
+  <label class="f"><span>備註（選填，例如數量、顏色、有效期限）</span><textarea id="io">${E(a.t.note)}</textarea></label>
+  <div class="f"><span>放在哪裡</span><div class="two"><select id="ic">${cabOptions(a.c.id)}</select><select id="ii">${cellOptions(a.c,a.i)}</select></div></div>
+  <div class="foot"><button class="bt bad" id="idel">刪除</button><div class="row"><button class="bt" id="icx">取消</button><button class="go" id="iok">儲存</button></div></div>`,p=>{
+  const ic=p.querySelector('#ic'),ii=p.querySelector('#ii');
+  ic.onchange=()=>{ii.innerHTML=cellOptions(cab(ic.value),0)};
+  p.querySelector('#icx').onclick=done;
+  p.querySelector('#idel').onclick=()=>{const b=loc(id);op(()=>b.c.cells[b.i].it.splice(b.k,1),'已刪除「'+b.t.n+'」');done()};
+  p.querySelector('#iok').onclick=()=>{
+   const n=p.querySelector('#in').value.trim();if(!n)return p.querySelector('#in').focus();
+   const note=p.querySelector('#io').value.trim(),tc=ic.value,ti=+ii.value,moved=tc!==a.c.id||ti!==a.i;
+   op(()=>{const b=loc(id);b.t.n=n;b.t.note=note;if(moved)moveItem(id,tc,ti)},moved?'「'+n+'」→ '+where(cab(tc),ti):'');
+   done();
+  };
+ });
+}
+function cabSheet(id){
+ const c=id?cab(id):null,room=c?c.room:(ROOM!=='all'?ROOM:S.rooms[0].id),color=c?c.color:COLORS[S.cabs.length%COLORS.length];
+ sheet(`<h3>${c?'編輯櫃子':'新增櫃子'}</h3>
+  <label class="f"><span>櫃子名稱</span><input id="cn" value="${E(c?c.name:'')}" placeholder="例如：鞋櫃、衣櫃、左櫃 A"></label>
+  <label class="f"><span>用途（選填）</span><input id="cs" value="${E(c?c.sub:'')}" placeholder="例如：音樂教材"></label>
+  <label class="f"><span>放在哪個地點</span><select id="cr">${S.rooms.map(r=>`<option value="${r.id}"${r.id===room?' selected':''}>${E(r.name)}</option>`).join('')}</select></label>
+  <div class="f"><span>格子：幾層（直的）× 每層幾格（橫的）</span><div class="two"><input id="cy" type="number" inputmode="numeric" min="1" max="20" value="${c?c.rows:6}"><input id="cx" type="number" inputmode="numeric" min="1" max="6" value="${c?c.cols:1}"></div></div>
+  <div class="f"><span>顏色</span><div class="sw">${COLORS.map(k=>`<label class="c-${k}"><input type="radio" name="cc" value="${k}"${k===color?' checked':''}><span></span></label>`).join('')}</div></div>
+  ${c?`<div class="row" style="margin-bottom:4px"><button class="bt" id="cl">← 往左移</button><button class="bt" id="cr2">往右移 →</button></div>`:''}
+  <div class="foot">${c?'<button class="bt bad" id="cdel">刪除櫃子</button>':'<span></span>'}<div class="row"><button class="bt" data-x>取消</button><button class="go" id="cok">${c?'儲存':'建立'}</button></div></div>`,p=>{
+  const v=s=>p.querySelector(s).value;
+  p.querySelector('#cok').onclick=()=>{
+   const name=v('#cn').trim();if(!name)return p.querySelector('#cn').focus();
+   const rows=Math.min(20,Math.max(1,Math.round(+v('#cy')||1))),cols=Math.min(6,Math.max(1,Math.round(+v('#cx')||1))),n=rows*cols;
+   const col=(p.querySelector('input[name=cc]:checked')||{}).value||'gray';
+   if(c){
+    const lost=c.cells.slice(n).reduce((a,x)=>a+x.it.length,0);
+    if(lost)return alert('第 '+(n+1)+' 格之後還有 '+lost+' 樣東西，請先把它們移到別格，再減少格數。');
+    op(()=>{Object.assign(c,{name,sub:v('#cs').trim(),room:v('#cr'),rows,cols,color:col});c.cells.length=Math.min(c.cells.length,n);while(c.cells.length<n)c.cells.push({l:'',it:[]})});
+   }else{
+    const r=v('#cr');op(()=>S.cabs.push({id:nid(),name,sub:v('#cs').trim(),room:r,rows,cols,color:col,cells:Array.from({length:n},()=>({l:'',it:[]}))}));
+    if(ROOM!=='all'&&ROOM!==r)setRoom(r);
+   }
+   closeSheet();
+  };
+  if(!c)return;
+  const shift=dir=>{const sib=S.cabs.filter(x=>x.room===c.room),k=sib.indexOf(c),o=sib[k+dir];if(!o)return;
+   op(()=>{const a=S.cabs.indexOf(c),b=S.cabs.indexOf(o);S.cabs[a]=o;S.cabs[b]=c})};
+  p.querySelector('#cl').onclick=()=>shift(-1);p.querySelector('#cr2').onclick=()=>shift(1);
+  p.querySelector('#cdel').onclick=()=>{
+   const k=c.cells.reduce((a,x)=>a+x.it.length,0);
+   if(!confirm('確定要刪除「'+c.name+'」？'+(k?'\n裡面的 '+k+' 樣東西也會一起刪除。':'')))return;
+   op(()=>S.cabs.splice(S.cabs.indexOf(c),1),'已刪除「'+c.name+'」');closeSheet();
+  };
+ });
+}
+const fmt=t=>{const d=new Date(t),z=n=>String(n).padStart(2,'0');return (d.getMonth()+1)+'/'+d.getDate()+' '+z(d.getHours())+':'+z(d.getMinutes())};
+function setSheet(){
+ sheet(`<h3>設定</h3>
+  <div class="sub" style="margin-bottom:6px">地點（例如：書房、客廳、主臥）</div>
+  ${S.rooms.map(r=>`<div class="li"><span><input data-rn="${r.id}" value="${E(r.name)}" style="border:0;padding:4px 0;background:none"></span><small class="sub">${S.cabs.filter(c=>c.room===r.id).length} 個櫃子</small><button data-rd="${r.id}" aria-label="刪除地點">✕</button></div>`).join('')}
+  <div class="add"><input id="rn" placeholder="新增地點"><button class="go" id="rnb">加入</button></div>
+  <div class="sub" style="margin-bottom:4px">最近移動</div>
+  <div class="card">${S.log.length?'<ul class="log">'+S.log.slice(0,15).map(l=>`<li><b>${E(l.n)}</b>：${E(l.f)} → ${E(l.to)}<div class="sub">${fmt(l.t)}</div></li>`).join('')+'</ul>':'<div class="sub">還沒有移動紀錄</div>'}</div>
+  <div class="sub" style="margin-bottom:6px">備份</div>
+  <div class="row" style="margin-bottom:14px"><button class="bt" id="exp">下載備份檔</button><button class="bt" id="imp">從備份檔還原</button></div>
+  <div class="foot">${window.fbLogout?'<button class="bt" id="lo">登出</button>':'<span></span>'}<button class="go" data-x>完成</button></div>`,p=>{
+  p.querySelectorAll('[data-rn]').forEach(i=>i.onchange=()=>{const r=S.rooms.find(x=>x.id===i.dataset.rn),n=i.value.trim();if(n&&r.name!==n)op(()=>{r.name=n})});
+  p.querySelectorAll('[data-rd]').forEach(b=>b.onclick=()=>{
+   if(S.rooms.length<2)return alert('至少要留一個地點。');
+   const r=S.rooms.find(x=>x.id===b.dataset.rd),rest=S.rooms.filter(x=>x!==r),k=S.cabs.filter(c=>c.room===r.id).length;
+   if(!confirm('確定刪除地點「'+r.name+'」？'+(k?'\n裡面的 '+k+' 個櫃子會移到「'+rest[0].name+'」。':'')))return;
+   op(()=>{S.cabs.forEach(c=>{if(c.room===r.id)c.room=rest[0].id});S.rooms.splice(S.rooms.indexOf(r),1)});
+   if(ROOM===r.id)setRoom('all');setSheet();
+  });
+  const addR=()=>{const n=p.querySelector('#rn').value.trim();if(!n)return;op(()=>S.rooms.push({id:nid(),name:n}));setSheet()};
+  p.querySelector('#rnb').onclick=addR;p.querySelector('#rn').onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing)addR()};
+  p.querySelector('#exp').onclick=()=>{
+   const d=new Date(),a=document.createElement('a');
+   a.href=URL.createObjectURL(new Blob([JSON.stringify(S,null,1)],{type:'application/json'}));
+   a.download='我的櫃子-'+d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+  };
+  p.querySelector('#imp').onclick=()=>$('impf').click();
+  const lo=p.querySelector('#lo');if(lo)lo.onclick=()=>window.fbLogout();
+ });
+}
+$('impf').onchange=async e=>{
+ const f=e.target.files[0];e.target.value='';if(!f)return;
+ let o;try{o=fix(JSON.parse(await f.text()))}catch(x){return alert('這不是「我的櫃子」的備份檔。')}
+ if(!confirm('用備份檔取代現在的資料？（還原後可以按「復原」）'))return;
+ op(()=>{S=o},'已從備份還原');setRoom('all');closeSheet();
+};
+function setRoom(id){ROOM=id;try{localStorage.setItem('cab-room',id)}catch(e){}render()}
+
+function onClick(e){
+ if(Date.now()-noClick<400)return;
+ const b=e.target.closest('[data-a]');
+ if(b){
+  const a=b.dataset.a;
+  if(a==='newcab')return cabSheet(null);
+  if(a==='cab')return cabSheet(b.dataset.id);
+  if(a==='set')return setSheet();
+  if(a==='room'){$('q').value='';return setRoom(b.dataset.id)}
+  if(a==='addroom'){const n=(prompt('新增地點名稱（例如：客廳）')||'').trim();if(n){const id=nid();op(()=>S.rooms.push({id,name:n}));setRoom(id)}return}
+  if(a==='tipx'){try{localStorage.setItem('cab-tip','0')}catch(x){}return $('tip').remove()}
+  if(a==='goto'){
+   const el=document.querySelector(`.cell[data-cell="${b.dataset.k}"]`);if(!el)return;
+   el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash');return;
+  }
+ }
+ const it=e.target.closest('.it');if(it)return itemSheet(it.dataset.it);
+ const cell=e.target.closest('.cell');
+ if(cell){const [c,i]=cell.dataset.cell.split(':');cellSheet(c,+i)}
+}
+
+shell();
+$('app').addEventListener('click',onClick);
+bindDrag();
+render();
+cloudInit();
+</script>
+</body>
+</html>

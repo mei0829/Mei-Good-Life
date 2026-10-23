@@ -9,3 +9,12 @@
 - GitHub Pages 由 `.github/workflows/pages.yml` 部署，每小時也會更新「股價與新聞」用的 `news.json`。
 
 從 mei0829/Uultra 搬過來。
+
+## 我的櫃子
+
+記錄家裡每個櫃子、每一格放了什麼東西。
+
+- 網址：https://mei0829.github.io/Mei-Good-Life/cabinet.html
+- 跟記帳用同一個帳號登入，資料存在 Firebase 的 `data/users/{uid}/k_cabinet`（手機和電腦會同步）。
+- 按住東西拖到別格就能換位置（手機要先按住一下再拖）；按住格子的名稱拖到別格，兩格會整格交換。每次變更都可以按「復原」。
+- 可以搜尋東西在哪、分地點（書房、客廳…）、自訂每個櫃子的層數和每層格數、下載備份檔。
