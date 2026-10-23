@@ -95,6 +95,8 @@ body.dragging{-webkit-user-select:none;user-select:none;cursor:grabbing}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .li{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 6px 6px 12px;margin-bottom:6px}
 .li>span{flex:1;min-width:0;overflow-wrap:anywhere}.li small{display:block;color:var(--sub);font-size:12px}
+.li .hd{flex:none;touch-action:none;cursor:grab;color:var(--sub);font-size:20px;line-height:1;padding:6px 2px;margin-left:-4px;-webkit-user-select:none;user-select:none}
+.li.sorting{position:relative;z-index:1;box-shadow:0 6px 18px rgba(0,0,0,.18);border-color:var(--acc)}
 .li button{border:0;background:none;padding:6px 8px;color:var(--sub)}
 .add{display:flex;gap:8px;margin:10px 0 14px}.add input{flex:1}.add button{flex:none}
 .sw{display:flex;gap:8px}.sw label{flex:1}.sw input{display:none}
@@ -472,11 +474,31 @@ function famBind(p){
   closeSheet();useFam(x);
  });
 }
+// 用把手（≡）上下拖曳排序清單；放開後把新的順序交給 done
+function sortable(box,done){
+ const pn=box.closest('.pn');
+ box.querySelectorAll('[data-h]').forEach(h=>h.onpointerdown=e=>{
+  e.preventDefault();
+  const row=h.closest('[data-id]'),id=e.pointerId;let y=e.clientY,raf=0;
+  row.classList.add('sorting');if(navigator.vibrate)try{navigator.vibrate(10)}catch(x){}
+  const place=()=>{const after=[...box.children].find(r=>r!==row&&y<r.getBoundingClientRect().top+r.offsetHeight/2)||null;if(row.nextSibling!==after&&row!==after)box.insertBefore(row,after)};
+  const tick=()=>{const b=pn.getBoundingClientRect(),d=y<b.top+60?-8:y>b.bottom-60?8:0;if(d){pn.scrollTop+=d;place()}raf=requestAnimationFrame(tick)};
+  raf=requestAnimationFrame(tick);
+  // 列會在畫面上搬動位置，所以在整個視窗上聽手指移動
+  const mv=ev=>{if(ev.pointerId===id){y=ev.clientY;place()}};
+  const up=ev=>{
+   if(ev.pointerId!==id)return;
+   cancelAnimationFrame(raf);removeEventListener('pointermove',mv);removeEventListener('pointerup',up);removeEventListener('pointercancel',up);
+   row.classList.remove('sorting');done([...box.children].map(r=>r.dataset.id));
+  };
+  addEventListener('pointermove',mv);addEventListener('pointerup',up);addEventListener('pointercancel',up);
+ });
+}
 function setSheet(){
  sheet(`<h3>設定</h3>
   ${famHTML()}
-  <div class="sub" style="margin-bottom:6px">地點（例如：書房、客廳、主臥）</div>
-  ${S.rooms.map(r=>`<div class="li"><span><input data-rn="${r.id}" value="${E(r.name)}" style="border:0;padding:4px 0;background:none"></span><small class="sub">${S.cabs.filter(c=>c.room===r.id).length} 個櫃子</small><button data-rd="${r.id}" aria-label="刪除地點">✕</button></div>`).join('')}
+  <div class="sub" style="margin-bottom:6px">地點（例如：書房、客廳、主臥）· 按住 ≡ 上下拖曳可以排順序</div>
+  <div id="rl">${S.rooms.map(r=>`<div class="li" data-id="${r.id}"><span class="hd" data-h aria-label="拖曳排序">≡</span><span><input data-rn="${r.id}" value="${E(r.name)}" style="border:0;padding:4px 0;background:none"></span><small class="sub">${S.cabs.filter(c=>c.room===r.id).length} 個櫃子</small><button data-rd="${r.id}" aria-label="刪除地點">✕</button></div>`).join('')}</div>
   <div class="add"><input id="rn" placeholder="新增地點"><button class="go" id="rnb">加入</button></div>
   <div class="sub" style="margin-bottom:4px">最近移動</div>
   <div class="card">${S.log.length?'<ul class="log">'+S.log.slice(0,15).map(l=>`<li><b>${E(l.n)}</b>：${E(l.f)} → ${E(l.to)}<div class="sub">${fmt(l.t)}</div></li>`).join('')+'</ul>':'<div class="sub">還沒有移動紀錄</div>'}</div>
@@ -484,6 +506,7 @@ function setSheet(){
   <div class="row" style="margin-bottom:14px"><button class="bt" id="exp">下載備份檔</button><button class="bt" id="imp">從備份檔還原</button></div>
   <div class="foot">${window.fbLogout?'<button class="bt" id="lo">登出</button>':'<span></span>'}<button class="go" data-x>完成</button></div>`,p=>{
   famBind(p);
+  sortable(p.querySelector('#rl'),ids=>{if(ids.join()!==S.rooms.map(r=>r.id).join())op(()=>{S.rooms=ids.map(id=>S.rooms.find(r=>r.id===id))})});
   p.querySelectorAll('[data-rn]').forEach(i=>i.onchange=()=>{const r=S.rooms.find(x=>x.id===i.dataset.rn),n=i.value.trim();if(n&&r.name!==n)op(()=>{r.name=n})});
   p.querySelectorAll('[data-rd]').forEach(b=>b.onclick=()=>{
    if(S.rooms.length<2)return alert('至少要留一個地點。');
