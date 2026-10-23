@@ -415,6 +415,28 @@ def fetch_us():
     return out
 
 
+def fetch_tw():
+    """台股上市＋上櫃：代號 → [名稱, 收盤價, 漲跌]。瀏覽器直接抓證交所常被擋，所以這裡先抓好放 tw.json。"""
+    m = {}
+    for url, kc, kn, kp, kd in (
+            ('https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL', 'Code', 'Name', 'ClosingPrice', 'Change'),
+            ('https://www.tpex.org.tw/openapi/v1/tpex_mainboard_daily_close_quotes', 'SecuritiesCompanyCode', 'CompanyName', 'Close', 'Change')):
+        try:
+            for x in json.loads(get(url, 30)):
+                c, n = str(x.get(kc, '')).strip().upper(), str(x.get(kn, '')).strip()
+                if not c or not n:
+                    continue
+                def num(v):
+                    try:
+                        return float(str(v).replace(',', '').replace('+', '').strip())
+                    except ValueError:
+                        return None
+                m[c] = [n, num(x.get(kp)), num(x.get(kd))]
+        except Exception as e:  # noqa: BLE001
+            print('  台股清單略過', url, e)
+    return m
+
+
 def main(path):
     now = int(time.time())
     crumb()  # 先拿好，免得下面同時搶
@@ -452,6 +474,11 @@ def main(path):
     }
     with open(path, 'w', encoding='utf-8') as fh:
         json.dump(data, fh, ensure_ascii=False, separators=(',', ':'))
+    tw = fetch_tw()
+    if tw:
+        with open(os.path.join(os.path.dirname(path) or '.', 'tw.json'), 'w', encoding='utf-8') as fh:
+            json.dump({'updated': now, 'm': tw}, fh, ensure_ascii=False, separators=(',', ':'))
+    print(f'台股清單 {len(tw)} 檔')
     print(f'news: {len(kept)} 則，來源 {data["sources"]["ok"]}/{len(FEEDS)}；'
           f'熱搜 TW {len(data["trends"]["TW"])} US {len(data["trends"]["US"])}；'
           f'大盤 {len(data["markets"])}；美股 {len(data["us"])}')
