@@ -26,4 +26,4 @@
 
 ### 第一次使用前：開通家庭空間
 
-到 Firebase 主控台 → Firestore Database → 規則，把 `firestore-family.rules` 裡的那一段貼進原本規則的 `match /databases/{database}/documents { … }` 裡面（原本的規則都保留），按「發布」。
+到 Firebase 主控台 → Firestore Database → 規則，把 `firestore.rules` 的內容整份貼上取代原本的規則（原本的規則都已包含在裡面），按「發布」。

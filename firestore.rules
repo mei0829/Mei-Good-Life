@@ -1,0 +1,41 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function verified() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+    function myEmail() {
+      return request.auth.token.email.lower();
+    }
+    function isAdmin() {
+      return verified() && myEmail() == 'lee19977889@gmail.com';
+    }
+    function invited() {
+      return isAdmin() || (verified() && exists(/databases/$(database)/documents/allow/$(myEmail())));
+    }
+    match /allow/{email} {
+      allow read: if isAdmin() || (verified() && email == myEmail());
+      allow write: if isAdmin();
+    }
+    // 每個人自己的私人資料（記帳等）：只有本人能讀寫
+    match /data/users/{uid}/{docId} {
+      allow read, write: if invited() && request.auth.uid == uid;
+    }
+    // 家庭空間：members 是成員的小寫 Email。成員可以看；只有建立的人能改成員名單、刪除
+    match /families/{fid} {
+      allow read: if invited() && myEmail() in resource.data.members;
+      allow create: if invited() && request.resource.data.owner == request.auth.uid
+                    && request.resource.data.ownerEmail == myEmail()
+                    && myEmail() in request.resource.data.members;
+      allow update: if invited() && resource.data.owner == request.auth.uid
+                    && request.resource.data.owner == resource.data.owner
+                    && request.resource.data.ownerEmail == resource.data.ownerEmail;
+      allow delete: if invited() && resource.data.owner == request.auth.uid;
+      // 共用資料（例如櫃子）：所有成員都能讀寫
+      match /data/{doc} {
+        allow read, write: if invited()
+          && myEmail() in get(/databases/$(database)/documents/families/$(fid)).data.members;
+      }
+    }
+  }
+}
