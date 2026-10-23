@@ -6,7 +6,7 @@ const box = document.getElementById('auth');
 // 離線使用：註冊 service worker，把網頁存在手機裡
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const LOCAL_KEYS = ['roster-v2', 'roster-t', 'roster-prev', 'money-v1', 'money-t', 'money-prev', 'ph-cloud', 'cab-v1', 'cab-t', 'cab-room', 'cab-fid'];
+const LOCAL_KEYS = ['roster-v2', 'roster-t', 'roster-prev', 'money-v1', 'money-t', 'money-prev', 'ph-cloud', 'cab-v1', 'cab-t', 'cab-room', 'cab-fid', 'mgl-role'];
 const TITLE = box.dataset.title || '新人名單與組織';
 
 const ERR = {
@@ -234,10 +234,22 @@ function deniedScreen(auth, am, user, msg) {
   document.getElementById('ado').onclick = e => { e.preventDefault(); am.signOut(auth); };
 }
 
+function adminOnlyScreen(auth, am) {
+  shell(`<div style="font-weight:700;font-size:17px;margin-bottom:8px">這頁只有管理員能使用</div>
+    <div class="sub" style="margin-bottom:12px">你可以使用首頁上的其他功能，例如「物品存放」。</div>
+    <a href="./" style="display:block;text-align:center;text-decoration:none;background:var(--acc);color:var(--on);border-radius:12px;padding:10px;font-weight:700">回首頁</a>
+    <div class="row" style="justify-content:flex-end;margin-top:12px"><a href="#" id="aoo">登出</a></div>`);
+  document.getElementById('aoo').onclick = e => { e.preventDefault(); am.signOut(auth); };
+}
+
 async function gate(auth, am, fs, fsm, user) {
   if (!user.emailVerified) return verifyScreen(auth, am, user);
   const em = (user.email || '').toLowerCase();
+  // 記住這支手機登入的是不是管理員：首頁用來決定要不要顯示記帳
+  try { localStorage.setItem('mgl-role', em === ADMIN ? 'admin' : 'member'); } catch (x) {}
   if (em === ADMIN) return startApp(fs, fsm, user);
+  // 只給管理員用的頁面（例如記帳）：家人登入也打不開
+  if (box.dataset.only === 'admin') return adminOnlyScreen(auth, am);
   // 沒有網路：這支手機之前用這個帳號登入過，就直接用本機資料
   try { if (!navigator.onLine && localStorage.getItem('roster-owner') === user.uid) return startApp(fs, fsm, user); } catch (x) {}
   shell('<div class="sub">確認權限中…</div>');

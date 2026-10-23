@@ -45,7 +45,7 @@ footer{text-align:center;font-size:11px;color:var(--sub);margin-top:36px;opacity
 <h1>Mei Good Life</h1>
 
 <div class="grid">
- <a class="tile k1" href="money.html">
+ <a class="tile k1" id="money" href="money.html">
   <div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18"/><circle cx="16.5" cy="14.5" r="1.2"/></svg></div>
   <div><b>記帳</b><p>收支、預算、股票、代墊</p></div>
   <span class="tag">私人</span>
@@ -79,6 +79,8 @@ footer{text-align:center;font-size:11px;color:var(--sub);margin-top:36px;opacity
 <footer>© 2026 mei0829 版權所有</footer>
 </main>
 <script>
+// 家人登入過的手機：不顯示記帳
+try{if(localStorage.getItem('mgl-role')==='member')document.getElementById('money').remove()}catch(e){}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 const d=new Date(),h=d.getHours();
 document.getElementById('hi').textContent=(h<11?'早安':h<18?'午安':'晚安')+'・'+(d.getMonth()+1)+'/'+d.getDate()+'（'+'日一二三四五六'[d.getDay()]+'）';
