@@ -44,6 +44,7 @@ textarea{min-height:64px;resize:vertical}
 
 .top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
 .top .row{flex-wrap:nowrap}
+.home{font-size:14px;text-decoration:none}
 #st{font-size:12px;color:var(--sub);margin:2px 0 10px}
 .srch{position:relative}
 .srch input{padding-left:36px;border-radius:14px;height:44px}
@@ -152,39 +153,55 @@ const where=(c,i)=>c.name+' › '+cname(c,i);
 function loc(itemId){for(const c of S.cabs)for(let i=0;i<c.cells.length;i++){const k=c.cells[i].it.findIndex(t=>t.id===itemId);if(k>=0)return{c,i,k,t:c.cells[i].it[k]}}return null}
 const count=()=>S.cabs.reduce((a,c)=>a+c.cells.reduce((b,x)=>b+x.it.length,0),0);
 
-// ---------- 儲存：先存手機，再同步到雲端 ----------
-const CL={col:null,tm:0,busy:false,again:false,dirty:false,st:''};
-function status(t){CL.st=t;const s=$('st');if(s)s.textContent=S.cabs.length+' 個櫃子 · '+count()+' 樣東西 · '+t}
+// ---------- 儲存：先存手機，再同步到家庭空間（家人改了會即時更新）----------
+const CL={F:null,fam:null,fams:[],ref:null,unsub:null,tm:0,busy:false,again:false,dirty:false,pending:null,st:''};
+function status(t){CL.st=t;const s=$('st');if(s)s.textContent=(CL.fam?CL.fam.name+' · ':'')+S.cabs.length+' 個櫃子 · '+count()+' 樣東西 · '+t}
 function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(S));localStorage.setItem(KT,String(T))}catch(e){}}
 function commit(){T=Date.now();saveLocal();render();CL.dirty=true;status('同步中…');clearTimeout(CL.tm);CL.tm=setTimeout(cloudPush,700)}
 async function cloudPush(){
- if(!CL.col){status('⚠︎ 沒有連到雲端，資料只存在這支手機');return}
+ if(!CL.ref){status(CL.st.startsWith('⚠︎')?CL.st:'⚠︎ 沒有連到雲端，資料只存在這支手機');return}
  if(CL.busy){CL.again=true;return}
  CL.busy=true;CL.dirty=false;
- try{await CL.col.doc(DOC).set({j:JSON.stringify(S),t:T});status('✓ 已同步')}
+ try{await CL.ref.set({j:JSON.stringify(S),t:T,by:CL.F.email});status('✓ 已同步')}
  catch(e){CL.dirty=true;status('⚠︎ 還沒同步，變更先存在這支手機，連上網路會再試')}
  CL.busy=false;
  if(CL.again){CL.again=false;cloudPush()}
 }
-async function cloudPull(){
- if(!CL.col||CL.dirty||CL.busy)return;
- try{
-  const d=await CL.col.doc(DOC).get(),ct=d?+d.t||0:0;
-  if(ct>T){S=fix(JSON.parse(d.j));T=ct;saveLocal();render()}
-  else if(ct<T){CL.dirty=true;return cloudPush()}
-  status('✓ 已同步');
- }catch(e){status('⚠︎ 無法連線，先顯示這支手機上的資料')}
+const busyUI=()=>!!drag||$('sheet').classList.contains('on');
+function onCloud(d){
+ if(!d){if(!T)T=Date.now();CL.dirty=true;return cloudPush()}  // 家庭空間還是空的：把手機上的放上去
+ const ct=+d.t||0;
+ if(ct>T){
+  if(CL.dirty||CL.busy)return;
+  if(busyUI()){CL.pending=d;return}  // 正在拖曳或編輯：關掉視窗後再更新
+  try{S=fix(JSON.parse(d.j))}catch(e){return}
+  T=ct;saveLocal();render();
+  if(d.by&&d.by!==CL.F.email)toast(d.by.split('@')[0]+' 剛剛更新了櫃子');
+ }else if(ct<T&&!CL.busy){CL.dirty=true;return cloudPush()}
+ if(!CL.dirty)status('✓ 已同步');
+}
+function applyPending(){if(CL.pending&&!busyUI()){const d=CL.pending;CL.pending=null;onCloud(d)}}
+function useFam(f){
+ let prev='';try{prev=localStorage.getItem('cab-fid')||''}catch(e){}
+ if(prev&&prev!==f.id){S=fix(seed());T=0;CL.dirty=false;saveLocal()}  // 換到別的家庭空間：以那邊的資料為準
+ try{localStorage.setItem('cab-fid',f.id)}catch(e){}
+ if(!CL.fams.some(x=>x.id===f.id))CL.fams.push(f);
+ CL.fam=f;CL.ref=CL.F.doc(f.id,'cabinet');
+ if(CL.unsub)CL.unsub();
+ status('連線中…');render();
+ CL.unsub=CL.ref.watch(onCloud,()=>status('⚠︎ 無法連線，先顯示這支手機上的資料'));
 }
 async function cloudInit(){
  try{
-  const db=await claude.use('db'),us=await claude.use('user'),uid=us&&await us.id();
-  if(!db||!uid)return status('⚠︎ 沒有連到雲端（請重新登入），資料只存在這支手機');
-  CL.col=db.collection('data/users/'+uid);
-  if(CL.dirty)cloudPush();else await cloudPull();
+  const F=CL.F=await claude.use('family');
+  if(!F)return status('⚠︎ 沒有連到雲端（請重新登入），資料只存在這支手機');
+  try{CL.fams=await F.list()}catch(e){return status(e&&e.code==='permission-denied'?'⚠︎ 家庭空間還沒開通（Firebase 要加上規則），資料先存在這支手機':'⚠︎ 無法連線，先顯示這支手機上的資料')}
+  let pick='';try{pick=localStorage.getItem('cab-fid')||''}catch(e){}
+  const f=CL.fams.find(x=>x.id===pick)||CL.fams.slice().sort((a,b)=>b.members.length-a.members.length)[0]||await F.create('我的家');
+  useFam(f);
  }catch(e){status('⚠︎ 沒有連到雲端，資料只存在這支手機')}
 }
-addEventListener('online',()=>CL.dirty?cloudPush():cloudPull());
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible')return;CL.dirty?cloudPush():cloudPull()});
+addEventListener('online',()=>{if(CL.dirty)cloudPush()});
 
 // 每次變更都可以「復原」
 function op(fn,msg){const prev=JSON.stringify(S);fn();commit();if(msg)toast(msg,()=>{S=fix(JSON.parse(prev));commit();toast('已復原')})}
@@ -208,7 +225,7 @@ function moveItem(itemId,cid,ci,beforeId){
 const ICON_S='<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>';
 function shell(){
  let tip=true;try{tip=localStorage.getItem('cab-tip')!=='0'}catch(e){}
- $('app').innerHTML=`<div class="top"><h1>我的櫃子</h1><div class="row"><button class="bt" data-a="newcab">＋ 櫃子</button><button class="bt" data-a="set" aria-label="設定">⋯</button></div></div>
+ $('app').innerHTML=`<div class="top"><div><a class="home" href="./">‹ 首頁</a><h1>我的櫃子</h1></div><div class="row"><button class="bt" data-a="newcab">＋ 櫃子</button><button class="bt" data-a="set" aria-label="設定">⋯</button></div></div>
  <div id="st"></div>
  <div class="srch">${ICON_S}<input id="q" type="search" placeholder="找東西，例如：印章、樂譜" autocomplete="off"></div>
  ${tip?'<div class="tip" id="tip"><span>點一下格子可以新增東西。<b>按住東西</b>拖到別格就能換位置；按住格子的<b>名稱</b>拖到別格，兩格會整格交換。</span><button data-a="tipx" aria-label="關閉">×</button></div>':''}
@@ -245,7 +262,7 @@ function render(){
  });
  if(!rooms.length||!S.cabs.length&&!multi&&!h)h='<div class="empty">還沒有櫃子</div>';
  $('board').innerHTML=h;
- status(CL.st||(CL.col?'✓ 已同步':'連線中…'));
+ status(CL.st||'連線中…');
 }
 
 // ---------- 拖曳（電腦用滑鼠拖；手機要先按住一下再拖，才不會跟捲動打架）----------
@@ -285,7 +302,7 @@ function finish(ok){
  const d=drag;drag=null;noClick=Date.now();
  d.g.remove();d.el.classList.remove('lift');document.body.classList.remove('dragging');
  if(d.over)d.over.classList.remove('over');if(d.ins)d.ins.classList.remove('ins');
- if(!ok||!d.over)return;
+ if(!ok||!d.over)return applyPending();
  const [tc,ti]=d.over.dataset.cell.split(':'),[fc,fi]=d.from.split(':'),to=cab(tc);
  if(d.type==='it'){
   const id=d.el.dataset.it,same=tc===fc&&+ti===+fi;
@@ -331,7 +348,7 @@ function sheet(html,bind){
  s.querySelectorAll('[data-x]').forEach(b=>b.onclick=closeSheet);
  if(bind)bind(s.querySelector('.pn'));
 }
-function closeSheet(){const s=$('sheet');s.classList.remove('on');s.innerHTML=''}
+function closeSheet(){const s=$('sheet');s.classList.remove('on');s.innerHTML='';applyPending()}
 const splitNames=s=>String(s).split(/[、,，\n]+/).map(x=>x.trim()).filter(Boolean);
 
 function cellSheet(cid,i,focusAdd){
@@ -414,8 +431,50 @@ function cabSheet(id){
  });
 }
 const fmt=t=>{const d=new Date(t),z=n=>String(n).padStart(2,'0');return (d.getMonth()+1)+'/'+d.getDate()+' '+z(d.getHours())+':'+z(d.getMinutes())};
+// 家人共用：建立的人可以邀請或移除家人（用 Email）
+const EMAIL=/^[^\s@\/]+@[^\s@\/]+\.[^\s@\/]+$/;
+function famHTML(){
+ const f=CL.fam;
+ if(!f)return `<div class="card sub" style="margin-bottom:14px">${E(CL.st.startsWith('⚠︎')?CL.st:'還沒連上家庭空間')}</div>`;
+ const own=f.owner===CL.F.uid,others=CL.fams.filter(x=>x.id!==f.id);
+ return `<div class="sub" style="margin-bottom:6px">家人共用</div>
+  <div class="card" style="margin-bottom:14px">
+  ${own?`<label class="f"><span>家庭空間名稱</span><input id="fnm" value="${E(f.name)}"></label>`:`<div style="font-weight:700;margin-bottom:6px">${E(f.name)}</div>`}
+  <div class="sub" style="margin-bottom:6px">成員（${f.members.length}）：都能看到、修改這裡的櫃子</div>
+  ${f.members.map(m=>`<div class="li"><span>${E(m)}${m===CL.F.email||m===f.ownerEmail?'<small>'+[m===CL.F.email?'你':'',m===f.ownerEmail?'建立者':''].filter(Boolean).join(' · ')+'</small>':''}</span>${own&&m!==f.ownerEmail?`<button data-fm="${E(m)}" aria-label="移除">✕</button>`:''}</div>`).join('')}
+  ${own?`<div class="add" style="margin-bottom:4px"><input id="fem" type="email" placeholder="家人的 Email" autocomplete="off"><button class="go" id="feb">邀請</button></div>
+  <div class="sub" id="fmsg">家人用這個 Email 註冊、登入後，打開「我的櫃子」就會看到。</div>`:'<div class="sub">要邀請或移除家人，請找建立者。</div>'}
+  ${others.length?`<div class="sub" style="margin:12px 0 6px">你也在這些家庭空間：</div>`+others.map(x=>`<div class="li"><span>${E(x.name)}<small>${x.members.length} 位成員 · ${E(x.ownerEmail||'')} 建立</small></span><button class="bt" data-fsw="${x.id}">切換</button></div>`).join(''):''}
+  </div>`;
+}
+function famBind(p){
+ const f=CL.fam;if(!f)return;
+ const save=async(o,ok)=>{try{await CL.F.update(f.id,o);Object.assign(f,o);ok&&ok()}catch(e){alert('沒有成功，請確認網路後再試。')}};
+ const nm=p.querySelector('#fnm');
+ if(nm)nm.onchange=()=>{const n=nm.value.trim();if(n&&n!==f.name)save({name:n},()=>status('✓ 已同步'))};
+ p.querySelectorAll('[data-fm]').forEach(b=>b.onclick=()=>{
+  const m=b.dataset.fm;if(!confirm('把 '+m+' 移出「'+f.name+'」？對方就看不到這裡的櫃子了。'))return;
+  save({members:f.members.filter(x=>x!==m)},setSheet);
+ });
+ const add=async()=>{
+  const m=p.querySelector('#fem').value.trim().toLowerCase(),msg=p.querySelector('#fmsg');
+  if(!EMAIL.test(m)){msg.textContent='Email 格式不正確';msg.className='sub bad';return}
+  if(f.members.includes(m)){msg.textContent='這位已經是成員了';msg.className='sub bad';return}
+  // 管理員邀請時，順便把對方加進網站的邀請名單，對方才能登入
+  if(window.FBA&&FBA.add&&!(FBA.list||[]).includes(m)){const err=await FBA.add(m);if(err){msg.textContent=err;msg.className='sub bad';return}}
+  save({members:[...f.members,m]},setSheet);
+ };
+ const fb=p.querySelector('#feb');
+ if(fb){fb.onclick=add;p.querySelector('#fem').onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing)add()}}
+ p.querySelectorAll('[data-fsw]').forEach(b=>b.onclick=()=>{
+  const x=CL.fams.find(y=>y.id===b.dataset.fsw);
+  if(!confirm('切換到「'+x.name+'」？這支手機會改顯示那邊的櫃子。'))return;
+  closeSheet();useFam(x);
+ });
+}
 function setSheet(){
  sheet(`<h3>設定</h3>
+  ${famHTML()}
   <div class="sub" style="margin-bottom:6px">地點（例如：書房、客廳、主臥）</div>
   ${S.rooms.map(r=>`<div class="li"><span><input data-rn="${r.id}" value="${E(r.name)}" style="border:0;padding:4px 0;background:none"></span><small class="sub">${S.cabs.filter(c=>c.room===r.id).length} 個櫃子</small><button data-rd="${r.id}" aria-label="刪除地點">✕</button></div>`).join('')}
   <div class="add"><input id="rn" placeholder="新增地點"><button class="go" id="rnb">加入</button></div>
@@ -424,6 +483,7 @@ function setSheet(){
   <div class="sub" style="margin-bottom:6px">備份</div>
   <div class="row" style="margin-bottom:14px"><button class="bt" id="exp">下載備份檔</button><button class="bt" id="imp">從備份檔還原</button></div>
   <div class="foot">${window.fbLogout?'<button class="bt" id="lo">登出</button>':'<span></span>'}<button class="go" data-x>完成</button></div>`,p=>{
+  famBind(p);
   p.querySelectorAll('[data-rn]').forEach(i=>i.onchange=()=>{const r=S.rooms.find(x=>x.id===i.dataset.rn),n=i.value.trim();if(n&&r.name!==n)op(()=>{r.name=n})});
   p.querySelectorAll('[data-rd]').forEach(b=>b.onclick=()=>{
    if(S.rooms.length<2)return alert('至少要留一個地點。');

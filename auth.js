@@ -6,7 +6,7 @@ const box = document.getElementById('auth');
 // 離線使用：註冊 service worker，把網頁存在手機裡
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const LOCAL_KEYS = ['roster-v2', 'roster-t', 'roster-prev', 'money-v1', 'money-t', 'money-prev', 'ph-cloud', 'cab-v1', 'cab-t', 'cab-room'];
+const LOCAL_KEYS = ['roster-v2', 'roster-t', 'roster-prev', 'money-v1', 'money-t', 'money-prev', 'ph-cloud', 'cab-v1', 'cab-t', 'cab-room', 'cab-fid'];
 const TITLE = box.dataset.title || '新人名單與組織';
 
 const ERR = {
@@ -99,7 +99,7 @@ function startApp(fs, fsm, user) {
   } catch (e) {}
   const { collection, doc, setDoc, getDocs, getDoc, query, where, documentId } = fsm;
   const col = path => ({
-    doc: id => ({ set: o => setDoc(doc(fs, path, id), o), get: async () => { const x = await getDoc(doc(fs, path, id)); return x.exists() ? x.data() : null; } }),
+    doc: id => ({ set: o => setDoc(doc(fs, path, id), o) }),
     get: async () => {
       // 照片（p_ 開頭）很大，只在要看的時候才下載；其他資料文件照常讀取
       const c = collection(fs, path), [a, b] = await Promise.all([getDocs(query(c, where(documentId(), '<', 'p_'))), getDocs(query(c, where(documentId(), '>=', 'p`')))]);
@@ -107,7 +107,23 @@ function startApp(fs, fsm, user) {
       return { docs: s.docs.map(d => ({ id: d.id, data: () => d.data() })) };
     }
   });
-  window.claude = { use: async n => n === 'db' ? { collection: col } : n === 'user' ? { id: async () => user.uid } : n === 'sample' ? sampler : null };
+  // 家庭空間：families/{id} 記錄成員 Email，共用資料放在 families/{id}/data/{名稱}，成員都能讀寫
+  const em = (user.email || '').toLowerCase();
+  const family = {
+    uid: user.uid, email: em,
+    list: async () => (await getDocs(query(collection(fs, 'families'), where('members', 'array-contains', em)))).docs.map(d => ({ id: d.id, ...d.data() })),
+    create: async name => {
+      const r = doc(collection(fs, 'families')), o = { name, owner: user.uid, ownerEmail: em, members: [em], at: Date.now() };
+      await setDoc(r, o);
+      return { id: r.id, ...o };
+    },
+    update: (fid, o) => fsm.updateDoc(doc(fs, 'families', fid), o),
+    doc: (fid, id) => ({
+      set: o => setDoc(doc(fs, 'families', fid, 'data', id), o),
+      watch: (cb, err) => fsm.onSnapshot(doc(fs, 'families', fid, 'data', id), x => cb(x.exists() ? x.data() : null), err)
+    })
+  };
+  window.claude = { use: async n => n === 'db' ? { collection: col } : n === 'user' ? { id: async () => user.uid } : n === 'sample' ? sampler : n === 'family' ? family : null };
   const { getDocs: gd, deleteDoc } = fsm;
   // 照片雲端備份：壓縮後的照片存在 data/users/{uid}/p_{照片id}
   const pcol = 'data/users/' + user.uid;
