@@ -26,6 +26,7 @@ main{max-width:640px;margin:0 auto;padding:calc(28px + env(safe-area-inset-top))
 h1{font-size:28px;margin:2px 0 22px;font-weight:700;letter-spacing:.5px}
 h2{font-size:14px;color:var(--sub);font-weight:500;margin:24px 2px 10px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tile[hidden]{display:none}
 .tile{display:flex;flex-direction:column;gap:10px;text-decoration:none;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;min-height:150px;transition:transform .12s}
 a.tile:active{transform:scale(.97)}
 .ic{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:var(--t)}
@@ -45,7 +46,7 @@ footer{text-align:center;font-size:11px;color:var(--sub);margin-top:36px;opacity
 <h1>Mei Good Life</h1>
 
 <div class="grid">
- <a class="tile k1" id="money" href="money.html">
+ <a class="tile k1" id="money" href="money.html" hidden>
   <div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18"/><circle cx="16.5" cy="14.5" r="1.2"/></svg></div>
   <div><b>記帳</b><p>收支、預算、股票、代墊</p></div>
   <span class="tag">私人</span>
@@ -79,8 +80,8 @@ footer{text-align:center;font-size:11px;color:var(--sub);margin-top:36px;opacity
 <footer>© 2026 mei0829 版權所有</footer>
 </main>
 <script>
-// 家人登入過的手機：不顯示記帳
-try{if(localStorage.getItem('mgl-role')==='member')document.getElementById('money').remove()}catch(e){}
+// 記帳只在管理員登入過的手機上顯示
+try{if(localStorage.getItem('mgl-role')==='admin')document.getElementById('money').hidden=false}catch(e){}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 const d=new Date(),h=d.getHours();
 document.getElementById('hi').textContent=(h<11?'早安':h<18?'午安':'晚安')+'・'+(d.getMonth()+1)+'/'+d.getDate()+'（'+'日一二三四五六'[d.getDay()]+'）';
