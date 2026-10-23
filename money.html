@@ -943,7 +943,7 @@ function sheetTrade(o){
 // ── 複利計算 ──
 // ── 我的錢一覽、時薪、要不要買 ──
 // 時薪：每月收入（本薪＋其他，可以自己加減）÷ 每月上班小時
-function W(){if(!S.work)S.work={items:[{id:'w1',n:'本薪',amt:Math.round(billPM('in'))||''}],h:8,d:5,save:''};return S.work}
+function W(){if(!S.work)S.work={items:[{id:'w1',n:'本薪',amt:Math.round(billPM('in'))||''}],h:8,d:5,save:''};if(!S.work.days)S.work.days={};return S.work}
 const wInc=()=>W().items.reduce((a,x)=>a+(+x.amt||0),0);
 // 辛苦錢：自己工作賺的（本薪、加班、兼職…），家人贊助這種不算，時薪只用辛苦錢算
 const wEarn=()=>W().items.reduce((a,x)=>a+(x.earn===false?0:+x.amt||0),0);
@@ -973,6 +973,13 @@ function vWallet(){
  ${w.items.map((x,i)=>`<div class="row" style="gap:6px;margin-top:6px"><input style="flex:1.2;min-width:0" value="${E(x.n)}" data-m="work.items.${i}.n" data-s="1" placeholder="例：兼職、家人贊助"><input style="flex:1;min-width:0" inputmode="numeric" value="${E(x.amt)}" data-m="work.items.${i}.amt" data-s="1" data-r="1" placeholder="每月多少"><label style="display:flex;align-items:center;gap:3px;font-size:13px;white-space:nowrap"><input type="checkbox" data-m="work.items.${i}.earn" data-s="1" data-r="1" ${x.earn===false?'':'checked'} style="width:18px;height:18px">辛苦錢</label><button class="x" data-a="wdel" data-i="${i}" aria-label="刪除">×</button></div>`).join('')}
  <div class="row" style="gap:6px;margin-top:8px"><button class="go q" data-a="wadd">＋ 工作收入（加班、兼職…）</button><button class="go q" data-a="wfam">＋ 家人贊助</button></div>
  <div class="grid" style="margin-top:8px"><label class="fl"><span>一天上班幾小時</span><input inputmode="decimal" value="${E(w.h)}" data-m="work.h" data-s="1" data-r="1"></label><label class="fl"><span>一週上幾天</span><input inputmode="decimal" value="${E(w.d)}" data-m="work.d" data-s="1" data-r="1"></label></div>
+ ${(()=>{// 另一種算法：照這個月實際上班幾天（沒填就用這個月的平日天數，沒扣國定假日）
+  const m=today().slice(0,7),d0=pd(m+'-01'),n=dim(d0.getFullYear(),d0.getMonth());let wd=0;for(let i=1;i<=n;i++){const g=new Date(d0.getFullYear(),d0.getMonth(),i).getDay();if(g&&g<6)wd++}
+  const md0=(w.days||{})[m],dd=+md0>0?+md0:wd,hrs=dd*(+w.h||0),h2=hrs?wEarn()/hrs:0;
+  return`<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)"><b style="font-size:14px">另一種算法：照這個月上班幾天</b>
+  <div class="grid" style="margin-top:6px"><label class="fl"><span>${+m.slice(5)} 月上班幾天</span><input inputmode="decimal" value="${E(md0||'')}" placeholder="${wd}" data-m="work.days.${m}" data-s="1" data-r="1"></label>
+  <div class="fl"><span>${+m.slice(5)} 月時薪</span><b class="big" style="font-size:24px">${h2?M(h2):'—'}</b></div></div>
+  <div class="sub">${M(wEarn())} ÷（${dd} 天 × ${+w.h||0} 小時 ＝ ${Math.round(hrs*10)/10} 小時）${+md0>0?'':`・沒填就先用 ${+m.slice(5)} 月的平日 ${wd} 天（沒扣國定假日）`}</div></div>`})()}
  <div class="note" data-t="時薪怎麼算？"><b>辛苦錢</b>＝自己工作賺來的：本薪、加班費、獎金、兼職、接案…，打勾。<b>家人贊助、紅包、利息、股利</b>這種不是用時間換來的，不要勾，它們還是算收入（存錢目標會算進去），只是不拿來算時薪。<br>時薪＝每月辛苦錢 ÷（每天小時 × 每週天數 × 52 週 ÷ 12 個月）。不固定的填平均每月大概多少就好，隨時可以改。記帳時輸入金額，會顯示「要工作多久」。</div></div>
  <button class="go" style="width:100%;margin-top:4px" data-a="tab" data-i="ask">想買東西？問問看要不要買</button>`;
  return h;
