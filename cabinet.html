@@ -65,8 +65,8 @@ textarea{min-height:64px;resize:vertical}
 .ch b{display:block;font-size:17px;line-height:1.3}
 .ch span{display:block;font-size:12px;color:var(--sub);min-height:18px}
 .cells{display:grid;gap:6px}
-.lay{display:flex;gap:6px;flex:1 1 auto}.lay.v{flex-direction:column}
-.lk{display:flex;flex-direction:column;min-width:0}.lay.v>.lk{flex:1 1 auto}.lk>*{flex:1 1 auto}
+.lay{display:grid;gap:6px;min-width:0}
+.lay .cl,.lay .it{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}.lay .cell{padding:6px 3px 7px}.lay .it{padding:3px 5px}.lay .its{flex-direction:column;align-items:center}
 .cell{position:relative;min-height:74px;background:var(--c);border:1.5px solid var(--k);border-radius:12px;padding:6px 6px 7px;transition:background .12s,border-color .12s,opacity .12s}
 .cl{font-size:13px;font-weight:700;line-height:1.35;text-align:center;padding:1px 2px 4px;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overflow-wrap:anywhere}
 .cl i{font-style:normal;font-weight:500;font-size:11px;color:var(--sub);margin-right:3px}
@@ -294,9 +294,13 @@ function cellHTML(c,i,m){
  const x=c.cells[i],k=c.id+':'+i,cls=m?(m.cells.has(k)?' hit':' dim'):'';
  return `<div class="cell${cls}" data-cell="${k}"><div class="cl" data-drag="cell"><i>${i+1}</i>${E(x.l)}</div><div class="its">${x.it.map(t=>`<span class="it${m&&m.hits.has(t.id)?' hit':''}" data-drag="it" data-it="${t.id}">${E(t.n)}</span>`).join('')}</div></div>`;
 }
+function vunits(n){return isLeaf(n)?1:n.d==='v'?n.k.reduce((a,x)=>a+vunits(x),0):Math.max(...n.k.map(vunits))}
+// 用 grid 平均分配：同一排的格子一樣寬、上下對齊；高度照層數分配
 function layHTML(c,n,m){
  if(isLeaf(n))return cellHTML(c,n.c,m);
- return `<div class="lay ${n.d}">${n.k.map(x=>{const u=units(x);return `<div class="lk"${n.d==='h'?` style="flex:${u} 1 0;min-width:${u*52}px"`:''}>${layHTML(c,x,m)}</div>`}).join('')}</div>`;
+ // 寬度把格子間的空隙也算進去：1 格寬 = 平均寬，2 格寬 = 2 個平均寬 + 1 個空隙
+ const U=units(n),t=n.d==='h'?'grid-template-columns:'+n.k.map(x=>{const u=units(x);return `calc((100% - ${(U-1)*6}px) * ${u} / ${U} + ${(u-1)*6}px)`}).join(' '):'grid-template-rows:'+n.k.map(x=>`minmax(0,${vunits(x)}fr)`).join(' ');
+ return `<div class="lay" style="${t}">${n.k.map(x=>layHTML(c,x,m)).join('')}</div>`;
 }
 function cellsHTML(c,m){return c.layout?`<div class="cells">${layHTML(c,c.layout,m)}</div>`:`<div class="cells" style="grid-template-columns:repeat(${c.cols},1fr)">${c.cells.map((x,i)=>cellHTML(c,i,m)).join('')}</div>`}
 const cabMin=c=>c.layout?Math.max(100,units(c.layout)*58):c.cols*100,cabFr=c=>c.layout?Math.max(1,units(c.layout)/2):c.cols;
