@@ -65,6 +65,8 @@ textarea{min-height:64px;resize:vertical}
 .ch b{display:block;font-size:17px;line-height:1.3}
 .ch span{display:block;font-size:12px;color:var(--sub);min-height:18px}
 .cells{display:grid;gap:6px}
+.lay{display:flex;gap:6px;flex:1 1 auto}.lay.v{flex-direction:column}
+.lk{display:flex;flex-direction:column;min-width:0}.lay.v>.lk{flex:1 1 auto}.lk>*{flex:1 1 auto}
 .cell{position:relative;min-height:74px;background:var(--c);border:1.5px solid var(--k);border-radius:12px;padding:6px 6px 7px;transition:background .12s,border-color .12s,opacity .12s}
 .cl{font-size:13px;font-weight:700;line-height:1.35;text-align:center;padding:1px 2px 4px;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overflow-wrap:anywhere}
 .cl i{font-style:normal;font-weight:500;font-size:11px;color:var(--sub);margin-right:3px}
@@ -129,6 +131,30 @@ function seed(){
   mk('中櫃 B','音樂教材','blue',['備用樂譜／參考書','音樂課本新書','幼兒音樂樂譜','鋼琴教本／樂理教材','教案／學習單','近期使用教材']),
   mk('右櫃 C','個人展示','sand',['輕型紀念品／留白','大照片①','大照片②','超大鴨子置物盤','招財貓','水晶'])]};
 }
+// ---------- 自訂格子形狀：每一格可以再切成上下／左右，切出來的也可以合併回去 ----------
+// layout 是一棵樹：{c:編號} 是一格；{d:'h' 左右排 | 'v' 上下排, k:[…], s:1} 是一組（s：切割出來的，可以合併回去）
+const isLeaf=n=>!!n&&n.c!=null;
+function validLay(n){return isLeaf(n)?Number.isInteger(n.c)&&n.c>=0:!!n&&(n.d==='h'||n.d==='v')&&Array.isArray(n.k)&&n.k.length>0&&n.k.every(validLay)}
+function units(n){return isLeaf(n)?1:n.d==='h'?n.k.reduce((a,x)=>a+units(x),0):Math.max(...n.k.map(units))}
+const leaves=n=>isLeaf(n)?[n.c]:n.k.flatMap(leaves);
+// 照畫面順序（由上到下、由左到右）重新編號，合併掉的格子會一起移除
+function tidy(c){const old=c.cells,cells=[];(function walk(n){if(isLeaf(n)){cells.push(old[n.c]||{l:'',it:[]});n.c=cells.length-1}else n.k.forEach(walk)})(c.layout);c.cells=cells}
+function toLayout(c){if(c.layout)return;let k=0;const row=()=>c.cols===1?{c:k++}:{d:'h',k:Array.from({length:c.cols},()=>({c:k++}))};c.layout=c.rows===1?row():{d:'v',k:Array.from({length:c.rows},row)}}
+function findPath(n,i,path=[]){if(isLeaf(n))return n.c===i?[...path,n]:null;for(const x of n.k){const r=findPath(x,i,[...path,n]);if(r)return r}return null}
+function splitCell(c,i,r,q){
+ toLayout(c);const path=findPath(c.layout,i),leaf=path[path.length-1];let first=true;
+ const mk=()=>{if(first){first=false;return{c:i}}c.cells.push({l:'',it:[]});return{c:c.cells.length-1}};
+ const row=()=>q===1?mk():{d:'h',k:Array.from({length:q},mk)};
+ const g=r===1?row():{d:'v',k:Array.from({length:r},row)};
+ delete leaf.c;Object.assign(leaf,g,{s:1});tidy(c);
+}
+function mergeGroup(c,i){if(!c.layout)return null;const p=findPath(c.layout,i)||[];for(let j=p.length-2;j>=0;j--)if(p[j].s)return p[j];return null}
+function mergeCell(c,i){
+ const g=mergeGroup(c,i),ids=leaves(g),keep=c.cells[ids[0]];
+ keep.l=keep.l||ids.map(j=>c.cells[j].l).find(Boolean)||'';
+ ids.slice(1).forEach(j=>keep.it.push(...c.cells[j].it));
+ Object.keys(g).forEach(k=>delete g[k]);g.c=ids[0];tidy(c);
+}
 function fix(o){
  if(!o||!Array.isArray(o.cabs))throw new Error('bad');
  o.rooms=Array.isArray(o.rooms)&&o.rooms.length?o.rooms:[{id:nid(),name:'我的家'}];
@@ -138,7 +164,8 @@ function fix(o){
   if(!COLORS.includes(c.color))c.color='gray';
   if(!o.rooms.some(r=>r.id===c.room))c.room=o.rooms[0].id;
   c.cells=Array.isArray(c.cells)?c.cells:[];
-  while(c.cells.length<c.rows*c.cols)c.cells.push({l:'',it:[]});
+  if(c.layout&&!validLay(c.layout))delete c.layout;
+  if(c.layout)tidy(c);else while(c.cells.length<c.rows*c.cols)c.cells.push({l:'',it:[]});
   c.cells.forEach(x=>{x.l=x.l||'';x.it=(Array.isArray(x.it)?x.it:[]).filter(t=>t&&t.n).map(t=>({id:t.id||nid(),n:String(t.n),note:t.note||''}))});
  });
  return o;
@@ -255,17 +282,24 @@ function render(){
   if(multi&&!cs.length)return;
   if(multi)h+=`<h2>${E(r.name)}</h2>`;else h+='<div style="height:10px"></div>';
   if(!cs.length){h+=`<div class="empty">「${E(r.name)}」還沒有櫃子<br><br><button class="go" data-a="newcab">＋ 新增櫃子</button></div>`;return}
-  h+=`<div class="board" style="grid-template-columns:${cs.map(c=>`minmax(${c.cols*100}px,${c.cols}fr)`).join(' ')}">`+cs.map(c=>
+  h+=`<div class="board" style="grid-template-columns:${cs.map(c=>`minmax(${cabMin(c)}px,${cabFr(c)}fr)`).join(' ')}">`+cs.map(c=>
    `<section class="cab c-${c.color}"><button class="ch" data-a="cab" data-id="${c.id}"><b>${E(c.name)}</b><span>${E(c.sub)}</span></button>
-   <div class="cells" style="grid-template-columns:repeat(${c.cols},1fr)">`+c.cells.map((x,i)=>{
-    const k=c.id+':'+i,cls=m?(m.cells.has(k)?' hit':' dim'):'';
-    return `<div class="cell${cls}" data-cell="${k}"><div class="cl" data-drag="cell"><i>${i+1}</i>${E(x.l)}</div><div class="its">${x.it.map(t=>`<span class="it${m&&m.hits.has(t.id)?' hit':''}" data-drag="it" data-it="${t.id}">${E(t.n)}</span>`).join('')}</div></div>`;
-   }).join('')+'</div></section>').join('')+'</div>';
+   ${cellsHTML(c,m)}</section>`).join('')+'</div>';
  });
  if(!rooms.length||!S.cabs.length&&!multi&&!h)h='<div class="empty">還沒有櫃子</div>';
  $('board').innerHTML=h;
  status(CL.st||'連線中…');
 }
+function cellHTML(c,i,m){
+ const x=c.cells[i],k=c.id+':'+i,cls=m?(m.cells.has(k)?' hit':' dim'):'';
+ return `<div class="cell${cls}" data-cell="${k}"><div class="cl" data-drag="cell"><i>${i+1}</i>${E(x.l)}</div><div class="its">${x.it.map(t=>`<span class="it${m&&m.hits.has(t.id)?' hit':''}" data-drag="it" data-it="${t.id}">${E(t.n)}</span>`).join('')}</div></div>`;
+}
+function layHTML(c,n,m){
+ if(isLeaf(n))return cellHTML(c,n.c,m);
+ return `<div class="lay ${n.d}">${n.k.map(x=>{const u=units(x);return `<div class="lk"${n.d==='h'?` style="flex:${u} 1 0;min-width:${u*52}px"`:''}>${layHTML(c,x,m)}</div>`}).join('')}</div>`;
+}
+function cellsHTML(c,m){return c.layout?`<div class="cells">${layHTML(c,c.layout,m)}</div>`:`<div class="cells" style="grid-template-columns:repeat(${c.cols},1fr)">${c.cells.map((x,i)=>cellHTML(c,i,m)).join('')}</div>`}
+const cabMin=c=>c.layout?Math.max(100,units(c.layout)*58):c.cols*100,cabFr=c=>c.layout?Math.max(1,units(c.layout)/2):c.cols;
 
 // ---------- 拖曳（電腦用滑鼠拖；手機要先按住一下再拖，才不會跟捲動打架）----------
 let press=null,drag=null,noClick=0;
@@ -360,6 +394,10 @@ function cellSheet(cid,i,focusAdd){
   <div class="sub" style="margin-bottom:6px">裡面有（${x.it.length}）</div>
   ${x.it.map(t=>`<div class="li"><span>${E(t.n)}${t.note?`<small>${E(t.note)}</small>`:''}</span><button data-ed="${t.id}">編輯</button><button data-del="${t.id}" aria-label="刪除">✕</button></div>`).join('')||'<div class="sub" style="padding:4px 2px 2px">這格還是空的</div>'}
   <div class="add"><input id="sa" placeholder="新增東西（用、或逗號可一次加很多）" enterkeyhint="done"><button class="go" id="sab">加入</button></div>
+  <div class="sub" style="margin:4px 0 6px">調整格子形狀</div>
+  <div class="card" style="margin-bottom:4px"><div class="row" style="flex-wrap:nowrap;gap:6px">把這格切成<input id="sr" type="number" inputmode="numeric" min="1" max="10" value="1" style="width:58px;padding:6px">層 ×<input id="sq" type="number" inputmode="numeric" min="1" max="10" value="2" style="width:58px;padding:6px">格<button class="bt" id="ssp" style="margin-left:auto">切割</button></div>
+  <div class="sub" style="margin-top:6px">「層」是上下分，「格」是左右分。這格裡的東西會留在左上那一格。</div>
+  ${mergeGroup(c,i)?`<button class="bt" id="smg" style="margin-top:8px">把切出來的 ${leaves(mergeGroup(c,i)).length} 格合併回一格</button>`:''}</div>
   <div class="foot"><button class="bt bad" id="sclr" ${x.it.length?'':'disabled style="opacity:.4"'}>清空這格</button><button class="go" data-x>完成</button></div>`,p=>{
   const sl=p.querySelector('#sl');
   sl.onchange=()=>{const v=sl.value.trim();if(v!==x.l)op(()=>{x.l=v})};
@@ -371,6 +409,17 @@ function cellSheet(cid,i,focusAdd){
   p.querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>itemSheet(b.dataset.ed,()=>cellSheet(cid,i)));
   p.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{const a=loc(b.dataset.del);op(()=>x.it.splice(a.k,1),'已刪除「'+a.t.n+'」');cellSheet(cid,i)});
   p.querySelector('#sclr').onclick=()=>{if(!x.it.length)return;op(()=>{x.it=[]},'已清空 '+where(c,i));cellSheet(cid,i)};
+  p.querySelector('#ssp').onclick=()=>{
+   const n=k=>Math.min(10,Math.max(1,Math.round(+p.querySelector(k).value||1))),r=n('#sr'),q=n('#sq');
+   if(r*q<2)return alert('至少要切成 2 格，例如 1 層 × 2 格。');
+   op(()=>splitCell(c,i,r,q),'已把第 '+(i+1)+' 格切成 '+r+' 層 × '+q+' 格');closeSheet();
+  };
+  const mg=p.querySelector('#smg');
+  if(mg)mg.onclick=()=>{
+   const ids=leaves(mergeGroup(c,i)),k=ids.reduce((a,j)=>a+c.cells[j].it.length,0);
+   if(k&&!confirm('這 '+ids.length+' 格裡的 '+k+' 樣東西會放在同一格，確定合併？'))return;
+   op(()=>mergeCell(c,i),'已合併成一格');closeSheet();
+  };
   if(focusAdd)p.querySelector('#sa').focus();
  });
 }
@@ -402,14 +451,14 @@ function cabSheet(id){
   <label class="f"><span>櫃子名稱</span><input id="cn" value="${E(c?c.name:'')}" placeholder="例如：鞋櫃、衣櫃、左櫃 A"></label>
   <label class="f"><span>用途（選填）</span><input id="cs" value="${E(c?c.sub:'')}" placeholder="例如：音樂教材"></label>
   <label class="f"><span>放在哪個地點</span><select id="cr">${S.rooms.map(r=>`<option value="${r.id}"${r.id===room?' selected':''}>${E(r.name)}</option>`).join('')}</select></label>
-  <div class="f"><span>格子：幾層（直的）× 每層幾格（橫的）</span><div class="two"><input id="cy" type="number" inputmode="numeric" min="1" max="20" value="${c?c.rows:6}"><input id="cx" type="number" inputmode="numeric" min="1" max="6" value="${c?c.cols:1}"></div></div>
+  ${c&&c.layout?`<div class="f"><span>格子</span><div class="sub">這個櫃子是自訂形狀（共 ${c.cells.length} 格）。點任何一格，就能再切割或合併。</div></div>`:`<div class="f"><span>格子：幾層（直的）× 每層幾格（橫的）</span><div class="two"><input id="cy" type="number" inputmode="numeric" min="1" max="20" value="${c?c.rows:6}"><input id="cx" type="number" inputmode="numeric" min="1" max="6" value="${c?c.cols:1}"></div></div><div class="sub" style="margin:-6px 0 12px">格子大小不一樣？先建立，再點格子「切割」。</div>`}
   <div class="f"><span>顏色</span><div class="sw">${COLORS.map(k=>`<label class="c-${k}"><input type="radio" name="cc" value="${k}"${k===color?' checked':''}><span></span></label>`).join('')}</div></div>
   ${c?`<div class="row" style="margin-bottom:4px"><button class="bt" id="cl">← 往左移</button><button class="bt" id="cr2">往右移 →</button></div>`:''}
   <div class="foot">${c?'<button class="bt bad" id="cdel">刪除櫃子</button>':'<span></span>'}<div class="row"><button class="bt" data-x>取消</button><button class="go" id="cok">${c?'儲存':'建立'}</button></div></div>`,p=>{
   const v=s=>p.querySelector(s).value;
   p.querySelector('#cok').onclick=()=>{
    const name=v('#cn').trim();if(!name)return p.querySelector('#cn').focus();
-   const rows=Math.min(20,Math.max(1,Math.round(+v('#cy')||1))),cols=Math.min(6,Math.max(1,Math.round(+v('#cx')||1))),n=rows*cols;
+   const lay=!!(c&&c.layout),rows=lay?c.rows:Math.min(20,Math.max(1,Math.round(+v('#cy')||1))),cols=lay?c.cols:Math.min(6,Math.max(1,Math.round(+v('#cx')||1))),n=lay?c.cells.length:rows*cols;
    const col=(p.querySelector('input[name=cc]:checked')||{}).value||'gray';
    if(c){
     const lost=c.cells.slice(n).reduce((a,x)=>a+x.it.length,0);
