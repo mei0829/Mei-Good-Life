@@ -961,7 +961,7 @@ function saName(a){const g=String(a.group||'').replace('銀行','');return(g?g+'
 function sheetBroker(o){const known=BROKERS.includes(o.name);return`<div class="row"><b class="sp" style="font-size:17px">${o.id?'修改證券戶':'新增證券戶'}</b><button class="x" data-a="close">×</button></div>
  <div class="grid"><label class="fl w"><span>券商</span><select data-m="sheet.o.pick" data-r="1"><option value="">選擇券商</option>${BROKERS.map(n=>`<option ${(o.pick||'')===n?'selected':''}>${n}</option>`).join('')}<option value="其他" ${o.pick==='其他'?'selected':''}>其他（自己打）</option></select></label>
  ${o.pick==='其他'?`<label class="fl w"><span>券商名稱</span><input value="${E(o.name)}" data-m="sheet.o.name" placeholder="例：XX 證券"></label>`:''}
- <label class="fl w"><span>證券帳號 ${o.no?copyTag(o.no,'複製'):''}</span><input inputmode="numeric" value="${E(o.no)}" data-m="sheet.o.no" placeholder="例：9A12-1234567"></label>
+ <label class="fl w"><span>證券帳號 ${o.no?copyTag(o.no,'複製'):''}</span><input value="${E(o.no)}" data-m="sheet.o.no" placeholder="例：9A12-1234567" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false"></label>
  <label class="fl w"><span>交割銀行帳戶（買賣股票的錢從這裡進出）</span><select data-m="sheet.o.acct"><option value="">還沒選</option>${S.accts.filter(a=>!isCard(a)).map(a=>`<option value="${a.id}" ${o.acct===a.id?'selected':''}>${E(nm(a))}</option>`).join('')}</select></label>
  <label class="fl"><span>手續費折扣（2.8 折填 0.28）</span><input inputmode="decimal" value="${E(o.disc==null?'':o.disc)}" data-m="sheet.o.disc" placeholder="空白＝用預設"></label>
  <label class="fl"><span>最低手續費</span><input inputmode="numeric" value="${E(o.min==null?'':o.min)}" data-m="sheet.o.min" placeholder="例：20"></label>
