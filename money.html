@@ -94,6 +94,9 @@ table.pv{width:100%;border-collapse:collapse;font-size:12px}table.pv td,table.pv
 .it select{height:32px!important;padding:4px 6px;font-size:13px}
 .st{display:inline-block;font-size:11px;line-height:1.6;padding:0 7px;border-radius:9px;border:1px solid var(--line);color:var(--sub);white-space:nowrap;margin-top:2px}
 .st.pending{border-style:dashed}.st.pre{opacity:.7}.st.open{color:var(--acc);border-color:var(--acc)}.st.billed{color:var(--amber);border-color:var(--amber)}.st.paid{color:var(--ok);border-color:var(--ok)}
+/* 旅行的日期月曆 */
+.rcal{border:1px solid var(--line);border-radius:12px;padding:8px}.rg{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}.rg i{font-style:normal;text-align:center;font-size:12px;color:var(--sub);padding:2px 0}
+.rg button{border:0;background:none;font:inherit;font-size:15px;color:var(--ink);height:38px;border-radius:9px;cursor:pointer}.rg button.mid{background:color-mix(in srgb,var(--acc) 18%,transparent)}.rg button.on{background:var(--acc);color:var(--on);font-weight:700}.rg button.t0{box-shadow:inset 0 0 0 1.5px var(--acc)}
 #app .today{font-size:15px;font-weight:700;color:var(--ink);white-space:nowrap;background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:4px 12px;box-shadow:0 1px 6px rgba(0,0,0,.1)}
 #helpb{position:fixed;top:calc(32px + env(safe-area-inset-top,0px));right:max(12px,calc(50% - 248px));z-index:8;width:32px;height:32px;border-radius:50%;border:1.5px solid var(--line);background:var(--card);color:var(--acc);font:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,.1);padding:0}
 .hp{border-top:1px solid var(--line)}.hp>button{width:100%;text-align:left;border:0;background:none;font:inherit;color:var(--ink);padding:11px 2px;cursor:pointer;display:flex;justify-content:space-between;font-weight:700}.hp>div{font-size:14px;line-height:1.75;padding:0 2px 12px;color:var(--ink)}.hp>div b{color:var(--acc)}
@@ -890,10 +893,21 @@ function sheetSp(o){const T=tripOf(U.trip)||{},ps=tripPpl(T),fx=T.cur&&T.cur!=='
  ${o.mode==='some'?`<div class="fl w"><span>誰要分（點選）</span><div class="chips">${ps.map(p=>`<button class="chip ${(o.among||[]).includes(p)?'on':''}" data-a="spam" data-i="${E(p)}">${(o.among||[]).includes(p)?'✓ ':''}${E(p)}</button>`).join('')}</div></div>`:''}
  ${o.mode==='none'?`<div class="sub w">${E(o.by||'付錢的人')}自己的，記下來看得到，但不算進誰欠誰。</div>`:''}</div>
  <div class="row" style="margin-top:14px;gap:8px">${o.id?'<button class="go r" data-a="spdel">刪除</button>':''}<span class="sp"></span><button class="go" data-a="spsave">儲存</button></div>`}
+// 出發、回家日用同一個月曆點：第一下出發日，第二下回家日（當天來回就同一天點兩下）
+const dLab=d=>md(d)+'（'+WD[pd(d).getDay()]+'）';
+function tripCal(o){const m=o.calM||(o.from||today()).slice(0,7),d0=pd(m+'-01'),y=d0.getFullYear(),mo=d0.getMonth(),n=dim(y,mo),lead=(d0.getDay()+6)%7,t0=today(),cells=[];
+ for(let i=0;i<lead;i++)cells.push('<span></span>');
+ for(let i=1;i<=n;i++){const d=ymd(y,mo,i),end=d===o.from||d===o.to,mid=o.from&&o.to&&d>o.from&&d<o.to;
+  cells.push(`<button class="${end?'on':mid?'mid':''}${d===t0?' t0':''}" data-a="trcal" data-i="${d}">${i}</button>`)}
+ const step=!o.from?'先點<b>出發日</b>':o.to?'✓ 選好了。要改的話，重新點<b>出發日</b>再點<b>回家日</b>':'再點<b>回家日</b>（當天來回就再點一次 '+md(o.from)+'）';
+ return`<div class="fl w"><span>出發日 → 回家日</span>
+ <div class="row" style="margin:2px 0 6px"><b class="sp" style="font-size:15px">${o.from?dLab(o.from):'—'} → ${o.to?dLab(o.to):'—'}</b>${o.from&&o.to?`<span class="pill y">${dleft(o.to)-dleft(o.from)+1} 天</span>`:''}</div>
+ <div class="rcal"><div class="row" style="margin-bottom:4px"><button class="go q" data-a="trcalm" data-i="-1">‹</button><b class="sp" style="text-align:center">${y} 年 ${mo+1} 月</b><button class="go q" data-a="trcalm" data-i="1">›</button></div>
+ <div class="rg">${['一','二','三','四','五','六','日'].map(w=>`<i>${w}</i>`).join('')}${cells.join('')}</div></div>
+ <div class="sub" style="margin-top:4px">${step}</div></div>`}
 function sheetTrip(o){return`<div class="row"><b class="sp" style="font-size:17px">${o.id?'修改旅行':'新增一次旅行'}</b><button class="x" data-a="close">×</button></div>
  <div class="grid"><label class="fl w"><span>名稱</span><input value="${E(o.name)}" data-m="sheet.o.name" placeholder="例：東京 5 天、墾丁家族旅行"></label>
- <label class="fl"><span>出發日</span><input type="date" value="${o.from||''}" data-m="sheet.o.from"></label>
- <label class="fl"><span>回家日</span><input type="date" value="${o.to||''}" data-m="sheet.o.to"></label>
+ ${tripCal(o)}
  <label class="fl"><span>預算（選填）</span><input inputmode="numeric" value="${E(o.budget||'')}" data-m="sheet.o.budget" placeholder="例：40000"></label>
  <label class="fl"><span>幾個人（選填，算每人；有填同行的人會自動算）</span><input inputmode="numeric" value="${E(o.ppl||'')}" data-m="sheet.o.ppl" placeholder="例：2"></label>
  <label class="fl w"><span>備註（選填）</span><input value="${E(o.note||'')}" data-m="sheet.o.note" placeholder="例：跟家人、住新宿"></label>
@@ -1779,11 +1793,13 @@ const ACT={
  tripopen:i=>{U.tab='trip';U.trip=i;U.tripV='spend';U.tripEd=0;U.tripAdd=0;U.tripQ='';U.sheet=null;render();window.scrollTo(0,0)},
  tripx:()=>{U.trip='';render();window.scrollTo(0,0)},
  tripedit:()=>{const T=tripOf(U.trip);if(T){U.sheet={k:'trip',o:Object.assign({},T,{memS:null})};render()}},
- tripsave:()=>{const o=U.sheet.o,name=String(o.name||'').trim();if(!name)return toast('請輸入名稱');if(!o.from||!o.to)return toast('請選出發日和回家日');if(o.to<o.from)return toast('回家日不能早於出發日');
+ tripsave:()=>{const o=U.sheet.o,name=String(o.name||'').trim();if(!name)return toast('請輸入名稱');if(!o.from)return toast('請在月曆點出發日');if(!o.to)return toast('請再點回家日（當天來回就再點一次出發日）');if(o.to<o.from)return toast('回家日不能早於出發日');
   const T=o.id&&tripOf(o.id)||{id:'tr'+nid(),ex:[]};const mem=o.memS==null?(o.mem||[]):[...new Set(String(o.memS).split(/[,，、\s]+/).map(x=>x.trim()).filter(x=>x&&x!==ME))];
   Object.assign(T,{name,from:o.from,to:o.to,budget:pAmt(o.budget)>0?pAmt(o.budget):'',ppl:mem.length?mem.length+1:pAmt(o.ppl)>1?Math.round(pAmt(o.ppl)):'',note:String(o.note||'').trim(),mem,cur:o.cur||'TWD',rate:o.cur&&o.cur!=='TWD'&&pAmt(o.rate)>0?pAmt(o.rate):''});
   if(!TRIPS().includes(T))TRIPS().push(T);U.sheet=null;U.tab='trip';U.trip=T.id;save();render();toast('已儲存 '+name)},
  tripdel:()=>{const id=U.sheet.o.id,T=tripOf(id);if(!T||!confirm('刪除「'+T.name+'」？（記帳紀錄不會刪，只是不再分到這次旅行）'))return;S.trips=TRIPS().filter(x=>x!==T);S.tx.forEach(t=>{if(t.trip===id)delete t.trip});U.sheet=null;U.trip='';save();render()},
+ trcal:i=>{const o=U.sheet.o;if(!o.from||o.to)Object.assign(o,{from:i,to:''});else if(i<o.from)o.from=i;else o.to=i;render()},
+ trcalm:i=>{const o=U.sheet.o,m=o.calM||(o.from||today()).slice(0,7);o.calM=addM(m+'-01',+i).slice(0,7);render()},
  tripv:i=>{U.tripV=i;render()},
  triprate:async()=>{const o=U.sheet.o;if(!o.cur||o.cur==='TWD')return;o.rBusy=1;render();
   try{const r=await askAI(`今天是 ${today()}。請用 Google 搜尋查台灣銀行或可靠來源今天的匯率：1 ${curNm(o.cur)}（${o.cur}）等於多少新台幣（用現金賣出或即期賣出價）。只回傳 JSON：{"rate":數字,"src":"來源名稱"}`,null,true);
