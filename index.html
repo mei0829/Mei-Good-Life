@@ -14,11 +14,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#F4F1EC;--card:#fff;--ink:#2B2A27;--sub:#7A766E;--line:#E4DFD6;--acc:#5E7A6A;
- --t1:#E1E7EF;--i1:#4F6F8C;--t2:#E3E9DF;--i2:#5E7A6A;--t3:#F3E2E1;--i3:#A8625F;--t4:#F0E7DA;--i4:#9A7440;--t5:#E9E3F0;--i5:#76619A}
+ --t6:#F6E6D8;--i6:#A85A30;--t1:#E1E7EF;--i1:#4F6F8C;--t2:#E3E9DF;--i2:#5E7A6A;--t3:#F3E2E1;--i3:#A8625F;--t4:#F0E7DA;--i4:#9A7440;--t5:#E9E3F0;--i5:#76619A}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171614;--card:#22211E;--ink:#EDEAE4;--sub:#A29D94;--line:#34322E;--acc:#9DC0AC;
- --t1:#29303A;--i1:#8DB0D0;--t2:#2C3329;--i2:#9DC0AC;--t3:#3A2B2A;--i3:#E0A09C;--t4:#36301F;--i4:#D9B47A;--t5:#322C3A;--i5:#B9A5DA}}
+ --t1:#29303A;--i1:#8DB0D0;--t2:#2C3329;--i2:#9DC0AC;--t3:#3A2B2A;--i3:#E0A09C;--t4:#36301F;--i4:#D9B47A;--t5:#322C3A;--i5:#B9A5DA;--t6:#3A2C22;--i6:#E8A57C}}
 :root[data-theme="dark"]{--bg:#171614;--card:#22211E;--ink:#EDEAE4;--sub:#A29D94;--line:#34322E;--acc:#9DC0AC;
- --t1:#29303A;--i1:#8DB0D0;--t2:#2C3329;--i2:#9DC0AC;--t3:#3A2B2A;--i3:#E0A09C;--t4:#36301F;--i4:#D9B47A;--t5:#322C3A;--i5:#B9A5DA}
+ --t1:#29303A;--i1:#8DB0D0;--t2:#2C3329;--i2:#9DC0AC;--t3:#3A2B2A;--i3:#E0A09C;--t4:#36301F;--i4:#D9B47A;--t5:#322C3A;--i5:#B9A5DA;--t6:#3A2C22;--i6:#E8A57C}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Noto Sans TC","PingFang TC",-apple-system,"Microsoft JhengHei",sans-serif}
 main{max-width:640px;margin:0 auto;padding:calc(28px + env(safe-area-inset-top)) 16px 40px}
@@ -36,7 +36,7 @@ a.tile:active{transform:scale(.97)}
 .tag{margin-top:auto;align-self:flex-start;font-size:12px;border-radius:999px;padding:2px 9px;background:var(--t);color:var(--i)}
 .soon{opacity:.6}
 .soon .tag{background:none;border:1px dashed var(--line);color:var(--sub)}
-.k1{--t:var(--t1);--i:var(--i1)}.k2{--t:var(--t2);--i:var(--i2)}.k3{--t:var(--t3);--i:var(--i3)}.k4{--t:var(--t4);--i:var(--i4)}.k5{--t:var(--t5);--i:var(--i5)}
+.k1{--t:var(--t1);--i:var(--i1)}.k2{--t:var(--t2);--i:var(--i2)}.k3{--t:var(--t3);--i:var(--i3)}.k4{--t:var(--t4);--i:var(--i4)}.k5{--t:var(--t5);--i:var(--i5)}.k6{--t:var(--t6);--i:var(--i6)}
 footer{text-align:center;font-size:11px;color:var(--sub);margin-top:36px;opacity:.8}
 </style>
 </head>
@@ -55,6 +55,11 @@ footer{text-align:center;font-size:11px;color:var(--sub);margin-top:36px;opacity
   <div class="ic"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M5 9h14M5 15h14M11 6h2M11 12h2M11 18h2"/></svg></div>
   <div><b>物品存放</b><p>哪個櫃子哪一格放了什麼</p></div>
   <span class="tag">家人共用</span>
+ </a>
+ <a class="tile k6" id="biz" href="biz.html" hidden>
+  <div class="ic"><svg viewBox="0 0 24 24"><path d="M4 15a8 8 0 0 1 16 0z"/><path d="M3 15h18"/><path d="M9 11.5h.01M12 10h.01M15 11.5h.01"/></svg></div>
+  <div><b>東京餅創業</b><p>原物料價格、新點子、口味筆記</p></div>
+  <span class="tag">夥伴共用</span>
  </a>
 </div>
 
@@ -82,6 +87,8 @@ footer{text-align:center;font-size:11px;color:var(--sub);margin-top:36px;opacity
 <script>
 // 記帳只在管理員登入過的手機上顯示
 try{if(localStorage.getItem('mgl-role')==='admin')document.getElementById('money').hidden=false}catch(e){}
+// 創業頁只給管理員和被邀請的夥伴看到
+try{if(localStorage.getItem('mgl-role')==='admin'||localStorage.getItem('mgl-biz')==='1')document.getElementById('biz').hidden=false}catch(e){}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 const d=new Date(),h=d.getHours();
 document.getElementById('hi').textContent=(h<11?'早安':h<18?'午安':'晚安')+'・'+(d.getMonth()+1)+'/'+d.getDate()+'（'+'日一二三四五六'[d.getDay()]+'）';

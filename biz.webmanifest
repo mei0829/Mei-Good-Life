@@ -1,0 +1,13 @@
+{
+  "name": "東京餅創業",
+  "short_name": "東京餅",
+  "start_url": "./biz.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F4EFE8",
+  "theme_color": "#F4EFE8",
+  "lang": "zh-Hant",
+  "icons": [
+    { "src": "biz.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F4EFE8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="東京餅">
+<link rel="manifest" href="biz.webmanifest">
+<link rel="icon" href="biz.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="biz.svg">
+<title>東京餅創業</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F4EFE8;--card:#fff;--ink:#2B2A27;--sub:#7A766E;--line:#E4DCD1;--acc:#A85A30;--on:#fff;--ok:#3F8A5F;--bad:#C94A4A;--soft:#F6E6D8;--up:#C94A4A;--down:#3F8A5F}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171614;--card:#22211E;--ink:#EDEAE4;--sub:#A29D94;--line:#34322E;--acc:#E8A57C;--on:#171614;--ok:#7CC49A;--bad:#F07070;--soft:#3A2C22;--up:#F07070;--down:#7CC49A}}
+:root[data-theme="dark"]{--bg:#171614;--card:#22211E;--ink:#EDEAE4;--sub:#A29D94;--line:#34322E;--acc:#E8A57C;--on:#171614;--ok:#7CC49A;--bad:#F07070;--soft:#3A2C22;--up:#F07070;--down:#7CC49A}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Noto Sans TC","PingFang TC",-apple-system,"Microsoft JhengHei",sans-serif}
+#app{max-width:760px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top)) 16px 90px}
+#app::after{content:"© 2026 mei0829 版權所有";display:block;text-align:center;font-size:11px;color:var(--sub);margin-top:28px;opacity:.8}
+h1{font-size:24px;margin:4px 0 0;font-weight:700}
+h2{font-size:14px;margin:18px 2px 8px;color:var(--sub);font-weight:500}
+a{color:var(--acc)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;touch-action:manipulation}
+input,select,textarea{font-size:16px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 10px;width:100%;min-width:0}
+textarea{min-height:72px;resize:vertical}
+.card{background:var(--card);border-radius:16px;padding:12px 14px;margin-bottom:10px;border:1px solid var(--line)}
+.sub{font-size:13px;color:var(--sub)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.go{background:var(--acc);color:var(--on);border:0;border-radius:12px;padding:10px 16px;font-weight:700}
+.bt{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 12px}
+.bad{color:var(--bad)}
+#authwrap{max-width:420px;margin:0 auto;padding:40px 16px}#authwrap a{color:var(--acc)}
+.afl{display:block;margin-bottom:10px}.afl span{display:block;font-size:13px;color:var(--sub);margin-bottom:4px}
+
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.top .row{flex-wrap:nowrap}
+.home{font-size:14px;text-decoration:none}
+#st{font-size:12px;color:var(--sub);margin:2px 0 10px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px;margin-bottom:10px}
+.tabs button{border:0;background:none;border-radius:10px;padding:7px 4px;font-weight:500;color:var(--sub)}
+.tabs button.on{background:var(--acc);color:var(--on)}
+.bar{display:flex;gap:8px}.bar input{flex:1;border-radius:14px;height:42px}.bar .go{flex:none;border-radius:14px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:10px 0 2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chips button{flex:none;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:4px 12px;font-size:13px}
+.chips button.on{background:var(--acc);border-color:var(--acc);color:var(--on)}
+.it{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:8px}
+.it .hd{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.it b{font-size:16px;overflow-wrap:anywhere}
+.it .r{text-align:right;white-space:nowrap;font-weight:700}
+.it .ln{font-size:13px;color:var(--sub);margin-top:2px;overflow-wrap:anywhere}
+.it .ex{font-size:13.5px;margin-top:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap}
+.tag{display:inline-block;font-size:12px;border-radius:999px;padding:1px 8px;background:var(--soft);color:var(--acc);margin-right:4px;font-weight:500;white-space:nowrap}
+.tag.g{background:none;border:1px solid var(--line);color:var(--sub)}
+.up{color:var(--up)}.down{color:var(--down)}
+.stars{color:var(--acc);letter-spacing:1px}
+.empty{text-align:center;padding:28px 12px;color:var(--sub)}
+.gone{text-align:center;padding:40px 16px}
+
+#sheet{position:fixed;inset:0;z-index:50;display:none}
+#sheet.on{display:block}
+#sheet .bk{position:absolute;inset:0;background:rgba(0,0,0,.35)}
+#sheet .pn{position:absolute;left:0;right:0;bottom:0;margin:0 auto;max-width:560px;max-height:90vh;overflow:auto;background:var(--bg);border-radius:20px 20px 0 0;padding:16px 16px calc(18px + env(safe-area-inset-bottom))}
+#sheet h3{margin:0 0 12px;font-size:18px}
+.f{display:block;margin-bottom:12px}.f>span{display:block;font-size:13px;color:var(--sub);margin-bottom:4px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.three{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:8px}
+.li{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 6px 6px 12px;margin-bottom:6px}
+.li>span{flex:1;min-width:0;overflow-wrap:anywhere}.li small{display:block;color:var(--sub);font-size:12px}
+.li button{border:0;background:none;padding:6px 8px;color:var(--sub)}
+.li input{width:76px;flex:none;padding:5px 8px;text-align:right}
+.li .c{flex:none;min-width:64px;text-align:right;font-size:13px}
+.add{display:flex;gap:8px;margin:10px 0 14px}.add input,.add select{flex:1}.add button{flex:none}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:12px}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center}
+.sum b{display:block;font-size:17px}.sum span{font-size:12px;color:var(--sub)}
+.rate{display:flex;gap:2px}.rate button{border:0;background:none;font-size:26px;line-height:1;padding:2px;color:var(--line)}.rate button.on{color:var(--acc)}
+.note{border-top:1px solid var(--line);padding:7px 0}.note:first-child{border-top:0}
+.note .w{font-size:12px;color:var(--sub);display:flex;justify-content:space-between}
+.note .w button{border:0;background:none;color:var(--sub);padding:0 2px}
+.note p{margin:2px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.foot{display:flex;gap:8px;justify-content:space-between;margin-top:14px}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:60;background:var(--ink);color:var(--bg);border-radius:12px;padding:9px 14px;font-size:14px;display:none;align-items:center;gap:12px;max-width:calc(100% - 32px);box-shadow:0 6px 20px rgba(0,0,0,.25)}
+#toast.on{display:flex}
+#toast button{border:0;background:none;color:var(--acc);font-weight:700;padding:0;white-space:nowrap}
+</style>
+</head>
+<body>
+<div id="auth" data-title="東京餅創業"></div>
+<div id="app"></div><div id="sheet"></div><div id="toast"></div>
+<input type="file" id="impf" accept="application/json,.json" style="display:none">
+<script type="module" src="auth.js"></script>
+<script type="text/plain" id="app-src">
+const E=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const $=id=>document.getElementById(id);
+const nid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3);
+const KEY='biz-v1',KT='biz-t';
+const UNITS=['g','ml','個','片','張','包'];
+// 買的時候可以用 kg、台斤、L 輸入，存的時候換成 g、ml
+const BUY={g:[['g',1],['kg',1000],['台斤',600]],ml:[['ml',1],['L',1000]]};
+const IDEA_ST=['想法','測試中','採用','放棄'];
+const REC_T=['甜','鹹','麵糊','其他'];
+const REC_ST=['研發中','試賣中','上架','停售'];
+const today=()=>{const d=new Date(),z=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate())};
+
+// 第一次打開：先放好常用的原物料和幾個口味，價格自己填
+function seed(){
+ const mk=(name,cat,unit)=>({id:nid(),name,cat,unit,prices:[]});
+ const mats=[mk('低筋麵粉','粉類','g'),mk('泡打粉','粉類','g'),mk('雞蛋','蛋奶','個'),mk('鮮奶','蛋奶','ml'),mk('細砂糖','糖油','g'),mk('奶油','糖油','g'),mk('沙拉油','糖油','ml'),
+  mk('卡士達粉','餡料','g'),mk('泰式奶茶粉','餡料','g'),mk('香蕉','餡料','個'),mk('熱狗','餡料','個'),mk('鵪鶉蛋','餡料','個'),mk('美乃滋','餡料','g'),mk('起司片','餡料','片'),
+  mk('紙袋','包材','個'),mk('小竹籤','包材','個')];
+ const rec=(name,type)=>({id:nid(),name,type,status:'研發中',rate:0,price:'',yield:'',ings:[],how:'',notes:[],u:Date.now()});
+ return {mats,ideas:[],recs:[rec('基本麵糊','麵糊'),rec('卡士達','甜'),rec('泰式奶茶','甜'),rec('熱狗鵪鶉蛋','鹹')]};
+}
+const arr=a=>Array.isArray(a)?a:[];
+const fixNotes=a=>arr(a).filter(n=>n&&n.x).map(n=>({id:n.id||nid(),t:+n.t||Date.now(),by:n.by||'',x:String(n.x)}));
+function fix(o){
+ if(!o||!Array.isArray(o.mats))throw new Error('bad');
+ o.mats=o.mats.filter(m=>m&&m.name).map(m=>({id:m.id||nid(),name:String(m.name),cat:m.cat||'其他',unit:UNITS.includes(m.unit)?m.unit:'個',
+  prices:arr(m.prices).filter(p=>p&&+p.p>=0&&+p.q>0).map(p=>({id:p.id||nid(),d:p.d||today(),p:+p.p,q:+p.q,shop:p.shop||'',note:p.note||''}))}));
+ o.ideas=arr(o.ideas).filter(i=>i&&i.title).map(i=>({id:i.id||nid(),title:String(i.title),body:i.body||'',st:IDEA_ST.includes(i.st)?i.st:'想法',by:i.by||'',t:+i.t||Date.now(),u:+i.u||+i.t||Date.now(),notes:fixNotes(i.notes)}));
+ o.recs=arr(o.recs).filter(r=>r&&r.name).map(r=>({id:r.id||nid(),name:String(r.name),type:REC_T.includes(r.type)?r.type:'其他',status:REC_ST.includes(r.status)?r.status:'研發中',
+  rate:Math.max(0,Math.min(5,+r.rate||0)),price:r.price===''||r.price==null?'':+r.price,yield:r.yield===''||r.yield==null?'':+r.yield,
+  ings:arr(r.ings).filter(g=>g&&g.ref).map(g=>({ref:String(g.ref),q:+g.q||0})),how:r.how||'',notes:fixNotes(r.notes),u:+r.u||Date.now()}));
+ // 被刪掉的原物料或麵糊，從配方裡拿掉；麵糊只能用原物料，避免互相套用
+ const mids=new Set(o.mats.map(m=>'m:'+m.id)),bids=new Set(o.recs.filter(r=>r.type==='麵糊').map(r=>'r:'+r.id));
+ o.recs.forEach(r=>{r.ings=r.ings.filter(g=>mids.has(g.ref)||(r.type!=='麵糊'&&bids.has(g.ref)))});
+ return o;
+}
+let S=null,T=0;
+try{S=fix(JSON.parse(localStorage.getItem(KEY)));T=+localStorage.getItem(KT)||0}catch(e){S=null}
+if(!S){S=fix(seed());T=0}
+let TAB='mat';try{TAB=localStorage.getItem('biz-tab')||'mat'}catch(e){}
+let FIL={mat:'全部',idea:'全部',rec:'全部'};
+
+// ---------- 計算：單價、價格變化、每片成本 ----------
+const mat=id=>S.mats.find(m=>m.id===id);
+const rec=id=>S.recs.find(r=>r.id===id);
+const hist=m=>m.prices.slice().sort((a,b)=>b.d<a.d?-1:b.d>a.d?1:0);
+const unitP=m=>{const h=hist(m);return h.length?h[0].p/h[0].q:null};
+const money=n=>n==null||isNaN(n)?'—':'$'+(Math.abs(n)>=100?Math.round(n).toLocaleString():(Math.round(n*100)/100).toString());
+// g 和 ml 用每 100 計比較好讀
+const perTxt=m=>{const p=unitP(m);if(p==null)return '';return m.unit==='g'||m.unit==='ml'?'每 100'+m.unit+' '+money(p*100):'每'+m.unit+' '+money(p)};
+function trend(m){const h=hist(m);if(h.length<2)return null;const a=h[0].p/h[0].q,b=h[1].p/h[1].q;return b?(a-b)/b:null}
+const pct=x=>(x>0?'+':'')+Math.round(x*1000)/10+'%';
+function cost(r,deep){
+ let batch=0,miss=[];
+ r.ings.forEach(g=>{
+  const [k,id]=g.ref.split(':');
+  if(k==='m'){const m=mat(id),p=m&&unitP(m);if(p==null)miss.push(m?m.name:'?');else batch+=p*g.q}
+  else if(!deep){const b=rec(id),c=b&&cost(b,1);if(!c||c.piece==null||c.miss.length)miss.push(b?b.name:'?');if(c&&c.piece!=null)batch+=c.piece*g.q}
+ });
+ return {batch,piece:+r.yield>0?batch/r.yield:null,miss};
+}
+const fmt=t=>{const d=new Date(t),z=n=>String(n).padStart(2,'0');return (d.getMonth()+1)+'/'+d.getDate()+' '+z(d.getHours())+':'+z(d.getMinutes())};
+const md=s=>{const p=String(s).split('-');return p.length===3?+p[1]+'/'+(+p[2]):s};
+const who=e=>e?String(e).split('@')[0]:'';
+
+// ---------- 儲存：先存手機，再同步到共用空間（夥伴改了會即時更新）----------
+const CL={F:null,fam:null,fams:[],ref:null,unsub:null,tm:0,busy:false,again:false,dirty:false,pending:null,st:'',none:false};
+const me=()=>CL.F?CL.F.email:'';
+function status(t){CL.st=t;const s=$('st');if(s)s.textContent=(CL.fam?CL.fam.name+' · ':'')+S.mats.length+' 項原物料 · '+S.ideas.length+' 個點子 · '+S.recs.length+' 個口味 · '+t}
+function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(S));localStorage.setItem(KT,String(T))}catch(e){}}
+function commit(){T=Date.now();saveLocal();render();CL.dirty=true;status('同步中…');clearTimeout(CL.tm);CL.tm=setTimeout(cloudPush,700)}
+async function cloudPush(){
+ if(!CL.ref){status(CL.st.startsWith('⚠︎')?CL.st:'⚠︎ 沒有連到雲端，資料只存在這支手機');return}
+ if(CL.busy){CL.again=true;return}
+ CL.busy=true;CL.dirty=false;
+ try{await CL.ref.set({j:JSON.stringify(S),t:T,by:me()});status('✓ 已同步')}
+ catch(e){CL.dirty=true;status('⚠︎ 還沒同步，變更先存在這支手機，連上網路會再試')}
+ CL.busy=false;
+ if(CL.again){CL.again=false;cloudPush()}
+}
+const busyUI=()=>$('sheet').classList.contains('on');
+function onCloud(d){
+ if(!d){if(!T)T=Date.now();CL.dirty=true;return cloudPush()}  // 共用空間還是空的：把手機上的放上去
+ const ct=+d.t||0;
+ if(ct>T){
+  if(CL.dirty||CL.busy)return;
+  if(busyUI()){CL.pending=d;return}  // 正在編輯：關掉視窗後再更新
+  try{S=fix(JSON.parse(d.j))}catch(e){return}
+  T=ct;saveLocal();render();
+  if(d.by&&d.by!==me())toast(who(d.by)+' 剛剛更新了資料');
+ }else if(ct<T&&!CL.busy){CL.dirty=true;return cloudPush()}
+ if(!CL.dirty)status('✓ 已同步');
+}
+function applyPending(){if(CL.pending&&!busyUI()){const d=CL.pending;CL.pending=null;onCloud(d)}}
+function useFam(f){
+ let prev='';try{prev=localStorage.getItem('biz-fid')||''}catch(e){}
+ if(prev&&prev!==f.id){S=fix(seed());T=0;CL.dirty=false;saveLocal()}  // 換到別的空間：以那邊的資料為準
+ try{localStorage.setItem('biz-fid',f.id);localStorage.setItem('mgl-biz','1')}catch(e){}
+ if(!CL.fams.some(x=>x.id===f.id))CL.fams.push(f);
+ CL.fam=f;CL.none=false;CL.ref=CL.F.doc(f.id,'biz');
+ if(CL.unsub)CL.unsub();
+ status('連線中…');render();
+ CL.unsub=CL.ref.watch(onCloud,()=>status('⚠︎ 無法連線，先顯示這支手機上的資料'));
+}
+async function cloudInit(){
+ try{
+  const F=CL.F=await claude.use('family');
+  if(!F)return status('⚠︎ 沒有連到雲端（請重新登入），資料只存在這支手機');
+  try{CL.fams=(await F.list()).filter(x=>x.kind==='biz')}catch(e){return status(e&&e.code==='permission-denied'?'⚠︎ 共用空間還沒開通（Firebase 要加上規則），資料先存在這支手機':'⚠︎ 無法連線，先顯示這支手機上的資料')}
+  let pick='';try{pick=localStorage.getItem('biz-fid')||''}catch(e){}
+  let f=CL.fams.find(x=>x.id===pick)||CL.fams.slice().sort((a,b)=>b.members.length-a.members.length)[0];
+  // 只有管理員會自動建立創業空間；其他人要等被邀請
+  if(!f&&window.FBU&&FBU.admin)f=await F.create('東京餅創業',{kind:'biz'});
+  if(!f){CL.none=true;try{localStorage.removeItem('mgl-biz')}catch(e){}status('還沒加入創業空間');return render()}
+  useFam(f);
+ }catch(e){status('⚠︎ 沒有連到雲端，資料只存在這支手機')}
+}
+addEventListener('online',()=>{if(CL.dirty)cloudPush()});
+
+// 每次變更都可以「復原」
+function op(fn,msg){const prev=JSON.stringify(S);fn();commit();if(msg)toast(msg,()=>{S=fix(JSON.parse(prev));commit();toast('已復原')})}
+let TT=0;
+function toast(msg,undo){
+ const t=$('toast');t.innerHTML=E(msg)+(undo?'<button>復原</button>':'');t.classList.add('on');
+ if(undo)t.querySelector('button').onclick=()=>{t.classList.remove('on');undo()};
+ clearTimeout(TT);TT=setTimeout(()=>t.classList.remove('on'),undo?5000:2200);
+}
+
+// ---------- 畫面 ----------
+const TABS=[['mat','原物料'],['idea','新點子'],['rec','口味筆記']];
+const ADD={mat:'＋ 原物料',idea:'＋ 點子',rec:'＋ 口味'};
+const PH={mat:'找原物料、店家',idea:'找點子',rec:'找口味、材料、筆記'};
+function shell(){
+ $('app').innerHTML=`<div class="top"><div><a class="home" href="./">‹ 首頁</a><h1>東京餅創業</h1></div><div class="row"><button class="bt" data-a="set" aria-label="設定">⋯</button></div></div>
+ <div id="st"></div>
+ <div class="tabs" id="tabs"></div>
+ <div class="bar"><input id="q" type="search" autocomplete="off"><button class="go" data-a="new" id="nb"></button></div>
+ <div class="chips" id="chips"></div><div id="list"></div>`;
+ $('q').addEventListener('input',render);
+}
+const has=(q,...s)=>s.some(x=>String(x||'').toLowerCase().includes(q));
+function render(){
+ if(!$('list'))return;
+ if(CL.none){
+  $('tabs').style.display=$('q').parentNode.style.display='none';$('chips').innerHTML='';
+  $('list').innerHTML=`<div class="card gone"><div style="font-weight:700;font-size:17px;margin-bottom:6px">還沒有加入創業空間</div><div class="sub">請把你登入的 Email <b>${E(me())}</b> 告訴建立的人，<br>請對方在「⋯ 設定 → 夥伴共用」邀請你，再重新整理這頁。</div><br><a class="go" style="display:inline-block;text-decoration:none" href="./">回首頁</a></div>`;
+  return status(CL.st);
+ }
+ $('tabs').style.display=$('q').parentNode.style.display='';
+ $('tabs').innerHTML=TABS.map(([k,n])=>`<button data-a="tab" data-k="${k}" class="${TAB===k?'on':''}">${n}</button>`).join('');
+ $('q').placeholder=PH[TAB];$('nb').textContent=ADD[TAB];
+ const q=($('q').value||'').trim().toLowerCase();
+ const ch=TAB==='mat'?['全部',...new Set(S.mats.map(m=>m.cat))]:TAB==='idea'?['全部',...IDEA_ST]:['全部',...REC_T,...REC_ST];
+ if(!ch.includes(FIL[TAB]))FIL[TAB]='全部';
+ $('chips').innerHTML=ch.map(c=>`<button data-a="fil" data-v="${E(c)}" class="${FIL[TAB]===c?'on':''}">${E(c)}</button>`).join('');
+ $('list').innerHTML=TAB==='mat'?matList(q):TAB==='idea'?ideaList(q):recList(q);
+ status(CL.st||'連線中…');
+}
+function matList(q){
+ const f=FIL.mat,ms=S.mats.filter(m=>(f==='全部'||m.cat===f)&&(!q||has(q,m.name,m.cat,...m.prices.map(p=>p.shop+' '+p.note))));
+ if(!ms.length)return `<div class="empty">${q?'找不到「'+E(q)+'」':'還沒有原物料'}</div>`;
+ const cats=[...new Set(ms.map(m=>m.cat))];
+ return cats.map(c=>(cats.length>1?`<h2>${E(c)}</h2>`:'<div style="height:8px"></div>')+ms.filter(m=>m.cat===c).map(m=>{
+  const h=hist(m)[0],tr=trend(m);
+  return `<button class="it" data-a="mat" data-id="${m.id}"><div class="hd"><b>${E(m.name)}</b><span class="r">${h?money(h.p):'<span class="sub" style="font-weight:400">還沒記價格</span>'}</span></div>
+   ${h?`<div class="ln">${E(h.q.toLocaleString()+m.unit)} · ${E(perTxt(m))}${tr?` · <span class="${tr>0?'up':'down'}">${tr>0?'▲':'▼'} ${pct(tr)}</span>`:''}</div><div class="ln">${md(h.d)}${h.shop?' · '+E(h.shop):''} · 共 ${m.prices.length} 筆</div>`:''}</button>`;
+ }).join('')).join('');
+}
+function ideaList(q){
+ const f=FIL.idea,is=S.ideas.filter(i=>(f==='全部'||i.st===f)&&(!q||has(q,i.title,i.body,...i.notes.map(n=>n.x)))).sort((a,b)=>b.u-a.u);
+ if(!is.length)return `<div class="empty">${q?'找不到「'+E(q)+'」':'還沒有點子，想到什麼都記下來吧'}</div>`;
+ return '<div style="height:8px"></div>'+is.map(i=>`<button class="it" data-a="idea" data-id="${i.id}"><div class="hd"><b>${E(i.title)}</b><span class="tag${i.st==='放棄'?' g':''}">${i.st}</span></div>
+  ${i.body?`<div class="ex">${E(i.body)}</div>`:''}<div class="ln">${E(who(i.by))} · ${fmt(i.u)}${i.notes.length?' · 💬 '+i.notes.length:''}</div></button>`).join('');
+}
+const stars=n=>n?'<span class="stars">'+'★'.repeat(n)+'</span>':'';
+function recList(q){
+ const f=FIL.rec,rs=S.recs.filter(r=>(f==='全部'||r.type===f||r.status===f)&&(!q||has(q,r.name,r.how,...r.notes.map(n=>n.x),...r.ings.map(g=>ingName(g))))).sort((a,b)=>(a.type==='麵糊')-(b.type==='麵糊')||b.u-a.u);
+ if(!rs.length)return `<div class="empty">${q?'找不到「'+E(q)+'」':'還沒有口味'}</div>`;
+ return '<div style="height:8px"></div>'+rs.map(r=>{
+  const c=cost(r),base=r.type==='麵糊',mg=!base&&r.price!==''&&c.piece!=null?(r.price-c.piece)/r.price:null;
+  return `<button class="it" data-a="rec" data-id="${r.id}"><div class="hd"><b>${E(r.name)}</b><span class="r">${base?(c.piece!=null?money(c.piece)+'<span class="sub" style="font-weight:400"> /片</span>':''):r.price!==''?money(r.price):''}</span></div>
+   <div class="ln"><span class="tag">${r.type}</span><span class="tag g">${r.status}</span>${stars(r.rate)}</div>
+   <div class="ln">${c.piece!=null?(base?'一批 '+money(c.batch)+' · 做 '+r.yield+' 片':'每片成本 '+money(c.piece)+(mg!=null?' · 毛利 '+money(r.price-c.piece)+'（'+Math.round(mg*100)+'%）':'')):r.ings.length?'填上「一批做幾片」就能算成本':'還沒填材料'}${c.miss.length?' · <span class="bad">缺價格：'+E(c.miss.join('、'))+'</span>':''}${r.notes.length?' · 📝 '+r.notes.length:''}</div></button>`;
+ }).join('');
+}
+function ingName(g){const [k,id]=g.ref.split(':'),x=k==='m'?mat(id):rec(id);return x?x.name:'?'}
+
+// ---------- 彈出視窗 ----------
+function sheet(html,bind){
+ const s=$('sheet');s.innerHTML=`<div class="bk"></div><div class="pn">${html}</div>`;s.classList.add('on');
+ s.querySelector('.bk').onclick=closeSheet;
+ s.querySelectorAll('[data-x]').forEach(b=>b.onclick=closeSheet);
+ if(bind)bind(s.querySelector('.pn'));
+}
+function closeSheet(){const s=$('sheet');s.classList.remove('on');s.innerHTML='';applyPending()}
+const enter=(el,fn)=>{el.onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();fn()}}};
+// 保持捲動位置重新整理視窗
+function refresh(fn){const pn=document.querySelector('#sheet .pn'),y=pn?pn.scrollTop:0;fn();const p2=document.querySelector('#sheet .pn');if(p2)p2.scrollTop=y}
+// 討論／試做紀錄：每則記下是誰、什麼時候寫的
+function notesHTML(ns,label){
+ return `<div class="sub" style="margin-bottom:6px">${label}（${ns.length}）</div><div class="box">${ns.length?ns.slice().sort((a,b)=>b.t-a.t).map(n=>`<div class="note"><div class="w"><span>${E(who(n.by))} · ${fmt(n.t)}</span>${n.by===me()||!n.by?`<button data-nd="${n.id}" aria-label="刪除">✕</button>`:''}</div><p>${E(n.x)}</p></div>`).join(''):'<div class="sub">還沒有紀錄</div>'}
+  <textarea id="nx" placeholder="寫下想法、試做結果、客人回饋…" style="margin-top:8px;min-height:56px"></textarea>
+  <div style="text-align:right;margin-top:6px"><button class="go" id="nb2">加入紀錄</button></div></div>`;
+}
+function notesBind(p,o,again){
+ p.querySelector('#nb2').onclick=()=>{const x=p.querySelector('#nx').value.trim();if(!x)return;op(()=>{o.notes.push({id:nid(),t:Date.now(),by:me(),x});o.u=Date.now()});refresh(again)};
+ p.querySelectorAll('[data-nd]').forEach(b=>b.onclick=()=>{if(!confirm('刪除這則紀錄？'))return;op(()=>{o.notes=o.notes.filter(n=>n.id!==b.dataset.nd)},'已刪除紀錄');refresh(again)});
+}
+const opts=(list,v)=>list.map(x=>`<option${x===v?' selected':''}>${E(x)}</option>`).join('');
+
+function newSheet(){
+ const t={mat:'新增原物料',idea:'新增點子',rec:'新增口味'}[TAB];
+ sheet(`<h3>${t}</h3>
+  <label class="f"><span>名稱</span><input id="nn" placeholder="${TAB==='mat'?'例如：低筋麵粉':TAB==='idea'?'例如：夜市擺攤試賣一週':'例如：芋泥麻糬'}"></label>
+  ${TAB==='mat'?`<div class="two"><label class="f"><span>分類</span><input id="nc" list="cats" value="${E(FIL.mat!=='全部'?FIL.mat:'')}" placeholder="粉類、餡料、包材…"></label><label class="f"><span>計價單位</span><select id="nu">${opts(UNITS,'g')}</select></label></div><datalist id="cats">${[...new Set(S.mats.map(m=>m.cat))].map(c=>`<option value="${E(c)}">`).join('')}</datalist>`:''}
+  ${TAB==='rec'?`<label class="f"><span>種類</span><select id="nt">${opts(REC_T,REC_T.includes(FIL.rec)?FIL.rec:'甜')}</select></label>`:''}
+  <div class="foot"><button class="bt" data-x>取消</button><button class="go" id="nok">建立</button></div>`,p=>{
+  const nn=p.querySelector('#nn');setTimeout(()=>nn.focus(),50);
+  const ok=()=>{
+   const n=nn.value.trim();if(!n)return nn.focus();
+   const id=nid();
+   if(TAB==='mat')op(()=>S.mats.push({id,name:n,cat:p.querySelector('#nc').value.trim()||'其他',unit:p.querySelector('#nu').value,prices:[]}));
+   if(TAB==='idea')op(()=>S.ideas.push({id,title:n,body:'',st:'想法',by:me(),t:Date.now(),u:Date.now(),notes:[]}));
+   if(TAB==='rec')op(()=>S.recs.push({id,name:n,type:p.querySelector('#nt').value,status:'研發中',rate:0,price:'',yield:'',ings:[],how:'',notes:[],u:Date.now()}));
+   ({mat:matSheet,idea:ideaSheet,rec:recSheet})[TAB](id);
+  };
+  p.querySelector('#nok').onclick=ok;enter(nn,ok);
+ });
+}
+
+function matSheet(id){
+ const m=mat(id);if(!m)return closeSheet();
+ const h=hist(m),buy=BUY[m.unit]||[[m.unit,1]],used=S.recs.filter(r=>r.ings.some(g=>g.ref==='m:'+id));
+ sheet(`<h3>${E(m.name)}</h3>
+  <div class="three"><label class="f"><span>名稱</span><input id="mn" value="${E(m.name)}"></label><label class="f"><span>分類</span><input id="mc" list="cats" value="${E(m.cat)}"></label><label class="f"><span>單位</span><select id="mu">${opts(UNITS,m.unit)}</select></label></div>
+  <datalist id="cats">${[...new Set(S.mats.map(x=>x.cat))].map(c=>`<option value="${E(c)}">`).join('')}</datalist>
+  <div class="sub" style="margin-bottom:6px">記一筆價格</div>
+  <div class="box"><div class="two"><label class="f"><span>日期</span><input id="pd" type="date" value="${today()}"></label><label class="f"><span>總價（元）</span><input id="pp" type="number" inputmode="decimal" min="0" step="any" placeholder="85"></label></div>
+   <div class="two"><label class="f"><span>數量</span><div class="row" style="flex-wrap:nowrap"><input id="pq" type="number" inputmode="decimal" min="0" step="any" placeholder="${m.unit==='g'?'1':'1'}"><select id="pk" style="width:auto;flex:none">${buy.map(([u,k],i)=>`<option value="${k}"${(m.unit==='g'&&u==='kg')||(m.unit==='ml'&&u==='L')||(!BUY[m.unit]&&i===0)?' selected':''}>${u}</option>`).join('')}</select></div></label><label class="f"><span>店家</span><input id="ps" list="shops" placeholder="全聯、烘焙材料行…"></label></div>
+   <datalist id="shops">${[...new Set(S.mats.flatMap(x=>x.prices.map(p=>p.shop)).filter(Boolean))].map(s=>`<option value="${E(s)}">`).join('')}</datalist>
+   <label class="f"><span>備註</span><input id="pn" placeholder="特價、品牌、批發價…"></label>
+   <div id="pmsg" class="sub" style="min-height:18px;margin-bottom:6px"></div>
+   <button class="go" id="pb" style="width:100%">記錄價格</button></div>
+  <div class="sub" style="margin-bottom:6px">價格紀錄（${h.length}）${h.length?' · 最新 '+E(perTxt(m)):''}</div>
+  ${h.map((p,i)=>{const u=p.p/p.q,nx=h[i+1],d=nx?(u-nx.p/nx.q)/(nx.p/nx.q):null;return `<div class="li"><span>${md(p.d)} · <b>${money(p.p)}</b> / ${E(p.q.toLocaleString()+m.unit)}${d?` <span class="${d>0?'up':'down'}" style="font-size:12px">${d>0?'▲':'▼'}${pct(d)}</span>`:''}<small>${E([m.unit==='g'||m.unit==='ml'?'每 100'+m.unit+' '+money(u*100):'每'+m.unit+' '+money(u),p.shop,p.note].filter(Boolean).join(' · '))}</small></span><button data-pd="${p.id}" aria-label="刪除">✕</button></div>`}).join('')||'<div class="sub" style="padding:2px 2px 8px">還沒有價格紀錄</div>'}
+  ${used.length?`<div class="sub" style="margin:12px 0 4px">用在：${used.map(r=>E(r.name)).join('、')}</div>`:''}
+  <div class="foot"><button class="bt bad" id="md">刪除</button><button class="go" data-x>完成</button></div>`,p=>{
+  const again=()=>matSheet(id);
+  p.querySelector('#mn').onchange=e=>{const v=e.target.value.trim();if(v&&v!==m.name)op(()=>{m.name=v})};
+  p.querySelector('#mc').onchange=e=>{const v=e.target.value.trim()||'其他';if(v!==m.cat)op(()=>{m.cat=v})};
+  p.querySelector('#mu').onchange=e=>{
+   if(m.prices.length&&!confirm('改了單位，之前價格紀錄的數量不會自動換算。確定要改？')){e.target.value=m.unit;return}
+   op(()=>{m.unit=e.target.value});refresh(again);
+  };
+  const addP=()=>{
+   const pr=parseFloat(p.querySelector('#pp').value),q=parseFloat(p.querySelector('#pq').value)*+p.querySelector('#pk').value,msg=p.querySelector('#pmsg');
+   if(!(pr>=0)){msg.textContent='請填總價';msg.className='sub bad';return}
+   if(!(q>0)){msg.textContent='請填數量';msg.className='sub bad';return}
+   op(()=>m.prices.push({id:nid(),d:p.querySelector('#pd').value||today(),p:pr,q:Math.round(q*1000)/1000,shop:p.querySelector('#ps').value.trim(),note:p.querySelector('#pn').value.trim()}));
+   toast('已記錄 '+m.name+' '+money(pr));refresh(again);
+  };
+  p.querySelector('#pb').onclick=addP;enter(p.querySelector('#pq'),addP);enter(p.querySelector('#pp'),addP);
+  p.querySelectorAll('[data-pd]').forEach(b=>b.onclick=()=>{op(()=>{m.prices=m.prices.filter(x=>x.id!==b.dataset.pd)},'已刪除一筆價格');refresh(again)});
+  p.querySelector('#md').onclick=()=>{
+   if(!confirm('確定要刪除「'+m.name+'」？'+(used.length?'\n'+used.map(r=>r.name).join('、')+' 的配方裡也會拿掉它。':'')))return;
+   op(()=>{S.mats=S.mats.filter(x=>x!==m);S=fix(S)},'已刪除「'+m.name+'」');closeSheet();
+  };
+ });
+}
+
+function ideaSheet(id){
+ const i=S.ideas.find(x=>x.id===id);if(!i)return closeSheet();
+ sheet(`<h3>點子</h3>
+  <label class="f"><span>標題</span><input id="it" value="${E(i.title)}"></label>
+  <label class="f"><span>內容</span><textarea id="ib" placeholder="想法、要準備什麼、預估成本、目標客人…" style="min-height:110px">${E(i.body)}</textarea></label>
+  <div class="f"><span class="sub" style="display:block;margin-bottom:4px">進度</span><div class="chips" style="padding:0">${IDEA_ST.map(s=>`<button data-st="${s}" class="${i.st===s?'on':''}">${s}</button>`).join('')}</div></div>
+  ${notesHTML(i.notes,'討論')}
+  <div class="sub">${E(who(i.by))} 在 ${fmt(i.t)} 提出</div>
+  <div class="foot"><button class="bt bad" id="idl">刪除</button><button class="go" data-x>完成</button></div>`,p=>{
+  const again=()=>ideaSheet(id);
+  p.querySelector('#it').onchange=e=>{const v=e.target.value.trim();if(v&&v!==i.title)op(()=>{i.title=v;i.u=Date.now()})};
+  p.querySelector('#ib').onchange=e=>{const v=e.target.value;if(v!==i.body)op(()=>{i.body=v;i.u=Date.now()})};
+  p.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{op(()=>{i.st=b.dataset.st;i.u=Date.now()});refresh(again)});
+  notesBind(p,i,again);
+  p.querySelector('#idl').onclick=()=>{if(!confirm('確定要刪除這個點子？'))return;op(()=>{S.ideas=S.ideas.filter(x=>x!==i)},'已刪除點子');closeSheet()};
+ });
+}
+
+function recSheet(id){
+ const r=rec(id);if(!r)return closeSheet();
+ const base=r.type==='麵糊',c=cost(r),bases=S.recs.filter(x=>x.type==='麵糊'&&x!==r);
+ const mg=!base&&r.price!==''&&c.piece!=null?r.price-c.piece:null;
+ const row=g=>{
+  const [k,rid]=g.ref.split(':'),x=k==='m'?mat(rid):rec(rid);if(!x)return '';
+  let u,sub,lc=null;
+  if(k==='m'){u=x.unit;const pp=unitP(x);sub=pp==null?'<small class="bad">還沒記價格</small>':'<small>'+E(perTxt(x))+'</small>';if(pp!=null)lc=pp*g.q}
+  else{u='片';const bc=cost(x,1);sub='<small>麵糊 · '+(bc.piece!=null?'每片 '+money(bc.piece):'<span class="bad">成本還沒算好</span>')+'</small>';if(bc.piece!=null)lc=bc.piece*g.q}
+  return `<div class="li"><span>${E(x.name)}${sub}</span><input data-iq="${E(g.ref)}" type="number" inputmode="decimal" min="0" step="any" value="${g.q||''}" aria-label="用量"><span class="sub" style="flex:none;width:22px">${u}</span><span class="c">${lc!=null?money(lc):'—'}</span><button data-ix="${E(g.ref)}" aria-label="拿掉">✕</button></div>`;
+ };
+ const avail=[...(bases.length&&!base?[['麵糊',bases.map(b=>['r:'+b.id,b.name])]]:[]),...[...new Set(S.mats.map(m=>m.cat))].map(cat=>[cat,S.mats.filter(m=>m.cat===cat).map(m=>['m:'+m.id,m.name+'（'+m.unit+'）'])])];
+ sheet(`<h3>${E(r.name)}</h3>
+  <div class="two"><label class="f"><span>名稱</span><input id="rn" value="${E(r.name)}"></label><label class="f"><span>種類</span><select id="rt">${opts(REC_T,r.type)}</select></label></div>
+  <div class="two"><label class="f"><span>狀態</span><select id="rs">${opts(REC_ST,r.status)}</select></label><div class="f"><span class="sub" style="display:block;margin-bottom:4px">好吃程度</span><div class="rate">${[1,2,3,4,5].map(n=>`<button data-rt="${n}" class="${n<=r.rate?'on':''}" aria-label="${n} 顆星">★</button>`).join('')}</div></div></div>
+  <div class="two"><label class="f"><span>一批做幾片</span><input id="ry" type="number" inputmode="numeric" min="0" step="any" value="${r.yield}" placeholder="例如：20"></label>${base?'<span></span>':`<label class="f"><span>售價（每片／元）</span><input id="rp" type="number" inputmode="decimal" min="0" step="any" value="${r.price}" placeholder="例如：25"></label>`}</div>
+  <div class="sub" style="margin-bottom:6px">一批的材料${base?'':'（可以加入「麵糊」，用量填片數）'}</div>
+  ${r.ings.map(row).join('')||'<div class="sub" style="padding:2px 2px 6px">還沒有材料</div>'}
+  <div class="add"><select id="ia"><option value="">選擇材料…</option>${avail.map(([g,xs])=>`<optgroup label="${E(g)}">${xs.filter(([v])=>!r.ings.some(i=>i.ref===v)).map(([v,n])=>`<option value="${v}">${E(n)}</option>`).join('')}</optgroup>`).join('')}</select><input id="iq" type="number" inputmode="decimal" min="0" step="any" placeholder="用量" style="flex:none;width:84px"><button class="go" id="ib">加入</button></div>
+  <div class="box"><div class="sum"><div><b>${money(c.batch)}</b><span>一批成本</span></div><div><b>${money(c.piece)}</b><span>每片成本</span></div>
+   <div>${base?`<b>${r.yield||'—'}</b><span>片</span>`:`<b class="${mg!=null&&mg<0?'bad':''}">${mg!=null?money(mg):'—'}</b><span>每片毛利${mg!=null&&r.price?'（'+Math.round(mg/r.price*100)+'%）':''}</span>`}</div></div>
+   ${c.miss.length?`<div class="sub bad" style="margin-top:6px;text-align:center">缺價格：${E(c.miss.join('、'))}（到「原物料」記價格）</div>`:''}</div>
+  <label class="f"><span>做法</span><textarea id="rh" placeholder="麵糊比例、靜置時間、火候、每片倒多少…" style="min-height:96px">${E(r.how)}</textarea></label>
+  ${notesHTML(r.notes,'試做筆記')}
+  <div class="foot"><button class="bt bad" id="rd">刪除</button><button class="go" data-x>完成</button></div>`,p=>{
+  const again=()=>recSheet(id),touch=()=>{r.u=Date.now()};
+  p.querySelector('#rn').onchange=e=>{const v=e.target.value.trim();if(v&&v!==r.name)op(()=>{r.name=v;touch()})};
+  p.querySelector('#rt').onchange=e=>{
+   const v=e.target.value,users=S.recs.filter(x=>x.ings.some(g=>g.ref==='r:'+r.id));
+   if(base&&users.length&&!confirm(users.map(x=>x.name).join('、')+' 有用到這個麵糊，改種類後會從它們的配方拿掉。確定？')){e.target.value=r.type;return}
+   op(()=>{r.type=v;touch();S=fix(S)});refresh(again);
+  };
+  p.querySelector('#rs').onchange=e=>op(()=>{r.status=e.target.value;touch()});
+  p.querySelectorAll('[data-rt]').forEach(b=>b.onclick=()=>{const n=+b.dataset.rt;op(()=>{r.rate=r.rate===n?0:n;touch()});refresh(again)});
+  const num=v=>v===''?'':Math.max(0,+v||0);
+  p.querySelector('#ry').onchange=e=>{op(()=>{r.yield=num(e.target.value);touch()});refresh(again)};
+  const rp=p.querySelector('#rp');if(rp)rp.onchange=e=>{op(()=>{r.price=num(e.target.value);touch()});refresh(again)};
+  p.querySelectorAll('[data-iq]').forEach(i=>i.onchange=()=>{const g=r.ings.find(x=>x.ref===i.dataset.iq);op(()=>{g.q=+i.value||0;touch()});refresh(again)});
+  p.querySelectorAll('[data-ix]').forEach(b=>b.onclick=()=>{op(()=>{r.ings=r.ings.filter(x=>x.ref!==b.dataset.ix);touch()});refresh(again)});
+  const addI=()=>{const v=p.querySelector('#ia').value,q=+p.querySelector('#iq').value||0;if(!v)return p.querySelector('#ia').focus();op(()=>{r.ings.push({ref:v,q});touch()});refresh(again)};
+  p.querySelector('#ib').onclick=addI;enter(p.querySelector('#iq'),addI);
+  p.querySelector('#rh').onchange=e=>{const v=e.target.value;if(v!==r.how)op(()=>{r.how=v;touch()})};
+  notesBind(p,r,again);
+  p.querySelector('#rd').onclick=()=>{if(!confirm('確定要刪除「'+r.name+'」？'))return;op(()=>{S.recs=S.recs.filter(x=>x!==r);S=fix(S)},'已刪除「'+r.name+'」');closeSheet()};
+ });
+}
+
+// 夥伴共用：建立的人可以邀請或移除夥伴（用 Email）
+const EMAIL=/^[^\s@\/]+@[^\s@\/]+\.[^\s@\/]+$/;
+function famHTML(){
+ const f=CL.fam;
+ if(!f)return `<div class="card sub" style="margin-bottom:14px">${E(CL.st.startsWith('⚠︎')?CL.st:'還沒連上共用空間')}</div>`;
+ const own=f.owner===CL.F.uid,others=CL.fams.filter(x=>x.id!==f.id);
+ return `<div class="sub" style="margin-bottom:6px">夥伴共用</div>
+  <div class="card" style="margin-bottom:14px">
+  ${own?`<label class="f"><span>空間名稱</span><input id="fnm" value="${E(f.name)}"></label>`:`<div style="font-weight:700;margin-bottom:6px">${E(f.name)}</div>`}
+  <div class="sub" style="margin-bottom:6px">成員（${f.members.length}）：都能看到、修改這裡的資料。跟「我的櫃子」的家人分開。</div>
+  ${f.members.map(m=>`<div class="li"><span>${E(m)}${m===CL.F.email||m===f.ownerEmail?'<small>'+[m===CL.F.email?'你':'',m===f.ownerEmail?'建立者':''].filter(Boolean).join(' · ')+'</small>':''}</span>${own&&m!==f.ownerEmail?`<button data-fm="${E(m)}" aria-label="移除">✕</button>`:''}</div>`).join('')}
+  ${own?`<div class="add" style="margin-bottom:4px"><input id="fem" type="email" placeholder="夥伴的 Email" autocomplete="off"><button class="go" id="feb">邀請</button></div>
+  <div class="sub" id="fmsg">夥伴用這個 Email 註冊、登入後，打開這頁（${E(location.origin+location.pathname)}）就會看到。</div>`:'<div class="sub">要邀請或移除夥伴，請找建立者。</div>'}
+  ${others.length?`<div class="sub" style="margin:12px 0 6px">你也在這些創業空間：</div>`+others.map(x=>`<div class="li"><span>${E(x.name)}<small>${x.members.length} 位成員 · ${E(x.ownerEmail||'')} 建立</small></span><button class="bt" data-fsw="${x.id}">切換</button></div>`).join(''):''}
+  </div>`;
+}
+function famBind(p){
+ const f=CL.fam;if(!f)return;
+ const save=async(o,ok)=>{try{await CL.F.update(f.id,o);Object.assign(f,o);ok&&ok()}catch(e){alert('沒有成功，請確認網路後再試。')}};
+ const nm=p.querySelector('#fnm');
+ if(nm)nm.onchange=()=>{const n=nm.value.trim();if(n&&n!==f.name)save({name:n},()=>status('✓ 已同步'))};
+ p.querySelectorAll('[data-fm]').forEach(b=>b.onclick=()=>{
+  const m=b.dataset.fm;if(!confirm('把 '+m+' 移出「'+f.name+'」？對方就看不到這裡的資料了。'))return;
+  save({members:f.members.filter(x=>x!==m)},setSheet);
+ });
+ const add=async()=>{
+  const m=p.querySelector('#fem').value.trim().toLowerCase(),msg=p.querySelector('#fmsg');
+  if(!EMAIL.test(m)){msg.textContent='Email 格式不正確';msg.className='sub bad';return}
+  if(f.members.includes(m)){msg.textContent='這位已經是成員了';msg.className='sub bad';return}
+  // 管理員邀請時，順便把對方加進網站的邀請名單，對方才能登入
+  if(window.FBA&&FBA.add&&!(FBA.list||[]).includes(m)){const err=await FBA.add(m);if(err){msg.textContent=err;msg.className='sub bad';return}}
+  save({members:[...f.members,m]},setSheet);
+ };
+ const fb=p.querySelector('#feb');
+ if(fb){fb.onclick=add;enter(p.querySelector('#fem'),add)}
+ p.querySelectorAll('[data-fsw]').forEach(b=>b.onclick=()=>{
+  const x=CL.fams.find(y=>y.id===b.dataset.fsw);
+  if(!confirm('切換到「'+x.name+'」？這支手機會改顯示那邊的資料。'))return;
+  closeSheet();useFam(x);
+ });
+}
+const csvCell=v=>{const s=String(v==null?'':v);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};
+function download(name,text,type){
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+const stamp=()=>{const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()};
+function setSheet(){
+ sheet(`<h3>設定</h3>
+  ${famHTML()}
+  <div class="sub" style="margin-bottom:6px">匯出與備份</div>
+  <div class="row" style="margin-bottom:14px"><button class="bt" id="csv">原物料價格表（Excel 可開）</button><button class="bt" id="exp">下載備份檔</button><button class="bt" id="imp">從備份檔還原</button></div>
+  <div class="foot">${window.fbLogout?'<button class="bt" id="lo">登出</button>':'<span></span>'}<button class="go" data-x>完成</button></div>`,p=>{
+  famBind(p);
+  p.querySelector('#csv').onclick=()=>{
+   const rows=[['分類','原物料','日期','總價','數量','單位','單價（每單位）','店家','備註']];
+   S.mats.forEach(m=>hist(m).forEach(x=>rows.push([m.cat,m.name,x.d,x.p,x.q,m.unit,Math.round(x.p/x.q*10000)/10000,x.shop,x.note])));
+   download('東京餅原物料價格-'+stamp()+'.csv','﻿'+rows.map(r=>r.map(csvCell).join(',')).join('\r\n'),'text/csv');
+  };
+  p.querySelector('#exp').onclick=()=>download('東京餅創業-'+stamp()+'.json',JSON.stringify(S,null,1),'application/json');
+  p.querySelector('#imp').onclick=()=>$('impf').click();
+  const lo=p.querySelector('#lo');if(lo)lo.onclick=()=>window.fbLogout();
+ });
+}
+$('impf').onchange=async e=>{
+ const f=e.target.files[0];e.target.value='';if(!f)return;
+ let o;try{o=fix(JSON.parse(await f.text()))}catch(x){return alert('這不是「東京餅創業」的備份檔。')}
+ if(!confirm('用備份檔取代現在的資料？（還原後可以按「復原」）'))return;
+ op(()=>{S=o},'已從備份還原');closeSheet();
+};
+
+function onClick(e){
+ const b=e.target.closest('[data-a]');if(!b)return;
+ const a=b.dataset.a;
+ if(a==='tab'){TAB=b.dataset.k;$('q').value='';try{localStorage.setItem('biz-tab',TAB)}catch(x){}return render()}
+ if(a==='fil'){FIL[TAB]=b.dataset.v;return render()}
+ if(a==='new')return newSheet();
+ if(a==='set')return setSheet();
+ if(a==='mat')return matSheet(b.dataset.id);
+ if(a==='idea')return ideaSheet(b.dataset.id);
+ if(a==='rec')return recSheet(b.dataset.id);
+}
+
+shell();
+$('app').addEventListener('click',onClick);
+render();
+cloudInit();
+</script>
+</body>
+</html>

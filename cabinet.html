@@ -197,7 +197,7 @@ async function cloudInit(){
  try{
   const F=CL.F=await claude.use('family');
   if(!F)return status('⚠︎ 沒有連到雲端（請重新登入），資料只存在這支手機');
-  try{CL.fams=await F.list()}catch(e){return status(e&&e.code==='permission-denied'?'⚠︎ 家庭空間還沒開通（Firebase 要加上規則），資料先存在這支手機':'⚠︎ 無法連線，先顯示這支手機上的資料')}
+  try{CL.fams=(await F.list()).filter(x=>x.kind!=='biz')}catch(e){return status(e&&e.code==='permission-denied'?'⚠︎ 家庭空間還沒開通（Firebase 要加上規則），資料先存在這支手機':'⚠︎ 無法連線，先顯示這支手機上的資料')}
   let pick='';try{pick=localStorage.getItem('cab-fid')||''}catch(e){}
   const f=CL.fams.find(x=>x.id===pick)||CL.fams.slice().sort((a,b)=>b.members.length-a.members.length)[0]||await F.create('我的家');
   useFam(f);
