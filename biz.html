@@ -66,6 +66,8 @@ textarea{min-height:72px;resize:vertical}
 #sheet .bk{position:absolute;inset:0;background:rgba(0,0,0,.35)}
 #sheet .pn{position:absolute;left:0;right:0;bottom:0;margin:0 auto;max-width:560px;max-height:90vh;overflow:auto;background:var(--bg);border-radius:20px 20px 0 0;padding:16px 16px calc(18px + env(safe-area-inset-bottom))}
 #sheet h3{margin:0 0 12px;font-size:18px}
+#sheet .back{position:sticky;top:-16px;z-index:2;margin:-16px -16px 6px;padding:12px 16px 6px;background:var(--bg)}
+#sheet .back button{border:0;background:none;color:var(--acc);font-size:16px;font-weight:500;padding:4px 0}
 .f{display:block;margin-bottom:12px}.f>span{display:block;font-size:13px;color:var(--sub);margin-bottom:4px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .three{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:8px}
@@ -283,13 +285,18 @@ function recList(q){
 function ingName(g){const [k,id]=g.ref.split(':'),x=k==='m'?mat(id):rec(id);return x?x.name:'?'}
 
 // ---------- 彈出視窗 ----------
+// 視窗最上面有「‹ 返回」；手機的返回手勢、瀏覽器的上一頁也會關掉視窗
 function sheet(html,bind){
- const s=$('sheet');s.innerHTML=`<div class="bk"></div><div class="pn">${html}</div>`;s.classList.add('on');
+ const s=$('sheet');
+ if(!s.classList.contains('on'))try{history.pushState({sheet:1},'')}catch(e){}
+ s.innerHTML=`<div class="bk"></div><div class="pn"><div class="back"><button data-x>‹ 返回</button></div>${html}</div>`;s.classList.add('on');
  s.querySelector('.bk').onclick=closeSheet;
  s.querySelectorAll('[data-x]').forEach(b=>b.onclick=closeSheet);
  if(bind)bind(s.querySelector('.pn'));
 }
-function closeSheet(){const s=$('sheet');s.classList.remove('on');s.innerHTML='';applyPending()}
+function hideSheet(){const s=$('sheet');if(!s.classList.contains('on'))return;s.classList.remove('on');s.innerHTML='';applyPending()}
+function closeSheet(){if(history.state&&history.state.sheet)history.back();else hideSheet()}
+addEventListener('popstate',hideSheet);
 const enter=(el,fn)=>{el.onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();fn()}}};
 // 保持捲動位置重新整理視窗
 function refresh(fn){const pn=document.querySelector('#sheet .pn'),y=pn?pn.scrollTop:0;fn();const p2=document.querySelector('#sheet .pn');if(p2)p2.scrollTop=y}
