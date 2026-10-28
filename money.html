@@ -639,6 +639,7 @@ const HELP=[
  ['add','記一筆（花錢、收入、轉帳）',['tx','home','cal'],`按右下角「<b>＋</b>」：<br>・<b>支出</b>：打金額、選帳戶和分類。說明裡有「全家」「中油」這類字會自動選分類。<br>・<b>收入</b>：薪水選「收入」，帳戶選銀行（不能選信用卡），日期是入帳日。<br>・<b>轉帳／繳卡費</b>：自己帳戶之間搬錢、繳信用卡費都用這個，<b>不算收入支出</b>。`],
  ['card','信用卡：刷卡到繳清的 4 個階段',['card','tx','home'],`刷卡時用「刷卡那天」記，網站會標出：<br><b>… 未入帳</b> 銀行還沒收到 → <b>○ 未出帳</b> 等結帳日 → <b>● 已出帳</b> 要繳 → <b>✓ 已繳清</b><br>匯入銀行明細時會自動跟你記的那筆配對、補上入帳日，不會重複。繳卡費時在總覽點那張卡 →「<b>記錄繳卡費</b>」。`],
  ['cycle','結帳日、繳款日某個月不一樣',['card','set'],`平常照「每月幾號」自動算。銀行某一期因為假日改日期時：<br>總覽點那張卡 →「<b>接下來的日期</b>」→ 按「<b>修改</b>」，照帳單上的日期填，<b>只會改那一期</b>。<br>建議每次收到帳單時看一眼，跟網站一樣就不用管。銀行永久改日期的話，到「設定 → 帳戶」改每月固定日。`],
+ ['retire','退休計畫：幾歲可以退休、花錢會晚多久退休',['retire','tx'],`「更多 → <b>⛱ 退休計畫</b>」：填「<b>現在幾歲</b>」就能算。其他（退休後每月生活費、現在有的錢、每月存多少）沒填會自動用記帳本裡的數字，都可以自己改。<br>算法：（退休後每月生活費 − 勞保勞退）× 12 ÷ 4% ＝ 要存到的錢；用每月存的錢加上投資報酬（扣掉通膨），算幾年後存到。<br>填好之後，記一筆支出時金額下面會顯示「<b>要工作多久・退休晚多久</b>」。`],
  ['trip','旅行花費',['trip','home'],`「更多 → <b>旅行</b>」：每次旅行新增一筆，填名稱和<b>出發、回家的日期</b>（預算、幾個人選填）。<br>旅行時照平常一樣記帳，或回來後匯入信用卡明細，<b>那幾天的花費會自動算進去</b>。出發前付的機票、訂房，到那次旅行按「<b>加入出發前的花費</b>」挑進來；那幾天裡跟旅行無關的，按「整理明細」→「不算」。<br>可以看到總共花多少、每天平均、每人多少、錢花在哪、每一天的明細。旅行中或 3 天內要出發，總覽也會顯示。<br><b>👥 分帳</b>：跟朋友一起去的話，在旅行設定填「同行的人」和當地貨幣、匯率。每一筆記誰付的、大家平分／只有某些人／<b>不列入平分</b>，最後自動算出<b>誰要還誰多少</b>（當地貨幣和台幣都有），可以一鍵記到「代墊與欠款」。`],
  ['sub','訂閱（Netflix、Spotify…）：續約提醒、取消',['bills','home'],`「固定收支 → 新增固定項目 → <b>訂閱</b>」：填名稱、金額、每月或每年、<b>下次續約日</b>、扣哪張信用卡。扣款會自動算進那張卡的帳單。<br>續約前幾天（預設 3 天，可以改）總覽最上面會出現「<b>🔔 訂閱快續約了</b>」：<br>・要繼續用 → 按「<b>繼續訂</b>」，下次續約前再提醒<br>・已經取消 → 按「<b>我已經取消了</b>」，之後就不會再算這筆錢<br>試用期或不想續的，勾「<b>我打算取消</b>」，會提早 7 天提醒你。<br>固定收支最上面會顯示訂閱總共每月、每年花多少；取消的訂閱收在最下面，按「恢復」可以改回來。`],
  ['week','每週報告',['week','home'],`每個<b>星期日晚上 10 點</b>起，總覽最上面會出現「這週報告」：這週（週一到週日）和上週各花了多少。週一到週日晚上 10 點前，還沒看的話會顯示「<b>上週報告</b>」。按「<b>知道了</b>」就收起來，下週日晚上再出現新的。<br>按「點開來看」或「更多 → <b>每週報告</b>」可以看兩週的總數、每個分類比較，每一筆明細要看再點開；按「‹ ›」看以前的週。<br>最下面可以「<b>請 AI 看看這兩週</b>」，AI 會給你 3 點鼓勵和提醒。`],
@@ -1048,7 +1049,44 @@ const wEarn=()=>W().items.reduce((a,x)=>a+(x.earn===false?0:+x.amt||0),0);
 const wHours=()=>(+W().h||0)*(+W().d||0)*52/12;
 const hourly=()=>wHours()?wEarn()/wHours():0;
 const hrsTxt=v=>{const r=hourly();if(!r||!(v>0))return'';const h=v/r;return h<1?'約 '+Math.max(1,Math.round(h*60))+' 分鐘':h<=8*3?'約 '+(Math.round(h*10)/10)+' 小時':'約 '+(Math.round(h/(+W().h||8)*10)/10)+' 天'};
-const hrsLine=o=>o.type==='out'&&hourly()&&pAmt(o.amt)>0?'要工作 '+hrsTxt(pAmt(o.amt)):'';
+const hrsLine=o=>{const v=pAmt(o.amt);if(o.type!=='out'||!(v>0))return'';const r=retLate(v);return[hourly()?'要工作 '+hrsTxt(v):'',r?'退休晚 '+r:''].filter(Boolean).join('・')};
+// ── 退休計畫：S.retire={age 現在幾歲,spend 退休後每月生活費,pension 勞保勞退每月可領,now 已經有的錢,save 每月存多少,ret 年報酬％,inf 通膨％,rate 每年提領％}，空白＝自動帶入 ──
+// 退休要存到：（每月生活費 − 勞保勞退）× 12 ÷ 每年提領率（4％＝25 倍），都用「今天的錢」算，報酬率扣掉通膨
+const RT=()=>S.retire||(S.retire={age:'',spend:'',pension:'',now:'',save:'',ret:5,inf:2,rate:4});
+const netWorth=()=>{const liq=liquid(),stk=holdings().filter(h=>h.sh>0).reduce((s,h)=>s+conv(h.val,h.cur,'TWD'),0),owe=S.accts.filter(isCard).reduce((s,c)=>s+cardInfo(c).owe,0);return liq+stk-owe-(S.holdIn?0:holdAmt())};
+const rtv=(k,auto)=>{const v=RT()[k];return v===''||v==null?auto:+v||0};
+function retPlan(){const R=RT(),age=+R.age||0,spend=rtv('spend',Math.round(living()+billPM('out'))),pen=rtv('pension',0),now=rtv('now',Math.round(netWorth())),save=rtv('save',saveTarget()),ret=rtv('ret',5),inf=rtv('inf',2),rate=rtv('rate',4);
+ const target=rate>0?Math.max(0,spend-pen)*12/(rate/100):0,r=Math.pow((1+ret/100)/(1+inf/100),1/12)-1;
+ return{age,spend,pen,now,save,ret,inf,rate,target,r,m:retMonths(now,save,r,target)}}
+// 幾個月後存到目標（每個月先長利息再存進去）；存不到回傳 Infinity
+function retMonths(p,c,r,target){if(p>=target)return 0;for(let m=1;m<=960;m++){const q=p*(1+r)+c;if(q>=target)return m-1+(target-p)/(q-p);if(q<=p&&c<=0)return Infinity;p=q}return Infinity}
+const retDur=mo=>{const d=mo*30.44;return d<1/24?'不到 1 小時':d<1?'約 '+Math.max(1,Math.round(d*24))+' 小時':d<60?'約 '+(Math.round(d*10)/10)+' 天':mo<24?'約 '+(Math.round(mo*10)/10)+' 個月':'約 '+(Math.round(mo/12*10)/10)+' 年'};
+// 花 v 元會晚多久退休；還沒填年齡、存不到或已經可以退休就不顯示
+function retLate(v){const P=retPlan();if(!P.age||!isFinite(P.m)||P.m<=0)return'';const m2=retMonths(P.now-v,P.save,P.r,P.target);return isFinite(m2)?retDur(Math.max(0,m2-P.m)):''}
+function vRetire(){const R=RT(),P=retPlan(),yrs=P.m/12,ok=isFinite(P.m),pct=P.target?Math.max(0,Math.min(100,P.now/P.target*100)):0,yr=new Date().getFullYear();
+ const inp=(k,lab,auto,ph,unit)=>`<label class="fl"><span>${lab}</span><input inputmode="decimal" value="${E(R[k]==null?'':R[k])}" data-m="retire.${k}" data-s="1" data-r="1" placeholder="${E(ph!=null?ph:auto)}"></label>`;
+ let h=`<h1>退休計畫</h1>`;
+ h+=!P.age?`<div class="card warn"><b>先填你現在幾歲</b><div class="sub" style="margin-top:4px">填好下面的「現在幾歲」，就會算出你幾歲可以退休，記帳時也會顯示「花這筆會晚多久退休」。</div></div>`:
+ `<div class="card" style="border-color:var(--acc)"><div class="sub">照現在的步調</div><div class="big">${P.m===0?'🎉 現在就可以退休了':ok?Math.floor(P.age+yrs)+' 歲可以退休':'目前存不到目標'}</div>
+  <div class="msg">${P.m===0?'你的錢已經夠退休生活用了。':ok?`還要大約 <b>${Math.round(yrs*10)/10} 年</b>（${yr+Math.ceil(yrs)} 年左右）`:'每月存的錢太少，或報酬率太低，存不到目標。試試看每月多存一點。'}</div>
+  <div class="bar" style="margin-top:10px"><i style="width:${pct}%"></i></div><div class="row sub" style="margin-top:2px"><span class="sp">現在 ${M(P.now)}</span><span>目標 ${M(P.target)}（${Math.floor(pct)}%）</span></div></div>`;
+ if(P.age&&ok&&P.m>0){const late=v=>{const m2=retMonths(P.now-v,P.save,P.r,P.target);return isFinite(m2)?retDur(m2-P.m):'—'},early=retMonths(P.now,P.save+1000,P.r,P.target);
+  h+=`<h2>花錢會晚多久退休</h2><div class="card"><div class="tiles" style="margin-top:0"><div><span class="sub">花 $100</span><b>${late(100)}</b></div><div><span class="sub">花 $1,000</span><b>${late(1000)}</b></div><div><span class="sub">花 $10,000</span><b>${late(10000)}</b></div></div>
+  <div class="msg">每月<b>多存 $1,000</b>，可以<b>提早 ${retDur(P.m-early)}</b> 退休。</div><div class="sub">記帳時輸入金額，金額下面也會顯示「退休晚 …」。</div></div>`}
+ h+=`<h2>退休要存到多少</h2><div class="card"><div class="tiles" style="margin-top:0"><div><span class="sub">退休後每月生活費</span><b>${M(P.spend)}</b></div><div><span class="sub">勞保勞退每月</span><b>${M(P.pen)}</b></div><div><span class="sub">要存到</span><b>${M(P.target)}</b></div></div>
+  <div class="sub">（${M(P.spend)} − ${M(P.pen)}）× 12 個月 ÷ 每年只領出 ${P.rate}% ＝ ${M(P.target)}</div></div>`;
+ h+=`<h2>可以改的地方（空白＝自動帶入）</h2><div class="card"><div class="grid">
+  ${inp('age','現在幾歲','',`例：30`)}
+  ${inp('spend','退休後每月生活費',Math.round(living()+billPM('out')),'自動：'+Math.round(living()+billPM('out')))}
+  ${inp('pension','勞保＋勞退每月可領',0,'例：20000')}
+  ${inp('now','現在已經有的錢',Math.round(netWorth()),'自動：'+Math.round(netWorth()))}
+  ${inp('save','每月存／投資多少',saveTarget(),'自動：'+saveTarget())}
+  ${inp('ret','投資年報酬率 %',5,'5')}
+  ${inp('inf','通貨膨脹 %',2,'2')}
+  ${inp('rate','退休後每年領出 %',4,'4')}</div>
+  <div class="note" data-t="退休的生活怎麼算？"><b>1. 退休後每月要花多少</b>：自動用你現在的「日常花費＋固定支出」（${M(Math.round(living()+billPM('out')))}）。退休後房貸繳完、不用通勤的話可以填少一點；想多旅行就填多一點。<br><b>2. 扣掉勞保、勞退</b>：可以到勞保局 e 化服務系統查「老年年金」和「勞退個人專戶」試算，大概填就好。<br><b>3. 要存到多少</b>：每年只從存款領出 ${P.rate}%（「4% 法則」），錢比較不會花完。4% 等於要存到「一年花費的 25 倍」。<br><b>4. 現在的錢</b>：自動用總資產（現金＋銀行＋股票－卡費）。<br><b>5. 每月存多少</b>：自動用「我的錢一覽」裡的每月想存多少。<br><b>6. 報酬率和通膨</b>：全部用「今天的錢」算，所以報酬率會先扣掉通膨（5% − 2% ≈ 實際 3%）。<br>這是簡單的估算，當作方向參考，不是理財建議。</div></div>`;
+ return h}
+
 function cardMonth(c,m){return S.tx.filter(t=>t.acct===c.id&&t.d.startsWith(m)).reduce((a,t)=>a+(t.type==='in'?-t.amt:t.type==='out'?t.amt:0),0)}
 const saveTarget=()=>{const w=W();return w.save!==''&&w.save!=null?+w.save||0:Math.round(billPM('save'))||Math.round(wInc()*0.2)};
 function savedMonth(m){const tos=new Set(S.accts.filter(a=>a.hold).map(a=>a.id));S.bills.forEach(b=>{if(b.kind==='save'&&b.to)tos.add(b.to)});return S.tx.filter(t=>t.type==='xfer'&&t.d.startsWith(m)&&tos.has(t.to)).reduce((a,t)=>a+t.amt,0)}
@@ -1342,7 +1380,7 @@ function sheetAcct(o){
 const STK=[['stock','我的持股'],['news','股價與新聞'],['calc','複利計算']];
 const stkSeg=()=>`<div class="chips" style="margin:0 0 12px">${STK.map(([k,n])=>`<button class="chip ${U.tab===k?'on':''}" data-a="tab" data-i="${k}">${n}</button>`).join('')}</div>`;
 const TABS=[['home','◎','總覽'],['tx','✎','記帳'],['cal','▦','月曆'],['bills','◷','固定收支'],['stock','↗','股票'],['more','⋯','更多']];
-const MORE=[['trip','✈','旅行','每次旅行花了多少：機票、住宿、吃、買…'],['week','✉','每週報告','這週和上一週花了多少，週日晚上 10 點出爐'],['idea','✧','賺錢點子','想到能賺錢的方法，先記下來慢慢研究'],['check','☑','對帳便條','每週打開網銀看一次，看過就打勾'],['book','▣','獨立帳本','爸媽帳戶、副業：收入和投資另外算'],['iou','⇄','代墊與欠款','幫朋友代墊、誰欠我、我欠誰'],['wallet','◉','我的錢一覽','總餘額、信用卡、每天該存多少、時薪'],['ask','？','要不要買？','想買東西時，像聊天一樣問問看'],['perk','✦','刷卡優惠','在哪裡刷用哪張卡、CUBE 要切哪個權益'],['plan','◫','分帳戶','薪水進來先分好：固定支出、生活費、存錢、投資'],['budget','◔','預算','每個分類一個月能花多少，快超過會提醒'],['chart','▥','圖表','每個月花多少、錢都花在哪'],['imp','⇣','匯入明細','信用卡、銀行、電子發票、截圖'],['set','⚙︎','設定與風格','帳戶、顏色、深色模式、備份'],['guide','?','新手教學','從頭一步一步開始']];
+const MORE=[['retire','⛱','退休計畫','幾歲可以退休、花這筆錢會晚多久退休'],['trip','✈','旅行','每次旅行花了多少：機票、住宿、吃、買…'],['week','✉','每週報告','這週和上一週花了多少，週日晚上 10 點出爐'],['idea','✧','賺錢點子','想到能賺錢的方法，先記下來慢慢研究'],['check','☑','對帳便條','每週打開網銀看一次，看過就打勾'],['book','▣','獨立帳本','爸媽帳戶、副業：收入和投資另外算'],['iou','⇄','代墊與欠款','幫朋友代墊、誰欠我、我欠誰'],['wallet','◉','我的錢一覽','總餘額、信用卡、每天該存多少、時薪'],['ask','？','要不要買？','想買東西時，像聊天一樣問問看'],['perk','✦','刷卡優惠','在哪裡刷用哪張卡、CUBE 要切哪個權益'],['plan','◫','分帳戶','薪水進來先分好：固定支出、生活費、存錢、投資'],['budget','◔','預算','每個分類一個月能花多少，快超過會提醒'],['chart','▥','圖表','每個月花多少、錢都花在哪'],['imp','⇣','匯入明細','信用卡、銀行、電子發票、截圖'],['set','⚙︎','設定與風格','帳戶、顏色、深色模式、備份'],['guide','?','新手教學','從頭一步一步開始']];
 let RD=0,RD2=0,KF=0;
 function render(){
  // 換掉畫面時，正在輸入的欄位失焦會觸發 change；那次重畫延後到這次畫完再做
@@ -1354,7 +1392,7 @@ function render(){
 function calmNotes(){document.querySelectorAll('#app .note,#sheet .note').forEach(n=>{const st=n.getAttribute('style')||'';if(n.id||n.classList.contains('keep')||st.includes('--bad')||n.querySelector('input,select,button,textarea'))return;
  const d=document.createElement('details');d.className='tip'+(n.classList.contains('w')?' w':'');d.innerHTML=`<summary>ⓘ ${E(n.dataset.t||'說明')}</summary><div></div>`;d.lastChild.innerHTML=n.innerHTML;n.replaceWith(d)})}
 function renderNow(){
- const y=window.scrollY,V={trip:vTrip,week:vWeek,idea:vIdea,check:vCheck,book:vBook,iou:vIou,wallet:vWallet,ask:vAsk,perk:vPerk,plan:vPlan,card:vCard,home:vHome,tx:vTx,cal:vCal,bills:vBills,more:vMore,budget:vBudget,chart:vChart,stock:vStock,news:vNews,calc:vCalc,imp:vImp,set:vSet,guide:vGuide},sub=MORE.some(m=>m[0]===U.tab),ae=KF&&document.activeElement,am=ae&&ae.dataset&&ae.dataset.m,cp=am&&ae.selectionStart;KF=0;
+ const y=window.scrollY,V={retire:vRetire,trip:vTrip,week:vWeek,idea:vIdea,check:vCheck,book:vBook,iou:vIou,wallet:vWallet,ask:vAsk,perk:vPerk,plan:vPlan,card:vCard,home:vHome,tx:vTx,cal:vCal,bills:vBills,more:vMore,budget:vBudget,chart:vChart,stock:vStock,news:vNews,calc:vCalc,imp:vImp,set:vSet,guide:vGuide},sub=MORE.some(m=>m[0]===U.tab),ae=KF&&document.activeElement,am=ae&&ae.dataset&&ae.dataset.m,cp=am&&ae.selectionStart;KF=0;
  CI={};LM=null;normAcct();$('tip').style.display='none';$('eye').textContent='•••• 已隱藏・點兩下顯示';$('eye').classList.toggle('on',HIDE);$('eye').setAttribute('aria-label',HIDE?'顯示金額':'隱藏金額');
  $('app').innerHTML=`<div class="row" style="gap:10px;padding-right:44px;min-height:32px;margin-top:calc(16px + env(safe-area-inset-top,0px))">${U.tab==='trip'&&tripOf(U.trip)?'<button class="back" data-a="tripx">‹ 所有旅行</button>':sub?'<button class="back" data-a="tab" data-i="more">‹ 更多</button>':'<a class="back" href="./" style="text-decoration:none">‹ 首頁</a>'}<span class="sp"></span><b class="today">今天 ${todayLab()}</b></div>`+V[U.tab]();
  $('nav').innerHTML=TABS.map(([k,i,n])=>`<button class="${U.tab===k||(k==='more'&&sub)||(k==='stock'&&STK.some(x=>x[0]===U.tab))?'on':''}" data-a="tab" data-i="${k}"><b>${i}</b>${n}</button>`).join('');
