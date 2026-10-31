@@ -40,7 +40,8 @@ function clearLocal() {
 let started = false, FBAPP = null;
 
 // 用 Gemini（Firebase AI Logic）讀照片或文字；頁面透過 claude.use('sample') 呼叫
-const AI_MODELS = ['gemini-3.6-flash', 'gemini-3-flash', 'gemini-2.5-flash'];
+// 每個模型的免費額度分開算：一個用完就換下一個（最後一個比較輕量，額度通常比較多）
+const AI_MODELS = ['gemini-3.6-flash', 'gemini-3-flash', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'];
 async function shrink(file) {
   try {
     const bm = await createImageBitmap(file), k = Math.min(1, 2000 / Math.max(bm.width, bm.height));
@@ -60,29 +61,44 @@ const sampler = {
     const ai = aim.getAI(FBAPP, { backend: new aim.GoogleAIBackend() });
     const parts = [prompt];
     if (opts && opts.images) parts.push({ inlineData: await shrink(opts.images) });
-    let last;
-    for (const name of AI_MODELS) {
-      try {
-        // search：讓 Gemini 用 Google 搜尋查最新資料（這時不能指定 JSON 格式，改從文字裡取出 JSON）
-        const srch = opts && opts.search;
-        const m = aim.getGenerativeModel(ai, srch ? { model: name, tools: [{ googleSearch: {} }] } : { model: name, generationConfig: { responseMimeType: 'application/json' } });
-        const r = await m.generateContent(parts);
-        let t = r.response.text().trim().replace(/^```(?:json)?\s*/i, '').replace(/```$/, '');
-        if (srch) { const a = t.indexOf('{'), b = t.lastIndexOf('}'); if (a >= 0 && b > a) t = t.slice(a, b + 1); }
-        let o;
-        try { o = JSON.parse(t); } catch (x) { throw { code: 'empty' }; }
-        if (srch && o && typeof o === 'object') {
-          const g = ((r.response.candidates || [])[0] || {}).groundingMetadata || {};
-          o._src = (g.groundingChunks || []).map(c => c.web).filter(Boolean).map(w => ({ t: w.title || w.domain || '', u: w.uri }));
-          o._entry = (g.searchEntryPoint && g.searchEntryPoint.renderedContent) || '';
-        }
-        return o;
-      } catch (e) {
-        last = e;
-        if (e && e.code === 'empty') throw e;
-        if (!/not.?found|404|not supported/i.test(String(e && e.message))) break;
+    const srch = opts && opts.search;
+    // 問一次指定的模型
+    const ask = async name => {
+      // search：讓 Gemini 用 Google 搜尋查最新資料（這時不能指定 JSON 格式，改從文字裡取出 JSON）
+      const m = aim.getGenerativeModel(ai, srch ? { model: name, tools: [{ googleSearch: {} }] } : { model: name, generationConfig: { responseMimeType: 'application/json' } });
+      const r = await m.generateContent(parts);
+      let t = r.response.text().trim().replace(/^```(?:json)?\s*/i, '').replace(/```$/, '');
+      if (srch) { const a = t.indexOf('{'), b = t.lastIndexOf('}'); if (a >= 0 && b > a) t = t.slice(a, b + 1); }
+      let o;
+      try { o = JSON.parse(t); } catch (x) { throw { code: 'empty' }; }
+      if (srch && o && typeof o === 'object') {
+        const g = ((r.response.candidates || [])[0] || {}).groundingMetadata || {};
+        o._src = (g.groundingChunks || []).map(c => c.web).filter(Boolean).map(w => ({ t: w.title || w.domain || '', u: w.uri }));
+        o._entry = (g.searchEntryPoint && g.searchEntryPoint.renderedContent) || '';
       }
+      return o;
+    };
+    const BUSY = /quota|429|RESOURCE_EXHAUSTED|rate|overloaded|503|UNAVAILABLE/i, DAILY = /per.?day|PerDay|daily/i;
+    let last, quota;
+    for (const name of AI_MODELS) {
+      for (let tryNo = 0; tryNo < 2; tryNo++) {
+        try { return await ask(name); } catch (e) {
+          last = e;
+          if (e && e.code === 'empty') throw e;
+          const em = String(e && e.message);
+          if (!BUSY.test(em)) break;
+          quota = e;
+          // 今天的額度用完：直接換下一個模型；只是一時太忙：等 4 秒再試同一個模型一次
+          if (DAILY.test(em) || tryNo) break;
+          await new Promise(r => setTimeout(r, 4000));
+        }
+      }
+      const em = String(last && last.message);
+      // 額度、忙碌、或這個模型不存在：換下一個；其他錯誤（例如沒有網路）就不用再試了
+      if (!BUSY.test(em) && !/not.?found|404|not supported/i.test(em)) break;
     }
+    // 每個模型都試過了：有遇到額度問題就照額度回報（最後一個模型可能只是不存在）
+    if (quota && /not.?found|404|not supported/i.test(String(last && last.message))) last = quota;
     const msg = String(last && last.message);
     console.error('AI', last);
     // 分辨是「每分鐘次數太多」還是「今天的額度用完」
