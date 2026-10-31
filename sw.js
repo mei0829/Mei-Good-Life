@@ -1,7 +1,7 @@
 // 離線用：把網頁和 Firebase 程式存在手機裡，沒有網路也能打開
-const CACHE = 'mgl-v3';
+const CACHE = 'mgl-v4';
 const FB = 'https://www.gstatic.com/firebasejs/12.18.0/';
-const LOCAL = ['./', 'index.html', 'money.html', 'auth.js', 'firebase-config.js', 'money.webmanifest', 'money.svg', 'cabinet.html', 'cabinet.webmanifest', 'cabinet.svg', 'home.webmanifest', 'home.svg', 'biz.html', 'biz.webmanifest', 'biz.svg'];
+const LOCAL = ['./', 'index.html', 'money.html', 'auth.js', 'firebase-config.js', 'money.webmanifest', 'money.svg', 'cabinet.html', 'cabinet.webmanifest', 'cabinet.svg', 'home.webmanifest', 'home.svg', 'biz.html', 'biz.webmanifest', 'biz.svg', 'cal.html'];
 const SDK = ['firebase-app.js', 'firebase-auth.js', 'firebase-firestore.js'].map(f => FB + f);
 
 self.addEventListener('install', e => {

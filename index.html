@@ -51,6 +51,11 @@ footer{text-align:center;font-size:11px;color:var(--sub);margin-top:36px;opacity
   <div><b>記帳</b><p>收支、預算、股票、代墊</p></div>
   <span class="tag">私人</span>
  </a>
+ <a class="tile k5" id="cal" href="cal.html" hidden>
+  <div class="ic"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><circle cx="8.5" cy="14.5" r=".9"/><circle cx="12" cy="14.5" r=".9"/><circle cx="15.5" cy="14.5" r=".9"/></svg></div>
+  <div><b>行事曆</b><p>課表、跟進、生日、保固</p></div>
+  <span class="tag">私人</span>
+ </a>
  <a class="tile k2" href="cabinet.html">
   <div class="ic"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M5 9h14M5 15h14M11 6h2M11 12h2M11 18h2"/></svg></div>
   <div><b>物品存放</b><p>哪個櫃子哪一格放了什麼</p></div>
@@ -86,7 +91,7 @@ footer{text-align:center;font-size:11px;color:var(--sub);margin-top:36px;opacity
 </main>
 <script>
 // 記帳只在管理員登入過的手機上顯示
-try{if(localStorage.getItem('mgl-role')==='admin')document.getElementById('money').hidden=false}catch(e){}
+try{if(localStorage.getItem('mgl-role')==='admin'){document.getElementById('money').hidden=false;document.getElementById('cal').hidden=false}}catch(e){}
 // 創業頁只給管理員和被邀請的夥伴看到
 try{if(localStorage.getItem('mgl-role')==='admin'||localStorage.getItem('mgl-biz')==='1')document.getElementById('biz').hidden=false}catch(e){}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});

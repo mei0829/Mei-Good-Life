@@ -103,7 +103,7 @@ function startApp(fs, fsm, user) {
   } catch (e) {}
   const { collection, doc, setDoc, getDocs, getDoc, query, where, documentId } = fsm;
   const col = path => ({
-    doc: id => ({ set: o => setDoc(doc(fs, path, id), o) }),
+    doc: id => ({ set: o => setDoc(doc(fs, path, id), o), get: async () => { const x = await getDoc(doc(fs, path, id)); return x.exists() ? x.data() : null; } }),
     get: async () => {
       // 照片（p_ 開頭）很大，只在要看的時候才下載；其他資料文件照常讀取
       const c = collection(fs, path), [a, b] = await Promise.all([getDocs(query(c, where(documentId(), '<', 'p_'))), getDocs(query(c, where(documentId(), '>=', 'p`')))]);
@@ -125,6 +125,7 @@ function startApp(fs, fsm, user) {
     update: (fid, o) => fsm.updateDoc(doc(fs, 'families', fid), o),
     doc: (fid, id) => ({
       set: o => setDoc(doc(fs, 'families', fid, 'data', id), o),
+      get: async () => { const x = await getDoc(doc(fs, 'families', fid, 'data', id)); return x.exists() ? x.data() : null; },
       watch: (cb, err) => fsm.onSnapshot(doc(fs, 'families', fid, 'data', id), x => cb(x.exists() ? x.data() : null), err)
     })
   };

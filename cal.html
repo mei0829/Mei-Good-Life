@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F2EFE9">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="home.webmanifest">
+<link rel="icon" href="home.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="home.svg">
+<title>行事曆</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F2EFE9;--card:#fff;--ink:#2B2A27;--sub:#7A766E;--line:#E2DDD3;--acc:#5E7A6A;--on:#fff;--bad:#C94A4A;
+ --ev:#4F86B8;--fu:#5E8F6A;--bd:#C0607E;--wty:#B07800}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171614;--card:#22211E;--ink:#EDEAE4;--sub:#A29D94;--line:#34322E;--acc:#9DC0AC;--on:#171614;--bad:#F07070;
+ --ev:#8DB0D0;--fu:#9DC0AC;--bd:#E59AB2;--wty:#E0A530}}
+:root[data-theme="dark"]{--bg:#171614;--card:#22211E;--ink:#EDEAE4;--sub:#A29D94;--line:#34322E;--acc:#9DC0AC;--on:#171614;--bad:#F07070;
+ --ev:#8DB0D0;--fu:#9DC0AC;--bd:#E59AB2;--wty:#E0A530}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Noto Sans TC","PingFang TC",-apple-system,"Microsoft JhengHei",sans-serif}
+#app{max-width:640px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top)) 16px 60px}
+#app::after{content:"© 2026 mei0829 版權所有";display:block;text-align:center;font-size:11px;color:var(--sub);margin-top:28px;opacity:.8}
+h1{font-size:24px;margin:0;font-weight:700}
+h2{font-size:14px;margin:18px 2px 8px;color:var(--sub);font-weight:500}
+a{color:var(--acc)}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
+input{font:inherit;font-size:16px;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 10px;width:100%}
+.card{background:var(--card);border-radius:16px;padding:12px 14px;margin-bottom:10px;border:1px solid var(--line)}
+.sub{font-size:13px;color:var(--sub)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.go{background:var(--acc);color:var(--on);border:0;border-radius:12px;padding:10px 16px;font-weight:700}
+.bt{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 12px}
+#authwrap{max-width:420px;margin:0 auto;padding:40px 16px}#authwrap a{color:var(--acc)}
+.afl{display:block;margin-bottom:10px}.afl span{display:block;font-size:13px;color:var(--sub);margin-bottom:4px}
+
+.home{font-size:14px;text-decoration:none}
+#st{font-size:12px;color:var(--sub);margin:2px 0 12px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;margin-bottom:10px;scrollbar-width:none}.chips::-webkit-scrollbar{display:none}
+.chips button{flex:none;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:5px 12px;font-size:14px;display:flex;align-items:center;gap:6px}
+.chips button.on{background:var(--acc);border-color:var(--acc);color:var(--on)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--c)}
+.c-ev{--c:var(--ev)}.c-fu{--c:var(--fu)}.c-bd{--c:var(--bd)}.c-wty{--c:var(--wty)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}
+.cal .cw{font-size:12px;color:var(--sub);padding-bottom:4px}
+.cd{border:0;background:none;border-radius:10px;padding:6px 0 4px;min-height:46px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:14px}
+.cd.td b{color:var(--acc)}.cd.td{box-shadow:inset 0 0 0 1.5px var(--acc)}.cd.sl{background:var(--line)}
+.cd b{font-weight:500}.cd .ds{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;max-width:34px}.cd .ds .dot{width:6px;height:6px}
+.mh{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.ag{display:flex;gap:10px;align-items:stretch;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin-bottom:6px;text-decoration:none;color:inherit}
+.ag i{flex:none;width:4px;border-radius:2px;background:var(--c)}
+.ag .tx{flex:1;min-width:0}.ag .tx b{font-weight:500;display:block;overflow-wrap:anywhere}.ag .tx small{display:block;color:var(--sub);font-size:12px}
+.ag .tg{flex:none;font-size:12px;color:var(--c);align-self:center}
+.dh{font-size:13px;color:var(--sub);margin:12px 2px 6px;font-weight:700}
+.dh.td{color:var(--acc)}
+.empty{text-align:center;color:var(--sub);padding:18px 0}
+.warn{color:var(--bad)}
+</style>
+</head>
+<body>
+<div id="auth" data-title="行事曆" data-only="admin"></div>
+<div id="app"></div>
+<script type="module" src="auth.js"></script>
+<script type="text/plain" id="app-src">
+const E=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const $=id=>document.getElementById(id);
+const DAY=864e5,z2=n=>String(n).padStart(2,'0');
+const isoD=d=>d.getFullYear()+'-'+z2(d.getMonth()+1)+'-'+z2(d.getDate());
+const pdD=s=>new Date(s+'T00:00:00');
+const okD=s=>/^\d{4}-\d{2}-\d{2}$/.test(s||'');
+const shift=(s,n)=>isoD(new Date(pdD(s).getTime()+n*DAY+36e5));
+const TODAY=isoD(new Date());
+const WD='日一二三四五六';
+// 新人名單（課表、跟進、生日）在另一個網站，資料在同一個 Firebase 帳號裡
+const ROSTER='https://mei0829.github.io/Uultra/';
+const CAT={ev:'課表',fu:'跟進',bd:'生日',wty:'保固'};
+
+let R=null,CAB=null,ST={r:'讀取中…',c:'讀取中…'};
+let M=TODAY.slice(0,7),SEL='',F='';
+try{F=localStorage.getItem('cal-f')||''}catch(e){}
+
+// ---------- 讀資料：新人名單（私人）＋ 櫃子保固（家庭空間）----------
+async function loadRoster(){
+ try{
+  const db=await claude.use('db'),us=await claude.use('user'),uid=us&&await us.id();
+  const col=db.collection('data/users/'+uid),keys=['events','people','side','leaders'],o={};
+  const ds=await Promise.all(keys.map(k=>col.doc('s_'+k).get()));
+  keys.forEach((k,i)=>{try{o[k]=ds[i]?JSON.parse(ds[i].j):[]}catch(e){o[k]=[]}if(!Array.isArray(o[k]))o[k]=[]});
+  R=o;ST.r=ds.some(Boolean)?'':'沒有找到新人名單的資料';
+ }catch(e){ST.r='新人名單讀取失敗'}
+ render();
+}
+async function loadCab(){
+ try{
+  const F=await claude.use('family');
+  const fams=(await F.list()).filter(x=>x.kind!=='biz');
+  let pick='';try{pick=localStorage.getItem('cab-fid')||''}catch(e){}
+  const f=fams.find(x=>x.id===pick)||fams.slice().sort((a,b)=>b.members.length-a.members.length)[0];
+  if(!f){ST.c='還沒有家庭空間';return render()}
+  const d=await F.doc(f.id,'cabinet').get();
+  CAB=d?JSON.parse(d.j):{cabs:[],rooms:[]};ST.c='';
+ }catch(e){ST.c='櫃子保固讀取失敗'}
+ render();
+}
+
+// ---------- 把四種資料整理成同一種「事件」----------
+const pname=o=>o.nick||o.name||'（沒有名字）';
+function entries(from,to){
+ const a=[],inR=d=>okD(d)&&d>=from&&d<=to;
+ if(R){
+  R.events.forEach(e=>{if(inR(e.date))a.push({d:e.date,c:'ev',t:e.title||e.kind||'活動',s:[e.start&&e.end?e.start+'–'+e.end:e.start,e.speaker&&'講師 '+e.speaker,e.loc].filter(Boolean).join('・'),h:ROSTER,k:e.start||''})});
+  [...R.people,...R.side].forEach(p=>{
+   if(inR(p.next))a.push({d:p.next,c:'fu',t:'跟進 '+pname(p),s:'新人名單',h:ROSTER,k:'~'});
+   if(p.pf&&inR(p.pf.next))a.push({d:p.pf.next,c:'fu',t:'產品跟進 '+pname(p),s:'新人名單',h:ROSTER,k:'~'});
+  });
+  // 生日只記月日，每一年都要算
+  const seen=new Set();
+  [...R.people,...R.leaders,...R.side].forEach(p=>{
+   const m=/^(\d{1,2})-(\d{1,2})$/.exec(p.bd||'');if(!m)return;
+   const key=pname(p)+'|'+p.bd;if(seen.has(key))return;seen.add(key);
+   for(let y=+from.slice(0,4);y<=+to.slice(0,4);y++){const d=y+'-'+z2(+m[1])+'-'+z2(+m[2]);if(inR(d))a.push({d,c:'bd',t:pname(p)+' 生日',s:'新人名單',h:ROSTER,k:''})}
+  });
+ }
+ if(CAB)(CAB.cabs||[]).forEach(c=>(c.cells||[]).forEach((x,i)=>(x.it||[]).forEach(t=>{
+  if(inR(t.wty))a.push({d:t.wty,c:'wty',t:'保固到期：'+t.n,s:c.name+' › 第 '+(i+1)+' 格'+(x.l?'（'+x.l+'）':''),h:'cabinet.html',k:'~'});
+ })));
+ return a.filter(x=>!F||x.c===F).sort((x,y)=>x.d.localeCompare(y.d)||x.k.localeCompare(y.k));
+}
+// 過了日期還沒做的跟進（新人名單會一直留在首頁，這裡也提醒）
+function overdue(){
+ if(!R||F&&F!=='fu')return [];
+ const a=[];[...R.people,...R.side].forEach(p=>{
+  if(okD(p.next)&&p.next<TODAY)a.push({d:p.next,c:'fu',t:'跟進 '+pname(p),s:'原本排 '+ +p.next.slice(5,7)+'/'+ +p.next.slice(8),h:ROSTER});
+  if(p.pf&&okD(p.pf.next)&&p.pf.next<TODAY)a.push({d:p.pf.next,c:'fu',t:'產品跟進 '+pname(p),s:'原本排 '+ +p.pf.next.slice(5,7)+'/'+ +p.pf.next.slice(8),h:ROSTER});
+ });
+ return a.sort((x,y)=>x.d.localeCompare(y.d));
+}
+
+// ---------- 畫面 ----------
+const row=x=>`<a class="ag c-${x.c}" href="${x.h}"><i></i><span class="tx"><b>${E(x.t)}</b>${x.s?`<small>${E(x.s)}</small>`:''}</span><span class="tg">${CAT[x.c]}</span></a>`;
+const dayLab=d=>{const n=Math.round((pdD(d)-pdD(TODAY))/DAY);return +d.slice(5,7)+'/'+ +d.slice(8)+'（'+WD[pdD(d).getDay()]+'）'+(n===0?' 今天':n===1?' 明天':'')};
+function groupHTML(list){
+ let h='',cur='';
+ list.forEach(x=>{if(x.d!==cur){cur=x.d;h+=`<div class="dh${x.d===TODAY?' td':''}">${dayLab(x.d)}</div>`}h+=row(x)});
+ return h;
+}
+function render(){
+ const [Y,Mo]=M.split('-').map(Number),first=M+'-01',last=M+'-'+z2(new Date(Y,Mo,0).getDate());
+ const pad=(new Date(Y,Mo-1,1).getDay()+6)%7,days=new Date(Y,Mo,0).getDate();
+ const by={};entries(first,last).forEach(x=>(by[x.d]=by[x.d]||[]).push(x));
+ let cal='一二三四五六日'.split('').map(w=>`<span class="cw">${w}</span>`).join('');
+ for(let i=0;i<pad;i++)cal+='<span></span>';
+ for(let d=1;d<=days;d++){const ds=M+'-'+z2(d),l=by[ds]||[];
+  cal+=`<button class="cd${ds===TODAY?' td':''}${ds===SEL?' sl':''}" data-d="${ds}"><b>${d}</b><span class="ds">${l.slice(0,6).map(x=>`<span class="dot c-${x.c}"></span>`).join('')}</span></button>`}
+ const mv=k=>isoD(new Date(Y,Mo-1+k,1)).slice(0,7);
+ const loading=!R&&ST.r==='讀取中…'||!CAB&&ST.c==='讀取中…';
+ const errs=[ST.r,ST.c].filter(x=>x&&x!=='讀取中…');
+ let list;
+ if(SEL){const l=by[SEL]||[];list=`<div class="dh">${dayLab(SEL)}</div>`+(l.length?l.map(row).join(''):'<div class="empty">這天沒有事情</div>')}
+ else{const od=overdue(),up=entries(TODAY,shift(TODAY,30));
+  list=(od.length?`<h2 class="warn">已經過了跟進日期（${od.length}）</h2>${od.map(row).join('')}`:'')+
+   `<h2>接下來 30 天</h2>`+(up.length?groupHTML(up):`<div class="empty">${loading?'讀取中…':'接下來 30 天沒有事情'}</div>`)}
+ $('app').innerHTML=`<a class="home" href="./">‹ 首頁</a><h1>行事曆</h1>
+  <div id="st">${loading?'讀取中…':'課表、跟進、生日來自新人名單；保固來自物品存放'}${errs.length?` · <span class="warn">${E(errs.join('、'))}</span>`:''}</div>
+  <div class="chips">${[['','全部'],...Object.entries(CAT)].map(([k,n])=>`<button data-f="${k}" class="${F===k?'on':''} c-${k}">${k?'<span class="dot"></span>':''}${n}</button>`).join('')}</div>
+  <div class="card"><div class="mh"><button class="bt" data-m="${mv(-1)}" aria-label="上個月">‹</button><div><b>${Y} 年 ${Mo} 月</b>${M!==TODAY.slice(0,7)?' <button class="bt" data-m="'+TODAY.slice(0,7)+'" style="padding:2px 8px;font-size:12px">回本月</button>':''}</div><button class="bt" data-m="${mv(1)}" aria-label="下個月">›</button></div>
+  <div class="cal">${cal}</div>
+  <div class="sub" style="margin-top:6px">${SEL?'再點一次日期回到「接下來 30 天」':'點日期看那天的事'}</div></div>
+  ${list}
+  <div class="row" style="margin-top:16px"><a class="bt" href="${ROSTER}" style="text-decoration:none">打開新人名單 ›</a><a class="bt" href="cabinet.html" style="text-decoration:none">打開物品存放 ›</a></div>`;
+}
+$('app').addEventListener('click',e=>{
+ const b=e.target.closest('button');if(!b)return;
+ if(b.dataset.m){M=b.dataset.m;SEL='';render()}
+ else if(b.dataset.d){SEL=SEL===b.dataset.d?'':b.dataset.d;render()}
+ else if(b.dataset.f!=null){F=b.dataset.f;try{localStorage.setItem('cal-f',F)}catch(x){}render()}
+});
+render();loadRoster();loadCab();
+</script>
+</body>
+</html>
