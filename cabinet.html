@@ -154,24 +154,6 @@ const wtyCls=s=>!s?'':dleft(s)<0?' wexp':dleft(s)<=SOON?' wsoon':'';
 function wtyEnd(buy,months){const d=pdD(buy),day=d.getDate();d.setDate(1);d.setMonth(d.getMonth()+months);d.setDate(Math.min(day,new Date(d.getFullYear(),d.getMonth()+1,0).getDate()));d.setDate(d.getDate()-1);return isoD(d)}
 function allWty(){const r=[];S.cabs.forEach(c=>c.cells.forEach((x,i)=>x.it.forEach(t=>{if(t.wty)r.push({t,c,i})})));return r.sort((a,b)=>a.t.wty<b.t.wty?-1:a.t.wty>b.t.wty?1:0)}
 const roomName=c=>(S.rooms.find(r=>r.id===c.room)||{}).name||'';
-// 行事曆檔（.ics）：iPhone、Google 行事曆都能匯入；到期前 30 天、7 天早上 9 點提醒
-const icsEsc=s=>String(s).replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/[,;]/g,m=>'\\'+m);
-function icsFold(line){const enc=new TextEncoder();let out='',n=0;for(const ch of line){const b=enc.encode(ch).length;if(n+b>73){out+='\r\n ';n=1}out+=ch;n+=b}return out}
-function ics(list){
- const st=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+/,''),L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Mei Good Life//Cabinet//ZH-TW','CALSCALE:GREGORIAN','METHOD:PUBLISH'];
- list.forEach(({t,c,i})=>{
-  L.push('BEGIN:VEVENT','UID:wty-'+t.id+'@mei-good-life','DTSTAMP:'+st,'DTSTART;VALUE=DATE:'+t.wty.replace(/-/g,''),'DTEND;VALUE=DATE:'+isoD(new Date(pdD(t.wty).getTime()+DAY+36e5)).replace(/-/g,''),
-   'SUMMARY:'+icsEsc('保固到期：'+t.n),'DESCRIPTION:'+icsEsc('放在 '+roomName(c)+' › '+where(c,i)+(t.buy?'\n購買日期 '+t.buy:'')),'TRANSP:TRANSPARENT');
-  [['P29DT15H','30 天後'],['P6DT15H','7 天後']].forEach(([tr,w])=>L.push('BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+icsEsc(t.n+' 的保固'+w+'到期'),'TRIGGER:-'+tr,'END:VALARM'));
-  L.push('END:VEVENT');
- });
- L.push('END:VCALENDAR');return L.map(icsFold).join('\r\n')+'\r\n';
-}
-function saveIcs(list,name){
- if(!list.length)return alert('沒有可以加入的保固日期。');
- const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([ics(list)],{type:'text/calendar;charset=utf-8'}));a.download=name+'.ics';
- document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),5000);
-}
 let CALM='';
 function wtySheet(m,sel){
  const list=allWty(),today=isoD(new Date());
@@ -191,11 +173,10 @@ function wtySheet(m,sel){
   ${soon.length?`<h2 style="margin-top:14px">30 天內到期（${soon.length}）</h2>${soon.map(row).join('')}`:''}
   ${later.length?`<h2>之後到期（${later.length}）</h2>${later.map(row).join('')}`:''}
   ${past.length?`<h2>已過期（${past.length}）</h2>${past.map(row).join('')}`:''}
-  <div class="foot"><button class="bt" id="wall" ${soon.length+later.length?'':'disabled style="opacity:.4"'}>全部加到 iPhone 行事曆</button><button class="go" data-x>完成</button></div>`,p=>{
+  <div class="foot"><span></span><button class="go" data-x>完成</button></div>`,p=>{
   p.querySelectorAll('[data-cm]').forEach(b=>b.onclick=()=>wtySheet(b.dataset.cm));
   p.querySelectorAll('[data-cd]').forEach(b=>b.onclick=()=>wtySheet(m,b.dataset.cd===sel?'':b.dataset.cd));
   p.querySelectorAll('[data-wi]').forEach(b=>b.onclick=()=>itemSheet(b.dataset.wi,()=>wtySheet(m,sel)));
-  p.querySelector('#wall').onclick=()=>saveIcs([...soon,...later],'warranty');
  });
 }
 // ---------- 自訂格子形狀：每一格可以再切成上下／左右，切出來的也可以合併回去 ----------
@@ -508,7 +489,7 @@ function itemSheet(id,back){
   <div class="f"><span>保固（選填）</span><div class="card" style="margin:0">
    <div class="two"><label class="sub">購買日期<input id="ib" type="date" value="${a.t.buy||''}"></label><label class="sub">保固多久<span class="row" style="flex-wrap:nowrap;gap:6px"><input id="il" type="number" inputmode="numeric" min="0" placeholder="例如 1"><select id="iu" style="width:auto"><option value="12">年</option><option value="1">個月</option></select></span></label></div>
    <label class="sub" style="display:block;margin-top:8px">保固到期日<input id="iw" type="date" value="${a.t.wty||''}"></label>
-   <div class="row" style="justify-content:space-between;margin-top:8px"><span class="sub" id="iwl"></span><button class="bt" id="ical">加到 iPhone 行事曆</button></div>
+   <div class="sub" id="iwl" style="margin-top:6px"></div>
   </div></div>
   <div class="foot"><button class="bt bad" id="idel">刪除</button><div class="row"><button class="bt" id="icx">取消</button><button class="go" id="iok">儲存</button></div></div>`,p=>{
   const ic=p.querySelector('#ic'),ii=p.querySelector('#ii');
@@ -518,10 +499,6 @@ function itemSheet(id,back){
   // 填了購買日期和保固多久，就自動算出到期日（也可以直接改到期日）
   const calc=()=>{const n=Math.round(+il.value);if(okD(ib.value)&&n>0)iw.value=wtyEnd(ib.value,n*+iu.value);lab()};
   ib.onchange=il.oninput=iu.onchange=calc;iw.onchange=lab;lab();
-  p.querySelector('#ical').onclick=()=>{
-   if(!okD(iw.value))return alert('請先填保固到期日。');
-   const b=loc(id);saveIcs([{t:{...b.t,n:p.querySelector('#in').value.trim()||b.t.n,wty:iw.value,buy:okD(ib.value)?ib.value:''},c:b.c,i:b.i}],'warranty');
-  };
   p.querySelector('#icx').onclick=done;
   p.querySelector('#idel').onclick=()=>{const b=loc(id);op(()=>b.c.cells[b.i].it.splice(b.k,1),'已刪除「'+b.t.n+'」');done()};
   p.querySelector('#iok').onclick=()=>{
