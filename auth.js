@@ -42,6 +42,8 @@ let started = false, FBAPP = null;
 // 用 Gemini（Firebase AI Logic）讀照片或文字；頁面透過 claude.use('sample') 呼叫
 // 每個模型的免費額度分開算：一個用完就換下一個（最後一個比較輕量，額度通常比較多）
 const AI_MODELS = ['gemini-3.6-flash', 'gemini-3-flash', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+// 要上網查（Google 搜尋）的問題：免費方案只有 2.5 Flash 系列有每天的免費搜尋次數，先用它們，比較不會撞到額度
+const AI_SEARCH_MODELS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-3.6-flash', 'gemini-3-flash'];
 async function shrink(file) {
   try {
     const bm = await createImageBitmap(file), k = Math.min(1, 2000 / Math.max(bm.width, bm.height));
@@ -81,7 +83,7 @@ const sampler = {
     const BUSY = /quota|429|RESOURCE_EXHAUSTED|rate|overloaded|503|UNAVAILABLE/i, DAILY = /per.?day|PerDay|daily/i;
     let last, quota;
     for (let pass = 0; pass < 2; pass++) {
-      for (const name of AI_MODELS) {
+      for (const name of srch ? AI_SEARCH_MODELS : AI_MODELS) {
         for (let tryNo = 0; tryNo < 2; tryNo++) {
           try { const o = await ask(name); if (pass && o && typeof o === 'object') o._nosearch = 1; return o; } catch (e) {
             last = e;
