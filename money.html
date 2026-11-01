@@ -340,10 +340,10 @@ function shopField(o){const used=shopUsed(),top=[...new Set(used.concat(['7-ELEV
  ${U.shopAll?SHOPS.map(([g,ns])=>`<div class="sub" style="margin:8px 0 2px">${g}</div><div class="chips">${ns.map(n=>`<button class="chip ${o.shop===n?'on':''}" data-a="shop" data-i="${E(n)}">${E(n)}</button>`).join('')}</div>`).join(''):''}`}
 function txLine(t){
  const a=A(t.acct),to=A(t.to),x=t.type==='xfer';
- return`<div class="li" data-a="edtx" data-i="${t.id}"><div class="ic">${E(x?'轉':(t.cat||'?').slice(0,1))}</div><div class="sp"><div>${E(t.note||(x?'轉帳':t.cat)||'')}</div><div class="sub">${x?E(nm(a)+' → '+nm(to)):E(t.cat||'')+(t.shop?' · '+PIN+E(t.shop):'')+' · '+E(nm(a))}${t.bill?' · 帳單':''}${t.src&&t.src!=='m'?' · 匯入':''}${lentOf(t.id)?' · 幫人代墊 '+M(lentOf(t.id))+'，自己 '+M(myA(t)):''}${t.iou&&t.type==='in'?' · 朋友還錢，不算收入':''}${t.fee?' · 含手續費 '+M(t.fee):''}</div>${stPill(t)}</div><div class="num ${t.type==='in'?'in':''}">${t.type==='in'?'+':x?'':'−'}${M(t.amt)}</div></div>`;
+ return`<div class="li" data-a="edtx" data-i="${t.id}"><div class="ic">${E(x?'轉':(t.cat||'?').slice(0,1))}</div><div class="sp"><div>${E(t.note||(x?'轉帳':t.cat)||'')}</div><div class="sub">${x?E(nm(a)+' → '+nm(to)):E(t.cat||'')+(t.sub?'・'+E(t.sub):'')+(t.shop?' · '+PIN+E(t.shop):'')+' · '+E(nm(a))}${t.bill?' · 帳單':''}${t.src&&t.src!=='m'?' · 匯入':''}${lentOf(t.id)?' · 幫人代墊 '+M(lentOf(t.id))+'，自己 '+M(myA(t)):''}${t.iou&&t.type==='in'?' · 朋友還錢，不算收入':''}${t.fee?' · 含手續費 '+M(t.fee):''}</div>${stPill(t)}</div><div class="num ${t.type==='in'?'in':''}">${t.type==='in'?'+':x?'':'−'}${M(t.amt)}</div></div>`;
 }
 function vTx(){
- const q=U.q.toLowerCase(),fc=isCard(A(U.fa))&&U.fs,xs=S.tx.filter(t=>t.d.startsWith(U.mon)&&(!U.fa||t.acct===U.fa||t.to===U.fa)&&(!fc||(txStatus(t)||{}).k===U.fs)&&(!q||((t.note||'')+' '+(t.cat||'')+' '+(t.shop||'')).toLowerCase().includes(q)))
+ const q=U.q.toLowerCase(),fc=isCard(A(U.fa))&&U.fs,xs=S.tx.filter(t=>t.d.startsWith(U.mon)&&(!U.fa||t.acct===U.fa||t.to===U.fa)&&(!fc||(txStatus(t)||{}).k===U.fs)&&(!q||((t.note||'')+' '+(t.cat||'')+' '+(t.sub||'')+' '+(t.shop||'')).toLowerCase().includes(q)))
   .sort((a,b)=>a.d<b.d?1:a.d>b.d?-1:(b.ts||0)-(a.ts||0));
  const out=xs.filter(t=>t.type==='out').reduce((s,t)=>s+myA(t),0),inc=xs.filter(isInc).reduce((s,t)=>s+t.amt,0);
  let h=`<div class="mh"><button class="go q" data-a="mon" data-i="-1">‹</button><b>${U.mon.slice(0,4)} 年 ${+U.mon.slice(5)} 月</b><button class="go q" data-a="mon" data-i="1">›</button></div>
@@ -366,6 +366,12 @@ const fundInfo=p=>{const fb=S.bills.find(x=>x.id===p.fb),from=addM(p.next,-(+p.f
 function fundSync(){S.bills.forEach(p=>{const fb=p.fb&&S.bills.find(x=>x.id===p.fb);if(!fb)return;const due=shiftD(p.next,-1),n=Math.max(1,occ(Object.assign({},fb,{end:''}),due).length);fb.amt=Math.max(0,Math.ceil(fundInfo(p).left/n))})}
 const fundBar=p=>{const I=fundInfo(p),to=I.fb&&A(I.fb.to);return`<div style="width:100%;padding-left:52px;margin-top:4px"><div class="row"><span class="sub sp">📦 已存 <b class="num">${M(I.got)}</b> / ${M(I.need)}${to?'（在 '+E(to.name)+'）':''}</span><b class="sub">${Math.floor(I.pct)}%</b></div><div class="bar"><i style="width:${I.pct}%"></i></div><div class="sub">${I.left>0?'還差 '+M(I.left)+(I.per?'，每月存 '+M(I.per)+'，'+md(p.next)+' 要繳':''):'✓ 已經存夠了，繳費時從這裡付就好'}</div></div>`};
 const saveBar=b=>{if(b.link){const p=S.bills.find(x=>x.id===b.link);if(p)return fundBar(p)}const I=saveInfo(b);if(!I.to)return'';return`<div style="width:100%;padding-left:52px;margin-top:4px"><div class="row"><span class="sub sp">${E(I.to.name)} 現在有 <b class="num">${M(I.v)}</b>${I.g?' / 目標 '+M(I.g):''}</span>${I.g?`<b class="sub">${Math.floor(I.pct)}%</b>`:''}</div>${I.g?`<div class="bar"><i style="width:${I.pct}%"></i></div><div class="sub">${I.left>0?'還差 '+M(I.left)+(I.n?'，照這樣存大約 '+(I.n>=12?Math.floor(I.n/12)+' 年'+(I.n%12?' '+I.n%12+' 個月':''):I.n+' 個月')+'後達成':''):'🎉 已經達成目標了！'}</div>${I.g&&b.end&&I.left>0?(()=>{const k=Math.max(1,occ(b,b.end).length),need=Math.ceil(I.left/k);return`<div class="sub">要在 <b>${b.end.slice(0,4)}/${+b.end.slice(5,7)}/${+b.end.slice(8,10)}</b> 前存到：還有 ${k} 次，每次要存 <b>${M(need)}</b>${+b.amt<need?'<span class="neg">（現在每次 '+M(b.amt)+'，不夠喔）</span>':' ✓'}</div>`})():''}`:''}</div>`};
+// 細分（小分類）：紀錄的 cat 一律存大分類（預算、圖表都照大分類算），細分存在 t.sub
+const SUBDEF={'餐飲':['早餐','午餐','晚餐','宵夜','聚餐'],'咖啡飲品':['咖啡','手搖飲'],'交通':['捷運','公車','計程車','高鐵台鐵','加油','機票'],'購物':['網購','3C','家電'],'日用品':['清潔用品','衛生用品'],'服飾穿搭':['衣服','鞋子','配件'],'醫療':['看診','藥品','牙醫'],'娛樂':['電影','遊戲','唱歌'],'學習':['書','課程']};
+const subsOf=c=>{const v=(S.subs||{})[c];return v==null?(SUBDEF[c]||[]):(Array.isArray(v)?v:String(v).split(/[,，、\s]+/)).map(x=>String(x).trim()).filter(Boolean)};
+// 記帳時上面那排「常用細分」：最近常用的，不夠再補預設
+function subTop(n){const by={};S.tx.slice(-400).forEach(t=>{if(t.type==='out'&&t.sub&&S.cats.out.includes(t.cat)&&subsOf(t.cat).includes(t.sub)){const k=t.cat+'|'+t.sub;by[k]=(by[k]||0)+1}});
+ const ks=Object.keys(by).sort((a,b)=>by[b]-by[a]);for(const c of S.cats.out)for(const x of subsOf(c)){if(ks.length>=n)break;const k=c+'|'+x;if(!ks.includes(k))ks.push(k)}return ks.slice(0,n)}
 const PRESETS=[{name:'停車費',cat:'停車費',freq:1,vary:1,note:'政府路邊停車費代扣'},{name:'電話費',cat:'電信網路',freq:1},{name:'電費',cat:'水電瓦斯',freq:2,vary:1},{name:'水費',cat:'水電瓦斯',freq:2,vary:1},{name:'瓦斯費',cat:'水電瓦斯',freq:2,vary:1},{name:'房租',cat:'居家',freq:1},{name:'房貸',cat:'房貸',freq:1,bank:1,note:'銀行每月自動扣款'},{name:'訂閱',cat:'娛樂',freq:1,auto:1,sub:1},{name:'保險費',cat:'保險',freq:12},{name:'牌照稅',cat:'稅費',freq:12},{name:'燃料費',cat:'稅費',freq:12},{name:'薪水',cat:'薪資',freq:1,kind:'in'},{name:'定期定額',freq:1,kind:'inv'},{name:'強迫儲蓄',freq:1,kind:'save',note:'薪水一進來就先轉走'},{name:'旅遊基金',freq:1,kind:'save'}];
 // 固定收支依銀行篩選：信用卡、子帳戶都歸到它的銀行
 const bankOf=a=>a?(a.type!=='cash'&&a.group)||a.name:'未指定帳戶';
@@ -461,7 +467,8 @@ function vSet(){
  <div class="row" style="gap:6px"><input id="rk" placeholder="關鍵字，例：停車"><select id="rc">${S.cats.out.concat(S.cats.in).map(c=>`<option>${E(c)}</option>`).join('')}</select><button class="go q" data-a="ruleadd">新增</button></div>
  <button class="go q" style="margin-top:8px;width:100%" data-a="rulesv">${U.rulesOpen?'▴ 收起':'▾ 看已經有的 '+S.rules.length+' 條規則'}</button>
  ${U.rulesOpen?`<input style="margin-top:8px" placeholder="搜尋關鍵字或分類，例：中油" value="${E(U.rq||'')}" data-m="rq" data-r="1">${ruleList()}`:''}</div>
- <h2>分類（用逗號分開）</h2><div class="card"><label class="fl"><span>支出</span><textarea rows="2" data-m="cats.out" data-s="1" data-l="1">${E(S.cats.out.join('，'))}</textarea></label><label class="fl" style="margin-top:6px"><span>收入</span><textarea rows="2" data-m="cats.in" data-s="1" data-l="1">${E(S.cats.in.join('，'))}</textarea></label></div>
+ <h2>分類（用逗號分開）</h2><div class="card"><label class="fl"><span>支出</span><textarea rows="2" data-m="cats.out" data-s="1" data-l="1">${E(S.cats.out.join('，'))}</textarea></label><label class="fl" style="margin-top:6px"><span>收入</span><textarea rows="2" data-m="cats.in" data-s="1" data-l="1">${E(S.cats.in.join('，'))}</textarea></label>
+ <details class="tip" style="margin-top:10px"><summary>支出的細分（例：餐飲 → 早餐、午餐、晚餐）▾</summary>${(S.subs=S.subs||{}),S.cats.out.map(c=>`<label class="fl" style="margin-top:6px"><span>${E(c)}</span><input value="${E(subsOf(c).join('，'))}" data-m="subs.${E(c)}" data-s="1" placeholder="用逗號分開，空白＝不分細分"></label>`).join('')}<div class="sub" style="margin-top:6px">記帳時選細分（例如「晚餐」），會自動歸到大分類「餐飲」。預算、週報照大分類算；圖表可以看每個大分類的細分。</div></details></div>
  <h2>帳號與備份</h2><div class="card">
  ${window.FBU?`<div class="row" style="margin-bottom:8px"><span class="sp sub">帳號：${E(FBU.email)}</span><button class="go q" data-a="logout">登出</button></div>`:''}
  <div class="sub" style="margin-bottom:8px">${E(CL.st)}</div>
@@ -807,6 +814,8 @@ function vChart(){
  <div class="card"><b>每月支出</b><div class="sub">平均每月 ${M(avg)}・點直條可以看那個月花在哪</div>
  ${colChart(ag.map(a=>({k:a.m,label:lab(a.m),v:a.o,on:a.m===sel,tip:`<b>${a.m.slice(0,4)} 年 ${lab(a.m)}</b><br>支出 ${M(a.o)}<br>收入 ${M(a.inc)}<br>結餘 ${M(a.inc-a.o)}`})))}</div>
  <h2>${lab(sel)}錢花在哪（共 ${M(tot)}）</h2><div class="card">${tot?hbars(Object.keys(sp).map(c=>[c,sp[c]]).sort((a,b)=>b[1]-a[1]),tot):'<div class="sub">這個月沒有支出紀錄。</div>'}</div>
+ ${(()=>{const g={};S.tx.forEach(t=>{if(t.type==='out'&&t.d.startsWith(sel)&&t.sub&&myA(t)>0){const c=t.cat||'其他';(g[c]=g[c]||{})[t.sub]=(g[c][t.sub]||0)+myA(t)}});const cs=Object.keys(g).sort((a,b)=>(sp[b]||0)-(sp[a]||0));
+  return cs.length?`<h2>細分</h2><div class="card">${cs.map(c=>{const d=g[c],un=(sp[c]||0)-Object.values(d).reduce((a,v)=>a+v,0),rows=Object.keys(d).map(k=>[k,d[k]]).sort((a,b)=>b[1]-a[1]);if(un>0.5)rows.push(['沒選細分',un]);return`<details class="tip" style="margin:4px 0"><summary><b>${E(c)}</b> ${M(sp[c]||0)} ▾</summary>${hbars(rows,sp[c]||0)}</details>`}).join('')}</div>`:''})()}
  ${(()=>{const by={};S.tx.forEach(t=>{if(t.type==='out'&&t.shop&&t.d.startsWith(sel))by[t.shop]=(by[t.shop]||0)+myA(t)});const r=Object.keys(by).map(k=>[k,by[k]]).sort((a,b)=>b[1]-a[1]).slice(0,10),st=r.reduce((a,x)=>a+x[1],0);return r.length?`<h2>${lab(sel)}最常花錢的地方</h2><div class="card">${hbars(r,st)}<div class="sub" style="margin-top:4px">只算有填「在哪裡買」的紀錄。</div></div>`:''})()}
  <h2>每月明細</h2><div class="card"><table class="pv"><tr><th>月份</th><th style="text-align:right">支出</th><th style="text-align:right">收入</th><th style="text-align:right">結餘</th></tr>${ag.slice().reverse().map(a=>`<tr><td>${a.m.slice(0,4)}/${+a.m.slice(5)}</td><td class="num" style="text-align:right">${M(a.o)}</td><td class="num" style="text-align:right">${M(a.inc)}</td><td class="num ${a.inc-a.o<0?'neg':''}" style="text-align:right">${M(a.inc-a.o)}</td></tr>`).join('')}</table></div>`;
  return h;
@@ -861,7 +870,7 @@ function vTripOne(T){
  // 可以加進來的：出發前 120 天到回來後 30 天，還沒算進這次旅行的支出
  const from=shiftD(T.from,-120),to=shiftD(T.to,30),q=String(U.tripQ||'').toLowerCase();
  h+=`<button class="go g" style="width:100%;margin-top:10px" data-a="tripmore">${U.tripAdd?'收起來 ▴':'＋ 加入出發前的花費（機票、訂房…）'}</button>`;
- if(U.tripAdd){const cs=S.tx.filter(t=>t.type==='out'&&myA(t)>0&&t.d>=from&&t.d<=to&&!inTrip(t,T)&&(!q||((t.note||'')+' '+(t.cat||'')+' '+(t.shop||'')).toLowerCase().includes(q))).sort((a,b)=>a.d<b.d?1:-1).slice(0,60);
+ if(U.tripAdd){const cs=S.tx.filter(t=>t.type==='out'&&myA(t)>0&&t.d>=from&&t.d<=to&&!inTrip(t,T)&&(!q||((t.note||'')+' '+(t.cat||'')+' '+(t.sub||'')+' '+(t.shop||'')).toLowerCase().includes(q))).sort((a,b)=>a.d<b.d?1:-1).slice(0,60);
   h+=`<input style="width:100%;margin-top:8px" placeholder="搜尋：機票、飯店、Agoda…" value="${E(U.tripQ||'')}" data-m="tripQ" data-r="1"><div class="card" style="margin-top:6px">${cs.length?cs.map(t=>`<div class="row" style="padding:6px 0;border-top:1px solid var(--line);gap:8px"><span class="sp">${md(t.d)} ${E(t.note||t.cat||'')}<div class="sub">${E(t.cat||'')}・${E(nm(A(t.acct)))}${t.trip&&tripOf(t.trip)?'・已算在「'+E(tripOf(t.trip).name)+'」':''}</div></span><b class="num">${M(myA(t))}</b><button class="go q" style="padding:3px 10px;font-size:12px" data-a="tripin" data-i="${t.id}">加入</button></div>`).join(''):'<div class="sub">找不到其他花費。</div>'}</div>`}
  return h;
 }
@@ -1327,7 +1336,9 @@ function sheetTx(o){
  <label class="fl"><span>說明</span><input value="${E(o.note)}" data-m="sheet.o.note" data-g="1" placeholder="${x?'例：繳卡費、提款':'例：午餐、停車費'}"></label>
  ${x||o.cat==='薪資'?'':shopField(o)}
  ${o.type==='out'?lendField(o):''}
- ${x?'':`<div class="fl" style="margin-top:8px"><span class="sub">分類</span><div class="chips" style="margin-top:4px">${cs.map(c=>`<button class="chip ${o.cat===c?'on':''}" data-a="cat" data-i="${E(c)}">${E(c)}</button>`).join('')}</div></div>
+ ${x?'':`${inc?'':(()=>{const tp=subTop(8);return tp.length?`<div class="fl" style="margin-top:8px"><span class="sub">常用細分（點了會自動歸到大分類）</span><div class="chips" style="margin-top:4px">${tp.map(k=>{const[c,b]=k.split('|');return`<button class="chip ${o.cat===c&&o.sub===b?'on':''}" data-a="sub" data-i="${E(k)}">${E(b)}</button>`}).join('')}</div></div>`:''})()}
+ <div class="fl" style="margin-top:8px"><span class="sub">分類</span><div class="chips" style="margin-top:4px">${cs.map(c=>`<button class="chip ${o.cat===c?'on':''}" data-a="cat" data-i="${E(c)}">${E(c)}</button>`).join('')}</div></div>
+ ${!inc&&o.cat&&subsOf(o.cat).length?`<div class="fl" style="margin-top:8px"><span class="sub">${E(o.cat)} 的細分（選填，再點一次取消）</span><div class="chips" style="margin-top:4px">${subsOf(o.cat).map(b=>`<button class="chip ${o.sub===b?'on':''}" data-a="sub" data-i="${E(o.cat+'|'+b)}">${E(b)}</button>`).join('')}</div></div>`:''}
  ${o.note&&o.cat&&o.catSet&&guess(o.note,o.type)!==o.cat?`<div class="sub" style="margin-top:6px"><a href="#" data-a="rule">以後說明有「${E(o.note.slice(0,12))}」都分到「${E(o.cat)}」</a></div>`:''}`}
  <div class="row" style="margin-top:14px;gap:8px">${o.id?'<button class="go r" data-a="deltx">刪除</button>':''}<span class="sp"></span><button class="go" data-a="savetx">儲存</button></div>`;
 }
@@ -1958,14 +1969,16 @@ const ACT={
  iddel:()=>{if(!confirm('刪除這個點子？（不想做可以改成「先放著」）'))return;S.ideas=IDS().filter(y=>y.id!==U.sheet.o.id);U.sheet=null;save();render()},
  az:()=>{U.az=!U.az;render()},
  shopall:()=>{U.shopAll=!U.shopAll;render()},
- cat:i=>{const o=U.sheet.o;o.cat=i;o.catSet=1;render()},
+ cat:i=>{const o=U.sheet.o;o.cat=i;o.catSet=1;if(o.sub&&!subsOf(i).includes(o.sub))o.sub='';render()},
+ sub:i=>{const o=U.sheet.o,[c,b]=i.split('|');if(o.cat===c&&o.sub===b)o.sub='';else{o.cat=c;o.sub=b;o.catSet=1}render()},
  rule:()=>{const o=U.sheet.o,k=o.note.trim().slice(0,12);S.rules=S.rules.filter(r=>r.k!==k);S.rules.unshift({k,c:o.cat});save();render();toast('已新增規則：'+k+' → '+o.cat)},
  savetx:()=>{const o=U.sheet.o,amt=pAmt(o.amt);
   if(!(amt>0))return toast('請輸入金額');if(!o.d)return toast('請選日期');
   if(o.type==='xfer'&&(!o.to||o.to===o.acct))return toast('請選不同的轉出、轉入帳戶');
   const fee=o.type==='out'&&isCard(A(o.acct))?pAmt(o.fee)||0:0;if(fee<0)return toast('手續費不正確');
   const t={id:o.id||nid(),d:o.d,type:o.type,amt:amt+fee,acct:o.acct,cat:o.type==='xfer'?'':(o.cat||guess(o.note+' '+(o.shop||''),o.type)||(o.type==='in'?'其他收入':'其他')),note:(o.note||'').trim(),src:o.src||'m',ts:o.ts||Date.now()};
-  if(fee>0)t.fee=fee;if(o.iou)t.iou=1;if(o.type==='xfer')t.to=o.to;else{const sh=String(o.shop||'').trim();if(sh)t.shop=sh}if(o.bill)t.bill=o.bill;if(o.type==='out'&&isCard(A(o.acct))&&o.pd)t.pd=o.pd;if(o.type==='out'&&o.trip)t.trip=o.trip;
+  if(fee>0)t.fee=fee;if(o.iou)t.iou=1;if(o.type==='xfer')t.to=o.to;else{const sh=String(o.shop||'').trim();if(sh)t.shop=sh}if(o.bill)t.bill=o.bill;if(o.type==='out'){if(o.sub&&subsOf(t.cat).includes(o.sub))t.sub=o.sub;else{const ns=String(o.note||'').trim();if(ns){if(subsOf(t.cat).includes(ns))t.sub=ns;else if(!o.catSet){const c=S.cats.out.find(c=>subsOf(c).includes(ns));if(c){t.cat=c;t.sub=ns}}}}}
+  if(o.type==='out'&&isCard(A(o.acct))&&o.pd)t.pd=o.pd;if(o.type==='out'&&o.trip)t.trip=o.trip;
   const L=o.type==='out'?(o.lend||[]).map(x=>({iid:x.iid,who:String(x.who||'').trim(),amt:pAmt(x.amt)||0})).filter(x=>x.who||x.amt):[];
   if(L.some(x=>!x.who||!(x.amt>0)))return toast('代墊要填是誰和金額');if(L.reduce((a,x)=>a+x.amt,0)>amt+0.001)return toast('代墊的錢不能比這筆還多');
   const keep=new Set(L.map(x=>x.iid).filter(Boolean));S.iou=S.iou.filter(x=>!(x.tx===t.id&&x.dir==='in'&&!keep.has(x.id)));
