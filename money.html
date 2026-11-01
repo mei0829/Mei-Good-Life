@@ -790,8 +790,8 @@ function vBudget(){
  if(noB.length)h+=`<h2>沒設預算的分類</h2><div class="card">${hbars(noB.map(c=>[c,sp[c]]).sort((a,b)=>b[1]-a[1]))}</div>`;
  h+=budgetSugCard();
  const hasB=+B.total>0||Object.values(B.cats).some(v=>+v>0);
- h+=`${hasB?'<h2>設定每月預算（空白＝不設）</h2><div class="card">':'<details class="tip" style="margin-top:12px"><summary>想現在就自己設預算 ▾</summary><div class="card" style="border:0;padding:8px 0;background:none">'}<label class="fl"><span>每月總預算</span><input inputmode="numeric" data-m="budget.total" data-s="1" data-n="1" value="${E(B.total||'')}" placeholder="例：20000"></label>
- ${(()=>{const F=fixedBy();return`<div class="grid" style="margin-top:8px">${S.cats.out.map(c=>{const x=F[c];return`<label class="fl"><span>${E(c)}</span><input inputmode="numeric" data-m="budget.cats.${E(c)}" data-s="1" data-n="1" value="${E(B.cats[c]||'')}" placeholder="${x?'至少 '+Math.round(x.pm):'—'}">${x?`<span class="sub" style="font-size:12px;line-height:1.4;margin-top:3px">固定每月 <b>${M(x.pm)}</b>：${fixedTxt(x)}</span>`:''}</label>`}).join('')}</div>${Object.keys(F).length?'<div class="sub" style="margin-top:6px">「固定每月」是固定收支裡這個分類的錢，扣款後會自動算進預算。預算至少要填這麼多，再加上你想給自己花的部分。</div>':''}`})()}
+ h+=`${hasB?'<h2>設定每月預算（空白＝不設）</h2><div class="card">':'<details class="tip" style="margin-top:12px"><summary>想現在就自己設預算 ▾</summary><div class="card" style="border:0;padding:8px 0;background:none">'}${(()=>{const sum=S.cats.out.reduce((a,c)=>a+(+B.cats[c]||0),0);return`<label class="fl"><span>每月總預算${sum?`　<b style="color:var(--ink)">下面加起來 ${M(sum)}</b>`:''}</span><input inputmode="numeric" data-m="budget.total" data-s="1" data-n="1" data-r="1" value="${E(B.total||'')}" placeholder="例：20000"></label>${sum&&+B.total!==sum?`<button class="go q" style="margin-top:6px" data-a="btsum">用加起來的 ${M(sum)} 當總預算</button>`:''}`})()}
+ ${(()=>{const F=fixedBy();return`<div class="grid" style="margin-top:8px">${S.cats.out.map(c=>{const x=F[c];return`<label class="fl"><span>${E(c)}</span><input inputmode="numeric" data-m="budget.cats.${E(c)}" data-s="1" data-n="1" data-r="1" value="${E(B.cats[c]||'')}" placeholder="${x?'至少 '+Math.round(x.pm):'—'}">${x?`<span class="sub" style="font-size:12px;line-height:1.4;margin-top:3px">固定每月 <b>${M(x.pm)}</b>：${fixedTxt(x)}</span>`:''}</label>`}).join('')}</div>${Object.keys(F).length?'<div class="sub" style="margin-top:6px">「固定每月」是固定收支裡這個分類的錢，扣款後會自動算進預算。預算至少要填這麼多，再加上你想給自己花的部分。</div>':''}`})()}
  <div class="note" data-t="怎麼用？">填完到上面看就會更新。用到 80% 會變黃色提醒，超過會變紅色，總覽頁最上面也會出現提醒。</div></div>${hasB?'':'</details>'}`;
  return h;
 }
@@ -1852,6 +1852,7 @@ const ACT={
   const t=x.dir==='in'?{id:nid(),d:o.d,type:'in',amt,acct:o.acct,cat:'收回代墊',note:x.who+' 還我'+(x.note?'（'+x.note+'）':''),iou:1,src:'m',ts:Date.now()}:{id:nid(),d:o.d,type:'out',amt,acct:o.acct,cat:x.cat||'其他',note:'還 '+x.who+(x.note?'（'+x.note+'）':''),src:'m',ts:Date.now()};
   S.tx.push(t);(x.back=x.back||[]).push({d:o.d,amt,tx:t.id});U.sheet=null;save();render();toast(iouLeft(x)>0?'已記下，還差 '+M(iouLeft(x)):'✓ '+x.who+' 這筆還清了')},
  iouall:()=>{U.iouAll=!U.iouAll;render()},
+ btsum:()=>{const B=S.budget;B.total=S.cats.out.reduce((a,c)=>a+(+B.cats[c]||0),0);save();render();toast('總預算設成 '+M(B.total))},
  bsug1:i=>{const r=(budgetSug().rows||[]).find(x=>x.c===i);if(!r)return;S.budget.cats[i]=r.sug;save();render();toast(i+' 預算設成 '+M(r.sug))},
  bsugall:()=>{const G=budgetSug();if(!G.rows)return;if(!confirm('把建議的預算全部套用？（之後還可以自己改）'))return;G.rows.forEach(r=>{S.budget.cats[r.c]=r.sug});S.budget.total=G.tot;save();render();toast('已套用，總預算 '+M(G.tot))},
  wkopen:i=>{U.wk=i;if(i===wkLast()){S.wkSeen=i;save()}U.tab='week';U.sheet=null;render();window.scrollTo(0,0)},
