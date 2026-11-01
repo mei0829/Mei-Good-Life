@@ -614,7 +614,7 @@ const pkCards=()=>pkList().map(c=>{const a=c.acct&&A(c.id);return c.o||((a&&a.gr
 // AI 回答裡的卡名換回你取的簡稱
 const pkName=t=>{const x=String(t||''),l=x.toLowerCase(),c=pkList().find(c=>{const o=(c.o||'').toLowerCase(),n=c.n.toLowerCase();return(o&&(l.includes(o)||o.includes(l)))||(n&&l.includes(n))});return c&&c.n!==x?`${E(c.n)} <span class="sub" style="font-size:12px;font-weight:400">${E(c.o||x)}</span>`:E(x)};
 const pkKey=(q,amt)=>String(q).trim().toLowerCase()+'|'+(+amt||'');
-const pkSrc=r=>(r&&r._src||[]).length?`<div class="sub" style="margin-top:8px">資料來源：${r._src.slice(0,6).map(x=>`<a href="${E(x.u)}" target="_blank" rel="noopener">${E(x.t||'網頁')}</a>`).join('、')}</div>`:'';
+const pkSrc=r=>(r&&r._nosearch?'<div class="sub" style="margin-top:8px;color:var(--amber)">⚠︎ 今天 AI 上網查的免費次數用完了，這次是用 AI 記得的資料回答，優惠可能不是最新的，刷卡前請再到銀行官網確認。</div>':'')+((r&&r._src||[]).length?`<div class="sub" style="margin-top:8px">資料來源：${r._src.slice(0,6).map(x=>`<a href="${E(x.u)}" target="_blank" rel="noopener">${E(x.t||'網頁')}</a>`).join('、')}</div>`:'');
 const pkEntry=k=>`<div data-entry="${k}" style="margin-top:6px"></div>`;
 function vPerk(){
  const P=S.perk,cards=pkCards(),r=(P.cache[pkKey(P.q,P.amt)]||{}).r,sm=P.sum;

@@ -42,6 +42,8 @@ let started = false, FBAPP = null;
 // 用 Gemini（Firebase AI Logic）讀照片或文字；頁面透過 claude.use('sample') 呼叫
 // 每個模型的免費額度分開算：一個用完就換下一個（最後一個比較輕量，額度通常比較多）
 const AI_MODELS = ['gemini-3.6-flash', 'gemini-3-flash', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+// 要上網查（Google 搜尋）的問題：免費方案只有 2.5 Flash 系列有每天的免費搜尋次數，先用它們，比較不會撞到額度
+const AI_SEARCH_MODELS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-3.6-flash', 'gemini-3-flash'];
 async function shrink(file) {
   try {
     const bm = await createImageBitmap(file), k = Math.min(1, 2000 / Math.max(bm.width, bm.height));
@@ -61,7 +63,7 @@ const sampler = {
     const ai = aim.getAI(FBAPP, { backend: new aim.GoogleAIBackend() });
     const parts = [prompt];
     if (opts && opts.images) parts.push({ inlineData: await shrink(opts.images) });
-    const srch = opts && opts.search;
+    let srch = opts && opts.search;
     // 問一次指定的模型
     const ask = async name => {
       // search：讓 Gemini 用 Google 搜尋查最新資料（這時不能指定 JSON 格式，改從文字裡取出 JSON）
@@ -80,22 +82,27 @@ const sampler = {
     };
     const BUSY = /quota|429|RESOURCE_EXHAUSTED|rate|overloaded|503|UNAVAILABLE/i, DAILY = /per.?day|PerDay|daily/i;
     let last, quota;
-    for (const name of AI_MODELS) {
-      for (let tryNo = 0; tryNo < 2; tryNo++) {
-        try { return await ask(name); } catch (e) {
-          last = e;
-          if (e && e.code === 'empty') throw e;
-          const em = String(e && e.message);
-          if (!BUSY.test(em)) break;
-          quota = e;
-          // 今天的額度用完：直接換下一個模型；只是一時太忙：等 4 秒再試同一個模型一次
-          if (DAILY.test(em) || tryNo) break;
-          await new Promise(r => setTimeout(r, 4000));
+    for (let pass = 0; pass < 2; pass++) {
+      for (const name of srch ? AI_SEARCH_MODELS : AI_MODELS) {
+        for (let tryNo = 0; tryNo < 2; tryNo++) {
+          try { const o = await ask(name); if (pass && o && typeof o === 'object') o._nosearch = 1; return o; } catch (e) {
+            last = e;
+            if (e && e.code === 'empty') throw e;
+            const em = String(e && e.message);
+            if (!BUSY.test(em)) break;
+            quota = e;
+            // 今天的額度用完：直接換下一個模型；只是一時太忙：等 4 秒再試同一個模型一次
+            if (DAILY.test(em) || tryNo) break;
+            await new Promise(r => setTimeout(r, 4000));
+          }
         }
+        const em = String(last && last.message);
+        // 額度、忙碌、或這個模型不存在：換下一個；其他錯誤（例如沒有網路）就不用再試了
+        if (!BUSY.test(em) && !/not.?found|404|not supported/i.test(em)) break;
       }
-      const em = String(last && last.message);
-      // 額度、忙碌、或這個模型不存在：換下一個；其他錯誤（例如沒有網路）就不用再試了
-      if (!BUSY.test(em) && !/not.?found|404|not supported/i.test(em)) break;
+      // 上網查（Google 搜尋）的免費額度比較少：用完了就改成不上網查再問一次，用 AI 自己記得的資料回答
+      if (!srch || !quota) break;
+      srch = false;
     }
     // 每個模型都試過了：有遇到額度問題就照額度回報（最後一個模型可能只是不存在）
     if (quota && /not.?found|404|not supported/i.test(String(last && last.message))) last = quota;
