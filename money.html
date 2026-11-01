@@ -49,6 +49,8 @@ nav button{flex:1;border:0;background:none;color:var(--sub);font:inherit;font-si
 nav button b{display:block;font-size:20px;line-height:1.2;font-weight:400}nav button.on{color:var(--acc);font-weight:700}
 input,select,textarea,button.go{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-width:0;width:100%}
 input:not([type=checkbox]):not([type=file]),select{height:38px;max-width:100%}
+/* iPhone：輸入框的字小於 16px 時，點下去會自動放大畫面、打完不會縮回來（右邊被切掉、下面按鈕跑到中間） */
+@supports (-webkit-touch-callout:none){input:not([type=checkbox]):not([type=file]),select,textarea{font-size:16px!important}}
 input[type=date]{-webkit-appearance:none;appearance:none;display:block;line-height:1.2;text-align:left}
 input[type=checkbox]{width:18px;height:18px;flex:none;accent-color:var(--acc)}
 textarea{resize:vertical;max-width:100%}
