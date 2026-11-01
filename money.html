@@ -606,6 +606,9 @@ function sheetPItem(o){
 const PKQ=['中油','全聯','7-ELEVEN','蝦皮','momo','夢時代','好市多','Uber Eats','高鐵','日本消費','保費','Netflix'];
 // 台灣常見信用卡的官方名稱（只是輸入建議，可以自己打）
 const CARDN=['國泰世華 CUBE 卡','國泰世華 亞洲萬里通聯名卡','台新 Richart 卡','台新 @GoGo 卡','玉山 Pi 拍錢包信用卡','玉山 Unicard','中國信託 LINE Pay 信用卡','台北富邦 J 卡','台北富邦 momo 卡','永豐 DAWAY 卡','聯邦 賴點卡','星展 eco永續卡','滙豐 Live+ 現金回饋卡','華南 i 網購生活卡','第一銀行 iLEO 卡','兆豐 Mega One 一卡通聯名卡','遠東 樂家+卡'];
+// 🔎 幫我查官方卡名：AI 上網查，列出可能的正式卡名（含發卡銀行），點一下填進去
+function cardFindUI(o,k,nk){const R=o.cfR;return`<div class="fl w"><button class="go q" data-a="cardfind" data-i="${k}|${nk}" ${o.cfBusy?'disabled':''}>${o.cfBusy?'AI 上網查詢中…':'🔎 幫我查官方卡名'}</button>
+ ${R?R.length?`<div class="sub" style="margin-top:6px">點一個填進去：</div><div class="chips" style="margin-top:4px">${R.map((c,i)=>`<button class="chip ${o[k]===c.name?'on':''}" data-a="cardpick" data-i="${k}|${i}">${E(c.name)}</button>`).join('')}</div>${R.some(c=>c.note)?`<div class="sub" style="margin-top:4px">${R.filter(c=>c.note).map(c=>'・'+E(c.name)+'：'+E(c.note)).join('<br>')}</div>`:''}${o.cfNo?'<div class="sub" style="margin-top:4px;color:var(--amber)">⚠︎ 這次 AI 沒有上網查，名稱請再對照卡片或銀行 App 確認。</div>':''}`:'<div class="sub" style="margin-top:6px">查不到，請照卡片正面或銀行 App 上的名稱填，記得加上發卡銀行。</div>':`<div class="sub" style="margin-top:4px">寫法：<b>銀行名稱＋卡片名稱</b>，例如「國泰世華 CUBE 卡」。好幾家銀行都有的卡（例如中油聯名卡）一定要寫銀行。</div>`}</div>`}
 const cardDL=()=>`<datalist id="cardlist">${CARDN.map(n=>`<option value="${E(n)}">`).join('')}</datalist>`;
 const pkList=()=>{if(S.perk.extra&&!S.perk.more){S.perk.more=String(S.perk.extra).split(/[,，、\n]+/).map(x=>x.trim()).filter(Boolean).map((n,i)=>({id:'x'+i,n,o:''}));S.perk.extra=''}
  return S.accts.filter(isCard).map(a=>({id:a.id,acct:1,n:a.name,o:a.official||''})).concat((S.perk.more||[]).map(x=>({id:x.id,n:x.n,o:x.o||''})))};
@@ -703,7 +706,7 @@ function sheetCyc(o){const c=A(o.cid);return`<div class="row"><b class="sp" styl
  <div class="row" style="margin-top:14px;gap:8px">${o.had?'<button class="go g" data-a="cycreset">改回每月固定日</button>':''}<span class="sp"></span><button class="go" data-a="cycsave">儲存</button></div>`}
 function sheetPCard(o){return`<div class="row"><b class="sp" style="font-size:17px">${o.id?'修改':'加一張想比較的卡'}</b><button class="x" data-a="close">×</button></div>
  <div class="grid"><label class="fl w"><span>顯示的名字（短一點）</span><input value="${E(o.n)}" data-m="sheet.o.n" placeholder="例：Richart"></label>
- <label class="fl w"><span>官方卡名（給 AI 查用）</span><input value="${E(o.o)}" data-m="sheet.o.o" list="cardlist" placeholder="例：台新 Richart 卡">${cardDL()}</label></div>
+ <label class="fl w"><span>官方卡名（給 AI 查用）</span><input value="${E(o.o)}" data-m="sheet.o.o" list="cardlist" placeholder="例：台新 Richart 卡">${cardDL()}</label>${cardFindUI(o,'o','n')}</div>
  <div class="row" style="margin-top:14px;gap:8px">${o.id?'<button class="go r" data-a="delpcard">刪除</button>':''}<span class="sp"></span><button class="go" data-a="savepcard">儲存</button></div>`}
 async function perkSum(force){
  const cards=pkCards();if(!cards.length)return;U.pkSum=1;if(U.tab==='perk')render();
@@ -1378,7 +1381,7 @@ function sheetAcct(o){
  ${o.type==='bank'?`<div class="fl w"><span>幣別</span><div class="chips">${[['TWD','台幣'],['USD','美元（外幣帳戶）']].map(([k,n])=>`<button class="chip ${(o.cur||'TWD')===k?'on':''}" data-a="acur" data-i="${k}">${n}</button>`).join('')}</div></div>${bankPick(o,'group','哪一家銀行（同一家的子帳戶會排在一起）','不指定')}
  <label class="fl"><span>銀行代碼</span><input inputmode="numeric" value="${E(o.code||'')}" data-m="sheet.o.code" placeholder="例：013"></label><label class="fl"><span>帳號 ${o.no?copyTag(o.no,'複製'):''}</span><input inputmode="numeric" value="${E(o.no||'')}" data-m="sheet.o.no" placeholder="匯款用的帳號"></label>`:''}
  ${c?bankPick(o,'group','發卡銀行（選填；會跟那家銀行的帳戶排在一起）','不指定'):''}
- ${c?`<label class="fl w"><span>官方卡名（選填；查刷卡優惠用，例：國泰世華 CUBE 卡）</span><input value="${E(o.official||'')}" data-m="sheet.o.official" list="cardlist" placeholder="上面的名稱可以取短一點，這裡填完整的">${cardDL()}</label>`:''}
+ ${c?`<label class="fl w"><span>官方卡名（選填；查刷卡優惠用，例：國泰世華 CUBE 卡）</span><input value="${E(o.official||'')}" data-m="sheet.o.official" list="cardlist" placeholder="上面的名稱可以取短一點，這裡填完整的">${cardDL()}</label>${cardFindUI(o,'official','name')}`:''}
  ${c?`<label class="fl w"><span>卡號末四碼（選填，方便辨認，不要填完整卡號）</span><input inputmode="numeric" maxlength="4" value="${E(o.last4||'')}" data-m="sheet.o.last4"></label>`:''}
  ${c?`<label class="fl"><span>每月幾號結帳</span><input inputmode="numeric" value="${E(o.close)}" data-m="sheet.o.close"></label>
  <label class="fl"><span>每月幾號前要繳</span><input inputmode="numeric" value="${E(o.due)}" data-m="sheet.o.due"></label>
@@ -2030,6 +2033,12 @@ Object.assign(ACT,{
  cycreset:()=>{const o=U.sheet.o,c=A(o.cid);if(c.ov)delete c.ov[o.key];U.sheet=null;save();render();toast('已改回每月固定日')},
  addpcard:()=>{U.sheet={k:'pcard',o:{n:'',o:''}};render()},
  edpcard:i=>{const x=(S.perk.more||[]).find(y=>y.id===i);if(x){U.sheet={k:'pcard',o:Object.assign({},x)};render()}},
+ cardfind:async i=>{const o=U.sheet&&U.sheet.o;if(!o||o.cfBusy)return;const[k,nk]=i.split('|'),a=String(o[nk]||'').trim(),b=String(o[k]||'').trim();if(!a&&!b)return toast('先填卡片的名字');o.cfBusy=1;render();
+  try{const r=await askAI(`台灣的信用卡。使用者在記帳 App 裡把一張信用卡叫做「${a||b}」${b&&b!==a?`，目前填的官方卡名是「${b}」`:''}。請用 Google 搜尋，找出最可能的正式卡片名稱，寫成「發卡銀行＋卡名」，例如「國泰世華 CUBE 卡」「遠東商銀 樂家+卡」。如果好幾家銀行都有類似的卡（例如中油聯名卡），每家各列一個。最多 4 個，最可能的放第一個。只列真的存在、目前還在發行或使用的卡。只回傳 JSON：{"cards":[{"name":"發卡銀行＋卡名","note":"一句話，例如：玉山銀行發行，也叫漢神巨蛋聯名卡"}]}。`,null,true);
+   o.cfR=(r&&Array.isArray(r.cards)?r.cards:[]).filter(c=>c&&c.name).slice(0,4).map(c=>({name:String(c.name).trim(),note:String(c.note||'').trim()}));o.cfNo=!!(r&&r._nosearch)}
+  catch(e){toast(aiErr(e))}
+  o.cfBusy=0;if(U.sheet&&U.sheet.o===o)render()},
+ cardpick:i=>{const o=U.sheet.o,[k,n]=i.split('|'),c=(o.cfR||[])[+n];if(c){o[k]=c.name;render()}},
  savepcard:()=>{const o=U.sheet.o,n=String(o.n||'').trim(),of=String(o.o||'').trim();if(!n&&!of)return toast('請輸入卡名');S.perk.more=S.perk.more||[];const x={id:o.id||nid(),n:n||of,o:of};const k=S.perk.more.findIndex(y=>y.id===x.id);if(k>=0)S.perk.more[k]=x;else S.perk.more.push(x);U.sheet=null;save();render()},
  delpcard:()=>{S.perk.more=(S.perk.more||[]).filter(y=>y.id!==U.sheet.o.id);U.sheet=null;save();render()},
  pksum:()=>perkSum(true),
