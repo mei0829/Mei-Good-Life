@@ -370,6 +370,8 @@ const saveBar=b=>{if(b.link){const p=S.bills.find(x=>x.id===b.link);if(p)return 
 const SUBDEF={'餐飲':['早餐','午餐','晚餐','宵夜','聚餐'],'咖啡飲品':['咖啡','手搖飲'],'交通':['捷運','公車','計程車','高鐵台鐵','加油','機票'],'購物':['網購','3C','家電'],'日用品':['清潔用品','衛生用品'],'服飾穿搭':['衣服','鞋子','配件'],'醫療':['看診','藥品','牙醫'],'娛樂':['電影','遊戲','唱歌'],'學習':['書','課程']};
 const subsOf=c=>{const v=(S.subs||{})[c];return v==null?(SUBDEF[c]||[]):(Array.isArray(v)?v:String(v).split(/[,，、\s]+/)).map(x=>String(x).trim()).filter(Boolean)};
 // 記帳時上面那排「常用細分」：最近常用的，不夠再補預設
+function subFind(q){q=String(q||'').trim().toLowerCase();if(!q)return[];const r=[];S.cats.out.forEach(c=>subsOf(c).forEach(b=>{if(b.toLowerCase().includes(q))r.push([c,b,b.toLowerCase().startsWith(q)?0:1])}));if(!r.length)S.cats.out.forEach(c=>{if(c.toLowerCase().includes(q))r.push([c,'',2])});return r.sort((a,b)=>a[2]-b[2]).slice(0,10)}
+function subRes(o){const r=subFind(o.subq);return!String(o.subq||'').trim()?'':r.length?r.map(([c,b])=>`<button class="chip ${o.cat===c&&(o.sub||'')===b?'on':''}" data-a="${b?'sub':'cat'}" data-i="${E(b?c+'|'+b:c)}">${b?E(b)+'<span style="opacity:.65;font-size:12px;margin-left:2px">（'+E(c)+'）</span>':E(c)}</button>`).join(''):'<span class="sub">找不到。可以到「設定 → 分類 → 支出的細分」新增。</span>'}
 function subTop(n){const by={};S.tx.slice(-400).forEach(t=>{if(t.type==='out'&&t.sub&&S.cats.out.includes(t.cat)&&subsOf(t.cat).includes(t.sub)){const k=t.cat+'|'+t.sub;by[k]=(by[k]||0)+1}});
  const ks=Object.keys(by).sort((a,b)=>by[b]-by[a]);for(const c of S.cats.out)for(const x of subsOf(c)){if(ks.length>=n)break;const k=c+'|'+x;if(!ks.includes(k))ks.push(k)}return ks.slice(0,n)}
 const PRESETS=[{name:'停車費',cat:'停車費',freq:1,vary:1,note:'政府路邊停車費代扣'},{name:'電話費',cat:'電信網路',freq:1},{name:'電費',cat:'水電瓦斯',freq:2,vary:1},{name:'水費',cat:'水電瓦斯',freq:2,vary:1},{name:'瓦斯費',cat:'水電瓦斯',freq:2,vary:1},{name:'房租',cat:'居家',freq:1},{name:'房貸',cat:'房貸',freq:1,bank:1,note:'銀行每月自動扣款'},{name:'訂閱',cat:'娛樂',freq:1,auto:1,sub:1},{name:'保險費',cat:'保險',freq:12},{name:'牌照稅',cat:'稅費',freq:12},{name:'燃料費',cat:'稅費',freq:12},{name:'薪水',cat:'薪資',freq:1,kind:'in'},{name:'定期定額',freq:1,kind:'inv'},{name:'強迫儲蓄',freq:1,kind:'save',note:'薪水一進來就先轉走'},{name:'旅遊基金',freq:1,kind:'save'}];
@@ -1336,7 +1338,8 @@ function sheetTx(o){
  <label class="fl"><span>說明</span><input value="${E(o.note)}" data-m="sheet.o.note" data-g="1" placeholder="${x?'例：繳卡費、提款':'例：午餐、停車費'}"></label>
  ${x||o.cat==='薪資'?'':shopField(o)}
  ${o.type==='out'?lendField(o):''}
- ${x?'':`${inc?'':(()=>{const tp=subTop(8);return tp.length?`<div class="fl" style="margin-top:8px"><span class="sub">常用細分（點了會自動歸到大分類）</span><div class="chips" style="margin-top:4px">${tp.map(k=>{const[c,b]=k.split('|');return`<button class="chip ${o.cat===c&&o.sub===b?'on':''}" data-a="sub" data-i="${E(k)}">${E(b)}</button>`}).join('')}</div></div>`:''})()}
+ ${x?'':`${inc?'':(()=>{const tp=subTop(8);return tp.length?`<div class="fl" style="margin-top:8px"><input value="${E(o.subq||'')}" data-m="sheet.o.subq" data-sq="1" placeholder="🔍 打字找細分，例：晚" autocomplete="off"><div class="chips" id="subres" style="margin-top:6px">${subRes(o)}</div></div>
+ <div class="fl" style="margin-top:8px"><span class="sub">常用細分（點了會自動歸到大分類）</span><div class="chips" style="margin-top:4px">${tp.map(k=>{const[c,b]=k.split('|');return`<button class="chip ${o.cat===c&&o.sub===b?'on':''}" data-a="sub" data-i="${E(k)}">${E(b)}</button>`}).join('')}</div></div>`:''})()}
  <div class="fl" style="margin-top:8px"><span class="sub">分類</span><div class="chips" style="margin-top:4px">${cs.map(c=>`<button class="chip ${o.cat===c?'on':''}" data-a="cat" data-i="${E(c)}">${E(c)}</button>`).join('')}</div></div>
  ${!inc&&o.cat&&subsOf(o.cat).length?`<div class="fl" style="margin-top:8px"><span class="sub">${E(o.cat)} 的細分（選填，再點一次取消）</span><div class="chips" style="margin-top:4px">${subsOf(o.cat).map(b=>`<button class="chip ${o.sub===b?'on':''}" data-a="sub" data-i="${E(o.cat+'|'+b)}">${E(b)}</button>`).join('')}</div></div>`:''}
  ${o.note&&o.cat&&o.catSet&&guess(o.note,o.type)!==o.cat?`<div class="sub" style="margin-top:6px"><a href="#" data-a="rule">以後說明有「${E(o.note.slice(0,12))}」都分到「${E(o.cat)}」</a></div>`:''}`}
@@ -2174,6 +2177,7 @@ function field(e){
  if(el.dataset.fe||el.dataset.hr){const n=$('feetot');if(n)n.textContent=feeTot(U.sheet.o)}
  if(el.dataset.hr){const n=$('fhrs');if(n)n.textContent=hrsLine(U.sheet.o)}
  if(el.dataset.cn){const n=$('cardnote');if(n)n.innerHTML=cardNote(U.sheet.o)}
+ if(el.dataset.sq&&e.type==='input'){const n=$('subres');if(n)n.innerHTML=subRes(U.sheet.o)}
  if(el.dataset.ns)U.sheet.o.nameSet=!!el.value;
  if(el.dataset.sym){const o=U.sheet.o,k=el.dataset.sym,n=symName(o.sym,o.cur);if(n&&(!o.nameSet||!o[k])){o[k]=n;o.nameSet=0;const f=$('symname');if(f)f.value=n}const dl=$(k==='name'?'symlist':'symlist2');if(dl)dl.innerHTML=symOpts(o.sym,o.cur)}
  if(p==='sheet.o.bk'&&U.sheet.o.sh!=null&&!U.sheet.o.feeSet){const f=calcFee(U.sheet.o);U.sheet.o.fee=f.fee||'';U.sheet.o.tax=f.tax||''}
