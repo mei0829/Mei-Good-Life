@@ -100,8 +100,8 @@ const sampler = {
         // 額度、忙碌、或這個模型不存在：換下一個；其他錯誤（例如沒有網路）就不用再試了
         if (!BUSY.test(em) && !/not.?found|404|not supported/i.test(em)) break;
       }
-      // 上網查（Google 搜尋）的免費額度比較少：用完了就改成不上網查再問一次，用 AI 自己記得的資料回答
-      if (!srch || !quota) break;
+      // 上網查（Google 搜尋）失敗（額度用完、這個模型不能搜尋…）：改成不上網查再問一次，用 AI 自己記得的資料回答
+      if (!srch) break;
       srch = false;
     }
     // 每個模型都試過了：有遇到額度問題就照額度回報（最後一個模型可能只是不存在）
@@ -111,7 +111,7 @@ const sampler = {
     // 分辨是「每分鐘次數太多」還是「今天的額度用完」
     if (/quota|429|RESOURCE_EXHAUSTED|rate/i.test(msg)) throw { code: /per.?day|PerDay|daily/i.test(msg) ? 'quota_day' : /per.?minute|PerMinute/i.test(msg) ? 'quota_min' : 'quota' };
     if (/not been used|disabled|PERMISSION_DENIED|403|api-not-enabled|not enabled/i.test(msg)) throw { code: 'none' };
-    throw { code: 'fail' };
+    throw { code: 'fail', msg: msg.slice(0, 80) };
   }
 };
 function startApp(fs, fsm, user) {
