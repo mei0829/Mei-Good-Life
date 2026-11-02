@@ -818,6 +818,16 @@ function vBudget(){
  const meter=(v,b)=>{const p=v/b,L=lvl(p);return`<div class="meter"><i style="width:${Math.min(100,p*100)}%;background:${L[0]}"></i></div><div class="row sub" style="margin-top:2px"><span class="sp">${L[1]?`<b style="color:var(--ink)">${L[1]}</b>　`:''}${v>b?'超過 '+M(v-b):'還剩 '+M(b-v)}</span>${cur&&v<b&&left?`<span>每天可花 ${M((b-v)/left)}</span>`:''}</div>`};
  let h=`<div class="mh"><button class="go q" data-a="bmon" data-i="-1">‹</button><b>${d0.getFullYear()} 年 ${d0.getMonth()+1} 月預算</b><button class="go q" data-a="bmon" data-i="1">›</button></div>`;
  h+=`<div class="card"><div class="row"><div class="sp"><div class="sub">這個月已經花了</div><div class="big">${M(tot)}</div></div>${+B.total?`<div style="text-align:right"><div class="sub">總預算</div><b class="num">${M(B.total)}</b></div>`:''}</div>${+B.total?meter(tot,+B.total):'<div class="sub" style="margin-top:6px">還沒設預算也沒關係，先照常記帳就好。</div>'}</div>`;
+ // 每月要賺多少＝花費預算＋存錢＋定期投資（年繳帳單的「預存」已經算在分類預算的固定支出裡，不重複加）
+ {const t0=today(),sv=S.bills.filter(b=>b.kind==='save'&&!b.link&&+b.freq&&!b.cancelled&&(!b.end||b.end>=t0)&&!inBook(b.acct)),svm=sv.reduce((a,b)=>a+conv(+b.amt||0,bcur(b),'TWD')/b.freq,0),inv=billPM('inv'),
+   csum=S.cats.out.reduce((a,c)=>a+(+B.cats[c]||0),0),sp=+B.total||csum,need=sp+svm+inv,inc=wInc()||billPM('in'),dup=sv.filter(b=>+B.cats[b.name]>0);
+  if(need)h+=`<h2>每月要賺多少</h2><div class="card"><div class="row" style="padding:3px 0"><span class="sp">花費預算${+B.total?'（總預算）':'（分類加起來）'}</span><b class="num">${M(sp)}</b></div>
+  ${svm?`<div class="row" style="padding:3px 0"><span class="sp">＋ 每月存錢<div class="sub">${sv.map(b=>E(b.name)+' '+M(conv(+b.amt||0,bcur(b),'TWD')/b.freq)).join('、')}</div></span><b class="num">${M(svm)}</b></div>`:''}
+  ${inv?`<div class="row" style="padding:3px 0"><span class="sp">＋ 定期投資</span><b class="num">${M(inv)}</b></div>`:''}
+  <div class="row" style="padding:6px 0 2px;border-top:1px solid var(--line);margin-top:4px"><b class="sp">＝ 每月要賺</b><b class="big" style="font-size:22px">${M(need)}</b></div>
+  ${inc?`<div class="msg">每月收入 ${M(inc)}・${inc>=need?`✓ 夠用，還多 <b>${M(inc-need)}</b>`:`<span class="neg">⚠︎ 還差 <b>${M(need-inc)}</b></span>`}</div>`:'<div class="sub">到「我的錢一覽」填每月收入，就能看夠不夠。</div>'}
+  ${dup.length?`<div class="sub" style="margin-top:6px;color:var(--amber)">⚠︎ 「${dup.map(b=>E(b.name)).join('、')}」同時有分類預算和「存錢」，算了兩次。建議把那個分類的預算清空，只留存錢。</div>`:''}
+  <div class="note" data-t="怎麼算的？">花費預算＋固定收支裡的「存錢」（每月平均）＋定期投資。年繳、半年繳帳單的「預存」不另外加，因為它們每月攤的錢已經在分類預算的「含固定」裡了。收入用「我的錢一覽」填的每月收入（沒填就用固定收支的固定收入）。</div></div>`}
  const withB=S.cats.out.filter(c=>+B.cats[c]>0),noB=Object.keys(sp).filter(c=>!(+B.cats[c]>0));
  if(withB.length)h+=`<h2>分類預算</h2><div class="card">${(()=>{const F=fixedBy();return withB.map(c=>`<div style="margin:8px 0"><div class="row"><b class="sp">${E(c)}${F[c]?` <span class="sub" style="font-weight:400">含固定 ${M(F[c].pm)}</span>`:''}</b><span class="num">${M(sp[c]||0)} <span class="sub">/ ${M(B.cats[c])}</span></span></div>${meter(sp[c]||0,+B.cats[c])}</div>`).join('')})()}</div>`;
  if(noB.length)h+=`<h2>沒設預算的分類</h2><div class="card">${hbars(noB.map(c=>[c,sp[c]]).sort((a,b)=>b[1]-a[1]))}</div>`;
