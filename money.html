@@ -793,6 +793,10 @@ const envDep=(c,m)=>S.tx.filter(t=>t.type==='xfer'&&t.env===c&&(!m||t.d.startsWi
 const envOut=c=>S.tx.filter(t=>t.type==='out'&&t.cat===c).reduce((a,t)=>a+myA(t),0);
 function envTo(c){const l=S.tx.filter(t=>t.type==='xfer'&&t.env===c).pop();return l&&A(l.to)?l.to:(S.accts.find(a=>a.hold&&!isCard(a))||S.accts.find(a=>a.type==='bank'&&a.id!==firstBank())||{}).id||firstBank()}
 function envFrom(c){const l=S.tx.filter(t=>t.type==='xfer'&&t.env===c).pop();return l&&A(l.acct)?l.acct:(S.accts.find(a=>a.type==='bank'&&!a.hold&&!a.excl)||{}).id||firstBank()}
+function sheetEnv(){return`<div class="row"><b class="sp" style="font-size:17px">🐷 選擇預留金</b><button class="x" data-a="close">×</button></div>
+ <div class="sub" style="margin:4px 0 10px">點一下變成預留金，再點一下取消。預留金是每月要存起來、之後才花的錢：預算不顯示「可以花」，另外記目前存了多少。</div>
+ <div class="chips">${S.cats.out.map(c=>`<button class="chip ${envOn(c)?'on':''}" data-a="envtog" data-i="${E(c)}">${envOn(c)?'🐷 ':''}${E(c)}</button>`).join('')}</div>
+ <div class="row" style="margin-top:14px"><span class="sp"></span><button class="go" data-a="close">好了</button></div>`}
 function budgetAlert(){
  const m=today().slice(0,7),sp=spentBy(m),B=S.budget,xs=[];
  const tot=Object.keys(sp).reduce((a,c)=>a+(envOn(c)?0:sp[c]),0)+S.cats.out.filter(envOn).reduce((a,c)=>a+envDep(c,m),0);if(+B.total&&tot>=B.total*.8)xs.push(['總預算',tot,+B.total]);
@@ -839,7 +843,7 @@ function vBudget(){
  const withB=S.cats.out.filter(c=>+B.cats[c]>0&&!envOn(c)),envs=S.cats.out.filter(envOn),noB=Object.keys(sp).filter(c=>!(+B.cats[c]>0)&&!envOn(c));
  if(withB.length)h+=`<h2>分類預算</h2><div class="card">${(()=>{const F=fixedBy();return withB.map(c=>`<div style="margin:8px 0"><div class="row"><b class="sp">${E(c)}${F[c]?` <span class="sub" style="font-weight:400">含固定 ${M(F[c].pm)}</span>`:''}</b><span class="num">${M(sp[c]||0)} <span class="sub">/ ${M(B.cats[c])}</span></span></div>${meter(sp[c]||0,+B.cats[c])}</div>`).join('')})()}</div>`;
  // 預留金：這個月存了沒、目前一共存了多少
- if(envs.length)h+=`<h2>🐷 預留金（存起來的錢）</h2><div class="card">${envs.map(c=>{const b=+B.cats[c]||0,dm=envDep(c,m),di=envDep(c),uo=envOut(c),bal=di-uo;
+ if(envs.length)h+=`<div class="row" style="margin:18px 2px 6px"><h2 class="sp" style="margin:0">🐷 預留金（存起來的錢）</h2><button class="go q" style="width:auto;padding:3px 10px;font-size:12px" data-a="envpick">選擇</button></div><div class="card">${envs.map(c=>{const b=+B.cats[c]||0,dm=envDep(c,m),di=envDep(c),uo=envOut(c),bal=di-uo;
   return`<div style="padding:8px 0;border-top:1px solid var(--line)"><div class="row"><b class="sp">${E(c)}</b><span class="sub">目前存了</span>&nbsp;<b class="num ${bal<0?'neg':''}" style="font-size:18px">${M(bal)}</b></div>
   <div class="sub">一共存入 ${M(di)}・花掉 ${M(uo)}${A(envTo(c))?'・在 '+E(nm(A(envTo(c)))):''}</div>
   ${b?`<div class="row sub" style="margin-top:6px"><span class="sp">${+m.slice(5)} 月存了 <b style="color:var(--ink)">${M(dm)}</b> / ${M(b)}</span>${dm>=b?'<span>✓ 存好了</span>':''}</div><div class="bar"><i style="width:${Math.min(100,dm/b*100)}%"></i></div>`:''}
@@ -849,7 +853,8 @@ function vBudget(){
  h+=budgetSugCard();
  const hasB=+B.total>0||Object.values(B.cats).some(v=>+v>0);
  h+=`${hasB?'<h2>設定每月預算（空白＝不設）</h2><div class="card">':'<details class="tip" style="margin-top:12px"><summary>想現在就自己設預算 ▾</summary><div class="card" style="border:0;padding:8px 0;background:none">'}${(()=>{const sum=S.cats.out.reduce((a,c)=>a+(+B.cats[c]||0),0);return`<label class="fl"><span>每月總預算${sum?`　<b style="color:var(--ink)">下面加起來 ${M(sum)}</b>`:''}</span><input inputmode="numeric" data-m="budget.total" data-s="1" data-n="1" data-r="1" value="${E(B.total||'')}" placeholder="例：20000"></label>${sum&&+B.total!==sum?`<button class="go q" style="margin-top:6px" data-a="btsum">用加起來的 ${M(sum)} 當總預算</button>`:''}`})()}
- ${(()=>{const F=fixedBy();return`<div class="grid" style="margin-top:8px">${S.cats.out.map(c=>{const x=F[c];return`<div class="fl"><span>${E(c)}</span><input inputmode="numeric" data-m="budget.cats.${E(c)}" data-s="1" data-n="1" data-r="1" value="${E(B.cats[c]||'')}" placeholder="${x?'至少 '+Math.round(x.pm):'—'}">${x?`<span class="sub" style="font-size:12px;line-height:1.4;margin-top:3px">固定每月 <b>${M(x.pm)}</b>：${fixedTxt(x)}</span>`:''}${+B.cats[c]>0||envOn(c)?`<label style="display:flex;gap:5px;align-items:center;margin-top:4px;font-size:12px;color:var(--sub)"><input type="checkbox" data-m="budget.env.${E(c)}" data-s="1" data-r="1" ${envOn(c)?'checked':''} style="width:16px;height:16px;flex:none">存起來（預留金）</label>`:''}</div>`}).join('')}</div>${Object.keys(F).length?'<div class="sub" style="margin-top:6px">「固定每月」是固定收支裡這個分類的錢，扣款後會自動算進預算。預算至少要填這麼多，再加上你想給自己花的部分。</div>':''}`})()}
+ ${(()=>{const F=fixedBy();return`<div class="grid" style="margin-top:8px">${S.cats.out.map(c=>{const x=F[c];return`<div class="fl"><span>${E(c)}</span><input inputmode="numeric" data-m="budget.cats.${E(c)}" data-s="1" data-n="1" data-r="1" value="${E(B.cats[c]||'')}" placeholder="${x?'至少 '+Math.round(x.pm):'—'}">${x?`<span class="sub" style="font-size:12px;line-height:1.4;margin-top:3px">固定每月 <b>${M(x.pm)}</b>：${fixedTxt(x)}</span>`:''}</div>`}).join('')}</div>${Object.keys(F).length?'<div class="sub" style="margin-top:6px">「固定每月」是固定收支裡這個分類的錢，扣款後會自動算進預算。預算至少要填這麼多，再加上你想給自己花的部分。</div>':''}`})()}
+ <div class="row" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line);gap:8px"><span class="sp">🐷 預留金：${S.cats.out.filter(envOn).map(E).join('、')||'<span class="sub">還沒有</span>'}<div class="sub">每月要存起來、之後才花的分類（例：特惠預留）</div></span><button class="go q" style="width:auto;flex:none" data-a="envpick">選擇 ›</button></div>
  <div class="note" data-t="怎麼用？">填完到上面看就會更新。用到 80% 會變黃色提醒，超過會變紅色，總覽頁最上面也會出現提醒。</div></div>${hasB?'':'</details>'}`;
  return h;
 }
@@ -1484,7 +1489,7 @@ function renderNow(){
  CI={};LM=null;normAcct();$('tip').style.display='none';$('eye').textContent='•••• 已隱藏・點兩下顯示';$('eye').classList.toggle('on',HIDE);$('eye').setAttribute('aria-label',HIDE?'顯示金額':'隱藏金額');
  $('app').innerHTML=`<div class="row" style="gap:10px;padding-right:44px;min-height:32px;margin-top:calc(16px + env(safe-area-inset-top,0px))">${U.tab==='trip'&&tripOf(U.trip)?'<button class="back" data-a="tripx">‹ 所有旅行</button>':sub?'<button class="back" data-a="tab" data-i="more">‹ 更多</button>':'<a class="back" href="./" style="text-decoration:none">‹ 首頁</a>'}<span class="sp"></span><b class="today">今天 ${todayLab()}</b></div>`+V[U.tab]();
  $('nav').innerHTML=TABS.map(([k,i,n])=>`<button class="${U.tab===k||(k==='more'&&sub)||(k==='stock'&&STK.some(x=>x[0]===U.tab))?'on':''}" data-a="tab" data-i="${k}"><b>${i}</b>${n}</button>`).join('');
- const sh=U.sheet,SH={catx:sheetCat,stk:sheetStk,tsp:sheetSp,trip:sheetTrip,idea:sheetIdea,broker:sheetBroker,pay:sheetPay,acctv:sheetAcctV,iou:sheetIou,iback:sheetIback,help:sheetHelp,cyc:sheetCyc,pcard:sheetPCard,pitem:sheetPItem,payee:sheetPayee,start:sheetStart,tx:sheetTx,bill:sheetBill,acct:sheetAcct,trade:sheetTrade,recon:sheetRecon,hold:sheetHold};$('sheet').innerHTML=sh?`<div class="sheet" data-a="bg"><div>${SH[sh.k](sh.o)}</div></div>`:'';
+ const sh=U.sheet,SH={envp:sheetEnv,catx:sheetCat,stk:sheetStk,tsp:sheetSp,trip:sheetTrip,idea:sheetIdea,broker:sheetBroker,pay:sheetPay,acctv:sheetAcctV,iou:sheetIou,iback:sheetIback,help:sheetHelp,cyc:sheetCyc,pcard:sheetPCard,pitem:sheetPItem,payee:sheetPayee,start:sheetStart,tx:sheetTx,bill:sheetBill,acct:sheetAcct,trade:sheetTrade,recon:sheetRecon,hold:sheetHold};$('sheet').innerHTML=sh?`<div class="sheet" data-a="bg"><div>${SH[sh.k](sh.o)}</div></div>`:'';
  calmNotes();window.scrollTo(0,y);
  document.querySelectorAll('[data-entry]').forEach(el=>{const k=el.dataset.entry,P=S.perk||{},r=k==='sum'?P.sum&&P.sum.r:k==='idea'?(((U.sheet||{}).o||{}).ai||{}).r:(P.cache[pkKey(P.q,P.amt)]||{}).r,html=r&&r._entry;if(html){try{el.attachShadow({mode:'open'}).innerHTML=html}catch(e){}}});
  if(am){const f=document.querySelector(`[data-m="${am}"]`);if(f&&f.tagName!=='SELECT'){f.focus();try{f.setSelectionRange(cp,cp)}catch(e){}}}
@@ -2034,6 +2039,8 @@ const ACT={
  catdel:()=>{const o=U.sheet.o,to=o.to;if(!to||to===o.old)return toast('請選要改到哪個分類');if(!confirm('刪除「'+o.old+'」？原本的紀錄、固定收支、預算會改到「'+to+'」。'))return;
   if(o.k==='out'){S.subs=S.subs||{};S.subs[o.old]=o.subs.join('，')}catMove(o.k,o.old,to);U.sheet=null;save();render();toast('已刪除，紀錄改到「'+to+'」')},
  bsub:i=>{const o=U.sheet.o;o.sc=o.sc===i?'':i;render()},
+ envpick:()=>{U.sheet={k:'envp',o:{}};render()},
+ envtog:c=>{const B=S.budget;B.env=B.env||{};if(B.env[c])delete B.env[c];else B.env[c]=true;save();render()},
  envdep:c=>{const b=+S.budget.cats[c]||0,dm=envDep(c,U.bm||today().slice(0,7));openTx({type:'xfer',amt:String(Math.max(0,b-dm)||b||''),acct:envFrom(c),to:envTo(c),cat:'',d:today(),note:c+' 存入',env:c})},
  envspend:c=>openTx({type:'out',amt:'',acct:envTo(c),to:'',cat:c,d:today(),note:''}),
  subnew:c=>{const o=U.sheet.o,q=String(o.subq||'').trim().replace(/[|,，、]/g,'');if(!q)return;S.subs=S.subs||{};const xs=subsOf(c);if(!xs.includes(q))S.subs[c]=xs.concat(q).join('，');o.cat=c;o.sub=q;o.catSet=1;o.subq='';save();render();toast('「'+q+'」加到 '+c+' 的細分了')},
