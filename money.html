@@ -281,7 +281,7 @@ function forecast(H){
   if(a&&(a.book||a.excl)&&b.kind!=='save')return;
   if(b.kind==='save'){const to=A(b.to);if(to&&!to.excl&&!(a&&a.excl))return;if(!a||a.excl)return}
   if(isCard(a)&&!inc){const due=dueOf(a,closeOf(a,o));if(due<=end)ev.push({d:due<t0?t0:due,late:due<t0,amt:-(+b.amt+billFee(b,+b.amt)),name:b.name,sub:md(o)+' 刷 '+a.name+'，跟著卡費繳',k:'bill'})}
-  else ev.push({d:o<t0?t0:o,late:o<t0,amt:(inc?1:-1)*conv(+b.amt+(inc||b.kind!=='out'?0:billFee(b,+b.amt)),bcur(b),'TWD'),name:b.name,sub:(b.kind==='inv'?'定期投資・':b.kind==='save'?'存錢・':'')+nm(a)+(isAuto(b)?' 自動扣款':''),k:inc?'inc':'bill'})}));
+  else ev.push({d:o<t0?t0:o,late:o<t0,amt:(inc?1:-1)*conv(+b.amt+(inc||b.kind!=='out'?0:billFee(b,+b.amt)),bcur(b),'TWD'),name:b.name,sub:(b.kind==='inv'?'定期投資・':b.kind==='save'?'存錢・':'')+(a?nm(a):'帳戶未決定')+(isAuto(b)?' 自動扣款':''),k:inc?'inc':'bill'})}));
  ev.sort((x,y)=>x.d<y.d?-1:x.d>y.d?1:x.amt-y.amt);
  const liq=liquid(),daily=living()/30.4;let cum=0,min=liq,minD=t0;
  ev.forEach(e=>{cum+=e.amt;e.run=liq+cum-daily*dleft(e.d);if(e.run<min){min=e.run;minD=e.d}});
@@ -357,7 +357,7 @@ function vTx(){
 }
 
 const bcur=b=>b.kind==='inv'?b.cur||'TWD':(A(b.acct)||{}).cur||'TWD';
-const isAuto=b=>!!b.auto&&(A(b.acct)||{}).type!=='cash';
+const isAuto=b=>!!b.auto&&!!A(b.acct)&&A(b.acct).type!=='cash';
 const billPM=k=>S.bills.filter(b=>(b.kind||'out')===k&&+b.freq&&!b.cancelled&&!inBook(b.acct)&&(!b.end||b.end>=today())).reduce((s,b)=>s+conv(k==='out'?(b.reimb?0:+b.amt)+billFee(b,+b.amt):b.amt,bcur(b),'TWD')/b.freq,0);
 const saveInfo=b=>{const to=A(b.to),v=to?conv(bal(to),to.cur,'TWD'):0,g=+b.goal||0;return{to,v,g,pct:g?Math.max(0,Math.min(100,v/g*100)):0,left:Math.max(0,g-v),n:g&&+b.amt>0&&+b.freq?Math.ceil(Math.max(0,g-v)/(+b.amt))*(+b.freq):0}};
 // 年繳、半年繳的「預存」：從上次繳完到現在，存了多少
@@ -397,7 +397,7 @@ function subTop(n){const by={};S.tx.slice(-400).forEach(t=>{if(t.type==='out'&&t
 function pickCat(want,alt,kind,name){const cs=S.cats[kind==='in'?'in':'out'];if(name&&kind!=='in'){const c=cs.find(c=>subsOf(c).includes(name));if(c)return c}for(const w of [want].concat(alt||[])){if(!w)continue;if(cs.includes(w))return w;const c=cs.find(c=>c.length>=2&&(w.startsWith(c)||c.startsWith(w)||w.includes(c)));if(c)return c}return cs.includes('其他')?'其他':cs.includes('其他收入')&&kind==='in'?'其他收入':cs[cs.length-1]}
 const PRESETS=[{name:'停車費',cat:'停車費',freq:1,vary:1,note:'政府路邊停車費代扣'},{name:'電話費',cat:'電信網路',freq:1},{name:'電費',cat:'水電瓦斯',freq:2,vary:1},{name:'水費',cat:'水電瓦斯',freq:2,vary:1},{name:'瓦斯費',cat:'水電瓦斯',freq:2,vary:1},{name:'房租',cat:'居家',freq:1},{name:'房貸',cat:'房貸',freq:1,bank:1,note:'銀行每月自動扣款'},{name:'訂閱',cat:'線上訂閱',alt:['訂閱','娛樂'],freq:1,auto:1,sub:1},{name:'保險費',cat:'保險',freq:12},{name:'牌照稅',cat:'稅費',freq:12},{name:'燃料費',cat:'稅費',freq:12},{name:'薪水',cat:'薪資',freq:1,kind:'in'},{name:'定期定額',freq:1,kind:'inv'},{name:'強迫儲蓄',freq:1,kind:'save',note:'薪水一進來就先轉走'},{name:'旅遊基金',freq:1,kind:'save'}];
 // 固定收支依銀行篩選：信用卡、子帳戶都歸到它的銀行
-const bankOf=a=>a?(a.type!=='cash'&&a.group)||a.name:'未指定帳戶';
+const bankOf=a=>a?(a.type!=='cash'&&a.group)||a.name:'帳戶未決定';
 function vBills(){
  const all=S.bills.filter(b=>!b.cancelled).sort((a,b)=>a.next<b.next?-1:1),t0=today(),bk={};all.forEach(b=>{const k=bankOf(A(b.acct));(bk[k]=bk[k]||[]).push(b)});
  const ks=Object.keys(bk).sort((x,y)=>bk[y].length-bk[x].length);if(U.bb&&!bk[U.bb])U.bb='';const bs=U.bb?bk[U.bb]:all;
@@ -409,7 +409,7 @@ function vBills(){
  if(ks.length>1){const out=bs.filter(b=>(b.kind||'out')!=='in'),inn=bs.filter(b=>b.kind==='in'),pmOf=xs=>xs.filter(b=>+b.freq).reduce((a,b)=>a+conv(b.amt,bcur(b),'TWD')/b.freq,0);
   h+=`<div class="chips" style="margin:4px 0 8px">${[['','全部',all.length]].concat(ks.map(k=>[k,k,bk[k].length])).map(([k,n,c])=>`<button class="chip ${(U.bb||'')===k?'on':''}" data-a="bbank" data-i="${E(k)}">${E(n)} ${c}</button>`).join('')}</div>`;
   if(U.bb)h+=`<div class="card"><div class="row"><b class="sp">${E(U.bb)}</b><span class="sub">${bs.length} 項</span></div><div class="row" style="margin-top:4px"><div class="sp"><div class="sub">每月扣款</div><b class="num">${M(pmOf(out))}</b></div>${inn.length?`<div class="sp"><div class="sub">每月入帳</div><b class="num in">${M(pmOf(inn))}</b></div>`:''}</div></div>`}
- h+=bs.length?'<div class="card">'+bs.map(b=>{const a=A(b.acct),n=dleft(b.next),late=b.next<t0;return`<div class="li" data-a="edbill" data-i="${b.id}" style="flex-wrap:wrap"><div class="dt">${md(b.next)}<small>${late?'<span class="late">逾期</span>':n===0?'今天':n+' 天後'}</small></div><div class="sp"><div>${E(b.name)}${b.sub?' <span class="pill">訂閱</span>':''}${b.quit?' <span class="pill y">打算取消</span>':''}${!isAuto(b)&&b.kind!=='inv'?` <span class="pill y">${b.kind==='save'?'自己轉':b.kind==='in'?'自己存':'自己繳'}</span>`:''}</div><div class="sub">${fqName(b.freq)} · ${E(a?a.name:'未指定帳戶')}${(b.kind||'out')==='out'||b.kind==='in'?' · 分類：'+E(b.cat||'其他')+(b.sc&&(b.kind||'out')==='out'?'・'+E(b.sc):'')+(b.cat&&!S.cats[b.kind==='in'?'in':'out'].includes(b.cat)?' <b class="neg">⚠︎ 不在分類清單</b>':''):''}${b.feeP||b.feeA?' · 手續費 '+(b.feeP?b.feeP+'%':M(b.feeA)):''}${b.reimb?' · '+E(b.rWho||'公司')+'會付回來':''}${b.kind==='save'?' → '+E(A(b.to)?A(b.to).name:'未指定'):''}${b.kind==='inv'&&b.sym?' · '+E(b.sym):''}${b.end?' · 剩 '+occ(b,b.end).length+' 期':''}${b.vary?' · 金額不固定':''}${b.kind==='inv'?' · 定期投資':isAuto(b)?' · 自動'+(b.kind==='in'?'入帳':b.kind==='save'?'轉':isCard(a)?'刷卡':'扣款'):''}</div>${(()=>{const p=S.payees.find(x=>x.id===b.payee);return p?`<div class="sub">匯到 ${E(p.name)} ${copyTag(p.no,(p.code?'('+p.code+') ':'')+tail5(p.no))}</div>`:''})()}</div><div class="num ${b.kind==='in'?'in':''}">${b.vary?'<span class="sub">約</span> ':''}${b.kind==='in'?'+':''}${MC(b.amt,bcur(b))}</div>
+ h+=bs.length?'<div class="card">'+bs.map(b=>{const a=A(b.acct),n=dleft(b.next),late=b.next<t0;return`<div class="li" data-a="edbill" data-i="${b.id}" style="flex-wrap:wrap"><div class="dt">${md(b.next)}<small>${late?'<span class="late">逾期</span>':n===0?'今天':n+' 天後'}</small></div><div class="sp"><div>${E(b.name)}${b.sub?' <span class="pill">訂閱</span>':''}${b.quit?' <span class="pill y">打算取消</span>':''}${!isAuto(b)&&b.kind!=='inv'?` <span class="pill y">${b.kind==='save'?'自己轉':b.kind==='in'?'自己存':'自己繳'}</span>`:''}</div><div class="sub">${fqName(b.freq)} · ${a?E(a.name):'<b style="color:var(--amber)">帳戶未決定</b>'}${(b.kind||'out')==='out'||b.kind==='in'?' · 分類：'+E(b.cat||'其他')+(b.sc&&(b.kind||'out')==='out'?'・'+E(b.sc):'')+(b.cat&&!S.cats[b.kind==='in'?'in':'out'].includes(b.cat)?' <b class="neg">⚠︎ 不在分類清單</b>':''):''}${b.feeP||b.feeA?' · 手續費 '+(b.feeP?b.feeP+'%':M(b.feeA)):''}${b.reimb?' · '+E(b.rWho||'公司')+'會付回來':''}${b.kind==='save'?' → '+E(A(b.to)?A(b.to).name:'未指定'):''}${b.kind==='inv'&&b.sym?' · '+E(b.sym):''}${b.end?' · 剩 '+occ(b,b.end).length+' 期':''}${b.vary?' · 金額不固定':''}${b.kind==='inv'?' · 定期投資':isAuto(b)?' · 自動'+(b.kind==='in'?'入帳':b.kind==='save'?'轉':isCard(a)?'刷卡':'扣款'):''}</div>${(()=>{const p=S.payees.find(x=>x.id===b.payee);return p?`<div class="sub">匯到 ${E(p.name)} ${copyTag(p.no,(p.code?'('+p.code+') ':'')+tail5(p.no))}</div>`:''})()}</div><div class="num ${b.kind==='in'?'in':''}">${b.vary?'<span class="sub">約</span> ':''}${b.kind==='in'?'+':''}${MC(b.amt,bcur(b))}</div>
  ${b.kind==='save'?saveBar(b):b.fb&&S.bills.some(x=>x.id===b.fb)?fundBar(b):''}
  ${n<=3&&isAuto(b)&&b.autoRec&&b.kind!=='inv'?`<div class="row" style="width:100%;justify-content:flex-end;gap:6px"><span class="sub sp" style="text-align:right">${n<=0?'今天自動記':md(b.next)+' 自動記'}</span><button class="go q" data-a="skipbill" data-i="${b.id}">略過這期</button></div>`:''}
  ${n<=3&&!(isAuto(b)&&b.autoRec&&b.kind!=='inv')?`<div class="row" style="width:100%;justify-content:flex-end;gap:6px"><button class="go q" data-a="skipbill" data-i="${b.id}">${b.kind==='in'?'沒入帳，略過':b.kind==='save'?'這期沒存，略過':'略過這期'}</button><button class="go q" data-a="paybill" data-i="${b.id}">${b.vary?(isAuto(b)?(b.kind==='in'?'已入帳':'已扣款'):'已繳')+'，填實際金額':(b.kind==='in'?'已入帳':b.kind==='inv'?'已扣款（記到股票）':b.kind==='save'?'已存':'已繳')+'（記一筆）'}</button></div>`:''}</div>`}).join('')+'</div>':'<div class="card sub">還沒有固定項目。點下面的常用項目快速新增。</div>';
@@ -1411,7 +1411,7 @@ function sheetBill(o){
  <label class="fl"><span>${inv?'每期扣款金額'+(o.cur==='USD'?'（美元）':''):inc?'每次金額':sv?'每次存多少':'每次金額（大概就好）'}</span><input inputmode="decimal" value="${E(o.amt)}" data-m="sheet.o.amt"></label>
  <label class="fl"><span>多久一次</span><select data-m="sheet.o.freq" data-n="1" data-r="1">${FQ.map(([v,n])=>`<option value="${v}" ${+o.freq===v?'selected':''}>${n}</option>`).join('')}</select></label>
  <label class="fl"><span>下次${inc?'入帳':sv?'存錢':K==='out'&&o.sub?'續約（扣款）':'繳費／扣款'}日</span><input type="date" value="${o.next}" data-m="sheet.o.next"></label>
- <label class="fl"><span>${inc?'入帳帳戶':sv?'從哪個帳戶轉出':'從哪個帳戶扣'}</span><select data-m="sheet.o.acct"${sv?' data-r="1"':''}>${S.accts.filter(a=>K==='out'||!isCard(a)).map(a=>`<option value="${a.id}" ${o.acct===a.id?'selected':''}>${E(nm(a))}</option>`).join('')}</select></label>
+ <label class="fl"><span>${inc?'入帳帳戶':sv?'從哪個帳戶轉出':'從哪個帳戶扣'}</span><select data-m="sheet.o.acct"${sv?' data-r="1"':''}>${sv?'':`<option value="" ${!A(o.acct)?'selected':''}>尚未決定</option>`}${S.accts.filter(a=>K==='out'||!isCard(a)).map(a=>`<option value="${a.id}" ${o.acct===a.id?'selected':''}>${E(nm(a))}</option>`).join('')}</select></label>
  ${sv?`<label class="fl"><span>存到哪個帳戶</span><select data-m="sheet.o.to" data-r="1">${S.accts.filter(a=>!isCard(a)&&a.id!==o.acct).map(a=>`<option value="${a.id}" ${o.to===a.id?'selected':''}>${E(nm(a))}</option>`).join('')}</select></label>
  <label class="fl"><span>目標金額（選填）</span><input inputmode="numeric" value="${E(o.goal||'')}" data-m="sheet.o.goal" placeholder="例：100000"></label>
  <div class="sub w">沒有專門存錢的帳戶？到「設定 → 帳戶」新增一個，例如「國泰 存錢」（子帳戶也可以）。</div>
@@ -1861,7 +1861,7 @@ function billRec(b,o){const t=billTx(b,o);
 const billTx=(b,o)=>Object.assign(b.kind==='save'?{type:'xfer',acct:b.acct,to:b.to,cat:''}:Object.assign({type:b.kind==='in'?'in':'out',acct:b.acct,cat:b.cat},b.sc&&b.kind!=='in'?{sub:b.sc}:{}),{note:b.name,bill:b.id},o);
 function autoBills(){
  const t0=today();let n=0;
- S.bills.slice().forEach(b=>{if(!isAuto(b)||!b.autoRec||b.kind==='inv'||b.cancelled)return;let g=0;
+ S.bills.slice().forEach(b=>{if(!isAuto(b)||!b.autoRec||b.kind==='inv'||b.cancelled||!A(b.acct))return;let g=0;
   while(b.next&&b.next<=t0&&g++<24){billRec(b,{id:nid()+n,d:b.next,amt:+b.amt,src:'auto',ts:Date.now()+n});n++;
    if(!+b.freq||(b.end&&addM(b.next,+b.freq,b.day)>b.end)){S.bills=S.bills.filter(x=>x!==b);break}b.next=addM(b.next,+b.freq,b.day)}});
  if(n){fundSync();save();render();toast('已自動記下 '+n+' 筆到期的固定收支')}
@@ -1872,7 +1872,8 @@ function sheetPay(o){const b=S.bills.find(x=>x.id===o.bid)||{},a=A(b.acct),inc=b
  <div class="sub" style="margin:2px 0 8px">這期原本是 ${md(b.next)}${b.vary?'，大約 '+M(b.amt):''}</div>
  <div class="grid"><label class="fl"><span>${inc?'實際入帳金額':sv?'存了多少':'實際扣了多少'}</span><input inputmode="decimal" id="pamt" value="${E(o.amt)}" data-m="sheet.o.amt"></label>
  <label class="fl"><span>${inc?'入帳日':sv?'轉帳日':isCard(a)?'刷卡扣款日':'扣款日'}</span><input type="date" value="${o.d}" data-m="sheet.o.d"></label></div>
- <div class="sub" style="margin-top:6px">${sv?'從 '+E(a?nm(a):'')+' 轉到 '+E((A(b.to)||{}).name||''):(inc?'進到 ':'從 ')+E(a?nm(a):'')+(isCard(a)&&!inc?'，會算進那張卡的帳單':'')}</div>
+ ${!a&&!sv?`<label class="fl" style="margin-top:8px"><span>這次${inc?'進到':'從'}哪個帳戶</span><select data-m="sheet.o.acct">${S.accts.filter(x=>!inc||!isCard(x)).map(x=>`<option value="${x.id}" ${o.acct===x.id?'selected':''}>${E(nm(x))}</option>`).join('')}</select></label>`:''}
+ <div class="sub" style="margin-top:6px">${!a&&!sv?'這筆的扣款帳戶還沒決定，這次先選上面的帳戶。':sv?'從 '+E(a?nm(a):'')+' 轉到 '+E((A(b.to)||{}).name||''):(inc?'進到 ':'從 ')+E(a?nm(a):'')+(isCard(a)&&!inc?'，會算進那張卡的帳單':'')}</div>
  <div class="row" style="margin-top:14px"><span class="sp"></span><button class="go" data-a="paysave">記下來</button></div>`}
 function payBill(b,skip){
  if(!skip&&b.kind==='inv'){
@@ -2084,9 +2085,9 @@ const ACT={
   else if(old&&old.fb)S.bills=S.bills.filter(x=>x.id!==old.fb);
   const k=S.bills.findIndex(x=>x.id===b.id);if(k>=0)S.bills[k]=b;else S.bills.push(b);fundSync();U.sheet=null;save();render();if(CL.col)autoBills()},
  delbill:()=>{if(!confirm('刪除這個固定項目？（已記錄的支出不會被刪）'))return;const id=U.sheet.o.id,d=S.bills.find(x=>x.id===id);S.bills=S.bills.filter(x=>x.id!==id&&!(d&&x.id===d.fb));S.bills.forEach(x=>{if(x.fb===id)delete x.fb});U.sheet=null;save();render()},
- paybill:i=>{const b=S.bills.find(x=>x.id===i);if(!b)return;if(b.kind==='inv')return payBill(b,false);U.sheet={k:'pay',o:{bid:i,amt:b.vary?'':String(b.amt),d:b.next<=today()?b.next:today()}};render();setTimeout(()=>{const f=$('pamt');f&&f.focus()},50)},
- paysave:()=>{const o=U.sheet.o,b=S.bills.find(x=>x.id===o.bid),n=pAmt(o.amt);if(!b)return;if(!(n>0))return toast('請輸入金額');if(!o.d)return toast('請選日期');
-  billRec(b,{id:nid(),d:o.d,amt:n,src:'m',ts:Date.now()});U.sheet=null;payBill(b,'done')},
+ paybill:i=>{const b=S.bills.find(x=>x.id===i);if(!b)return;if(b.kind==='inv')return payBill(b,false);U.sheet={k:'pay',o:{bid:i,acct:A(b.acct)?b.acct:(S.accts.find(a=>a.type==='bank'&&!a.excl)||S.accts[0]||{}).id,amt:b.vary?'':String(b.amt),d:b.next<=today()?b.next:today()}};render();setTimeout(()=>{const f=$('pamt');f&&f.focus()},50)},
+ paysave:()=>{const o=U.sheet.o,b=S.bills.find(x=>x.id===o.bid),n=pAmt(o.amt);if(!b)return;if(!(n>0))return toast('請輸入金額');if(!o.d)return toast('請選日期');const pa=A(b.acct)?{}:{acct:o.acct};if(!A(b.acct)&&!A(o.acct))return toast('請選這次從哪個帳戶');
+  billRec(b,Object.assign({id:nid(),d:o.d,amt:n,src:'m',ts:Date.now()},pa));U.sheet=null;payBill(b,'done')},
  skipbill:i=>{const b=S.bills.find(x=>x.id===i);if(b)payBill(b,true)},
  addacct:()=>{U.sheet={k:'acct',o:{type:'bank',name:'',now:'',close:5,due:20,init:0}};render()},
  edacct:i=>{const a=A(i);U.sheet={k:'acct',o:Object.assign({},a,{book:!!(a.book||a.excl),now:isCard(a)?'':Math.round(bal(a)*100)/100})};render()},
