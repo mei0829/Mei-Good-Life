@@ -1398,6 +1398,12 @@ function sheetTx(o){
  ${o.note&&o.cat&&o.catSet&&guess(o.note,o.type)!==o.cat?`<div class="sub" style="margin-top:6px"><a href="#" data-a="rule">以後說明有「${E(o.note.slice(0,12))}」都分到「${E(o.cat)}」</a></div>`:''}`}
  <div class="row" style="margin-top:14px;gap:8px">${o.id?'<button class="go r" data-a="deltx">刪除</button>':''}<span class="sp"></span><button class="go" data-a="savetx">儲存</button></div>`;
 }
+// 存錢：填了目標金額和存到哪天，推算每次要存多少（已經存過的、這一筆記下來的轉帳會先扣掉）
+function saveCalc(o){const g=pAmt(o.goal),f=+o.freq;if(!(g>0)||!o.end||!o.next||!f)return'';if(o.end<o.next)return'<div class="sub w" style="color:var(--bad)">存到哪天要在下次存錢日之後。</div>';
+ const k=occ({next:o.next,freq:f,day:+o.next.slice(8,10)},o.end).length,got=o.id?S.tx.filter(t=>t.bill===o.id).reduce((a,t)=>a+t.amt,0):0,left=Math.max(0,g-got);if(!k)return'';
+ const need=Math.ceil(left/k/10)*10,cur=pAmt(o.amt)||0;
+ return`<div class="note w keep" style="margin-top:6px;font-size:14px;color:var(--ink)">到 <b>${o.end.replace(/-/g,'/')}</b> 存到 <b>${M(g)}</b>${got?`（已經存了 ${M(got)}，還差 ${M(left)}）`:''}：還有 <b>${k}</b> 次，${fqName(f)}要存 <b>${M(need)}</b>
+ ${left<=0?'<div style="margin-top:4px">🎉 已經存夠了</div>':cur===need?'<div class="sub" style="margin-top:4px">✓ 上面的「每次存多少」已經是這個金額</div>':`<div class="row" style="margin-top:6px;gap:8px"><span class="sub sp">${cur?`現在填的 ${M(cur)} ${cur<need?'<span class="neg">不夠</span>':'比需要的多'}`:''}</span><button class="go q" style="width:auto" data-a="sfill" data-i="${need}">填入 ${M(need)}</button></div>`}</div>`}
 function sheetBill(o){
  const K=o.kind||'out',inv=K==='inv',inc=K==='in',sv=K==='save',cs=S.cats[inc?'in':'out'];
  const tip={out:'例：房貸、房租、保險、水電、電話、稅',in:'例：薪水、租金收入',inv:'例：每月 5 號定期定額買 0050',save:'例：每月 6 號從薪水帳戶轉 5,000 到存錢帳戶。記成「轉帳」，不算花掉。'}[K];
@@ -1413,11 +1419,11 @@ function sheetBill(o){
  <label class="fl"><span>下次${inc?'入帳':sv?'存錢':K==='out'&&o.sub?'續約（扣款）':'繳費／扣款'}日</span><input type="date" value="${o.next}" data-m="sheet.o.next"></label>
  <label class="fl"><span>${inc?'入帳帳戶':sv?'從哪個帳戶轉出':'從哪個帳戶扣'}</span><select data-m="sheet.o.acct"${sv?' data-r="1"':''}>${sv?'':`<option value="" ${!A(o.acct)?'selected':''}>尚未決定</option>`}${S.accts.filter(a=>K==='out'||!isCard(a)).map(a=>`<option value="${a.id}" ${o.acct===a.id?'selected':''}>${E(nm(a))}</option>`).join('')}</select></label>
  ${sv?`<label class="fl"><span>存到哪個帳戶</span><select data-m="sheet.o.to" data-r="1">${S.accts.filter(a=>!isCard(a)&&a.id!==o.acct).map(a=>`<option value="${a.id}" ${o.to===a.id?'selected':''}>${E(nm(a))}</option>`).join('')}</select></label>
- <label class="fl"><span>目標金額（選填）</span><input inputmode="numeric" value="${E(o.goal||'')}" data-m="sheet.o.goal" placeholder="例：100000"></label>
+ <label class="fl"><span>目標金額（選填）</span><input inputmode="numeric" value="${E(o.goal||'')}" data-m="sheet.o.goal" data-r="1" placeholder="例：100000"></label>
  <div class="sub w">沒有專門存錢的帳戶？到「設定 → 帳戶」新增一個，例如「國泰 存錢」（子帳戶也可以）。</div>
  <div class="fl w"><span>怎麼存</span><div class="chips">${[[0,'我自己轉'],[1,'銀行自動轉帳（約定轉帳）']].map(([v,n])=>`<button class="chip ${!!o.auto===!!v?'on':''}" data-a="bauto" data-i="${v}">${n}</button>`).join('')}</div></div>
  ${o.auto?`<label class="fl w" style="display:flex;gap:8px;align-items:center"><input type="checkbox" data-m="sheet.o.autoRec" ${o.autoRec?'checked':''} style="width:20px;height:20px;flex:none"><span style="font-size:14px;color:inherit">到轉帳日<b>自動記一筆</b></span></label>`:'<div class="sub w">到期前 3 天會在這頁提醒你。轉完按「<b>已存（記一筆）</b>」。</div>'}`:''}
- ${+o.freq?`<label class="fl w"><span>${sv?'存到哪天（選填；旅遊填出發日）':'最後一期（選填，分期、房貸才填）'}</span><input type="date" value="${o.end||''}" data-m="sheet.o.end"></label>`:''}
+ ${+o.freq?`<label class="fl w"><span>${sv?'存到哪天（選填；旅遊填出發日）':'最後一期（選填，分期、房貸才填）'}</span><input type="date" value="${o.end||''}" data-m="sheet.o.end" data-r="1"></label>${sv?saveCalc(o):''}`:''}
  ${inv||sv?'':`<label class="fl"><span>分類${o.cat&&!cs.includes(o.cat)?' <b style="color:var(--bad)">⚠︎ 不在分類清單，請改</b>':''}</span><select data-m="sheet.o.cat" data-r="1">${(o.cat&&!cs.includes(o.cat)?[o.cat]:[]).concat(cs).map(c=>`<option ${c===o.cat?'selected':''}>${E(c)}</option>`).join('')}</select></label>${K==='out'&&subsOf(o.cat).length?`<div class="fl w"><span>細分（選填，再點一次取消）</span><div class="chips">${subsOf(o.cat).map(b=>`<button class="chip ${o.sc===b?'on':''}" data-a="bsub" data-i="${E(b)}">${E(b)}</button>`).join('')}</div></div>`:''}
  <span></span>
  <div class="fl w"><span>${inc?'怎麼入帳':'怎麼繳'}</span><div class="chips">${[[0,inc?'我自己存／轉進來':'我自己繳（轉帳、現金、超商）'],[1,inc?'公司自動匯入':'自動扣款（銀行或信用卡）']].map(([v,n])=>`<button class="chip ${!!o.auto===!!v?'on':''}" data-a="bauto" data-i="${v}">${n}</button>`).join('')}</div></div>
@@ -2039,6 +2045,7 @@ const ACT={
   U.sheet=null;save();render();toast(o.old&&nm!==o.old?'已改名，以前的紀錄也改成「'+nm+'」':'已儲存')},
  catdel:()=>{const o=U.sheet.o,to=o.to;if(!to||to===o.old)return toast('請選要改到哪個分類');if(!confirm('刪除「'+o.old+'」？原本的紀錄、固定收支、預算會改到「'+to+'」。'))return;
   if(o.k==='out'){S.subs=S.subs||{};S.subs[o.old]=o.subs.join('，')}catMove(o.k,o.old,to);U.sheet=null;save();render();toast('已刪除，紀錄改到「'+to+'」')},
+ sfill:v=>{U.sheet.o.amt=String(v);render();toast('每次存 '+M(+v))},
  bsub:i=>{const o=U.sheet.o;o.sc=o.sc===i?'':i;render()},
  envpick:()=>{U.sheet={k:'envp',o:{}};render()},
  envtog:c=>{const B=S.budget;B.env=B.env||{};if(B.env[c])delete B.env[c];else B.env[c]=true;save();render()},
