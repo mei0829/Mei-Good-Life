@@ -1692,8 +1692,11 @@ function sheetRecon(o){
  return`<div class="row"><b class="sp" style="font-size:17px">更新餘額（對帳）</b><button class="x" data-a="close">×</button></div>
  <div class="sub" style="margin:6px 0">打開網銀 App，把看到的餘額填進來；也可以按「截圖」讓 AI 讀。沒變的空著就好。</div>
  ${S.accts.filter(a=>!isCard(a)).map(a=>`<label class="fl"><span>${E(nm(a))}（網站算的：${MA(a)}）</span><div class="row" style="gap:6px"><input inputmode="decimal" placeholder="實際餘額" value="${E(o.v[a.id]==null?'':o.v[a.id])}" data-m="sheet.o.v.${a.id}"><button class="go q" data-a="snapbal" data-i="${a.id}">截圖</button></div></label>`).join('')}
+ <div class="card" style="margin-top:10px;padding:10px 12px"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" data-m="sheet.o.asTx" data-r="1" ${o.asTx!==false?'checked':''} style="width:20px;height:20px;flex:none"><span style="font-size:14px"><b>錢比網站算的少：差額記成一筆「未記帳差額」支出</b></span></label>
+ ${o.asTx!==false?`<label class="fl" style="margin-top:8px"><span>記在哪一天</span><input type="date" value="${o.d||today()}" data-m="sheet.o.d"></label><div class="sub" style="margin-top:4px">分類記成「${E(reconCat())}」，之後想起來花在哪，可以點那筆改。錢比網站算的<b>多</b>的話，只會把餘額改正確，不會記成收入。</div>`:'<div class="sub" style="margin-top:4px">不勾的話，只會把餘額改成正確數字，差掉的錢不會算成花費。</div>'}</div>
  <div class="row" style="margin-top:14px"><span class="sp"></span><button class="go" data-a="saverecon">儲存</button></div>`;
 }
+const reconCat=()=>S.cats.out.includes('其他')?'其他':S.cats.out[S.cats.out.length-1];
 // 點一檔持股：這檔每一次買、賣、領股利的完整紀錄，每次交易後持有幾股、均價多少
 function sheetStk(o){const ac=o.ac||'',h=holdings(ac).find(x=>x.sym===o.sym),c=h?h.cur:'TWD',xs=S.trades.filter(t=>t.sym===o.sym&&(!ac||tradeKey(t)===ac)).sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:(a.ts||0)-(b.ts||0));
  let sh=0,cost=0;const rows=xs.map(t=>{let r=null;
@@ -2229,7 +2232,10 @@ Object.assign(ACT,{
  pdset:()=>{const o=U.sheet.o;o.pd=o.d>today()?o.d:today()<shiftD(o.d,3)?today():o.d;render()},
  pdclr:()=>{U.sheet.o.pd='';render()},
  recon:()=>{U.sheet={k:'recon',o:{v:{}}};render()},
- saverecon:()=>{const v=U.sheet.o.v;let n=0;S.accts.forEach(a=>{if(isCard(a)||v[a.id]==null||v[a.id]==='')return;const x=pAmt(v[a.id]);if(isNaN(x))return;a.init=(+a.init||0)+x-bal(a);n++});U.sheet=null;if(n)save();render();toast(n?'已更新 '+n+' 個帳戶':'沒有變更')},
+ saverecon:()=>{const o=U.sheet.o,v=o.v,tx=o.asTx!==false,d=o.d||today();let n=0,m=0,sum=0;S.accts.forEach(a=>{if(isCard(a)||v[a.id]==null||v[a.id]==='')return;const x=pAmt(v[a.id]);if(isNaN(x))return;const df=x-bal(a);if(Math.abs(df)<0.005)return;
+  // 錢變少：記成一筆支出（花費才算得準）；錢變多或不想記：直接把餘額改正確
+  if(tx&&df<0){S.tx.push({id:nid()+a.id,d,type:'out',amt:Math.round(-df*100)/100,acct:a.id,cat:reconCat(),note:'未記帳差額',src:'adj',ts:Date.now()});m++;sum+=-df}else a.init=(+a.init||0)+df;n++});
+  U.sheet=null;if(n)save();render();toast(n?(m?'已記下未記帳差額 '+M(sum)+(n>m?'，另外 '+(n-m)+' 個帳戶改了餘額':''):'已更新 '+n+' 個帳戶'):'沒有變更')},
  snapbal:i=>{U.snap={k:'bal',id:i};$('snapf').click()},
  snapacct:()=>{U.snap={k:'acct'};$('snapf').click()},
  snaphold:()=>{U.snap={k:'hold'};$('snapf').click()},
