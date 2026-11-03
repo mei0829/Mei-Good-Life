@@ -183,6 +183,8 @@ if(!S.iou)S.iou=[];
 // 🔒 不算進總資產 已合併到 📒 獨立帳本：兩個一起
 const normAcct=()=>S.accts.forEach(a=>{if(a.type!=='card'&&(a.excl||a.book)){a.excl=true;a.book=true;delete a.hold}});normAcct();
 S.bills.forEach(b=>{const a=S.accts.find(x=>x.id===b.acct);if(b.auto&&a&&a.type==='cash'){b.auto=false;delete b.autoRec}});
+// 舊資料：要繳的錢身上留著過時的「預存」連結（以前從預存改過來的），清掉免得被當成放錯的預存
+S.bills.forEach(b=>{if(b.kind!=='save'&&b.link){const p=S.bills.find(x=>x.id===b.link);if(!p||p.fb!==b.id)delete b.link}});
 if(!S.cats.in.includes('副業'))S.cats.in.splice(Math.max(0,S.cats.in.indexOf('薪資')+1),0,'副業');
 if(!S.cats.in.includes('家人贊助'))S.cats.in.splice(Math.max(0,S.cats.in.indexOf('薪資')+1),0,'家人贊助');
 if(!S.cats.out.includes('房貸'))S.cats.out.splice(Math.max(0,S.cats.out.indexOf('居家')+1),0,'房貸');
@@ -400,13 +402,14 @@ const PRESETS=[{name:'停車費',cat:'停車費',freq:1,vary:1,note:'政府路�
 // 固定收支依銀行篩選：信用卡、子帳戶都歸到它的銀行
 const bankOf=a=>a?(a.type!=='cash'&&a.group)||a.name:'帳戶未決定';
 // 固定收支「簡單」看法：一行一筆，照種類分組；點一筆看完整資料
+const misFund=b=>{if((b.kind||'out')!=='out')return false;if(/^預存・/.test(b.name||'')&&!(b.fb&&S.bills.some(x=>x.id===b.fb)))return true;if(!b.link)return false;const p=S.bills.find(x=>x.id===b.link);return!!p&&p.fb===b.id&&!(b.fb&&S.bills.some(x=>x.id===b.fb))};
 const billAmtTxt=b=>(b.vary?'約 ':'')+(b.kind==='in'?'+':'')+MC(b.amt,bcur(b));
 function billSimple(bs){if(!bs.length)return'<div class="card sub">還沒有固定項目。點下面的常用項目快速新增。</div>';
  const G=[['out','要繳的錢'],['in','固定收入'],['save','存錢'],['inv','定期投資']],t0=today();
  return G.map(([k,n])=>{const xs=bs.filter(b=>(b.kind||'out')===k);if(!xs.length)return'';const pm=xs.filter(b=>+b.freq).reduce((a,b)=>a+conv(+b.amt||0,bcur(b),'TWD')/b.freq,0);
   return`<div class="row" style="margin:12px 2px 4px"><b class="sp" style="font-size:15px">${n}（${xs.length}）</b><span class="sub">每月約 ${M(pm)}</span></div><div class="card" style="padding:4px 12px">${xs.map(b=>{const d=dleft(b.next);
    const K=b.kind||'out',fd=b.fb&&S.bills.find(x=>x.id===b.fb),par=b.link&&S.bills.find(x=>x.id===b.link);
-   const tag=K==='out'&&b.link?' <span class="pill" style="color:var(--bad);border-color:var(--bad)">⚠︎ 應該是存錢</span>':K==='out'&&b.fb?(fd?' <span class="pill">📦 有預存</span>':' <span class="pill" style="color:var(--amber);border-color:var(--amber)">⚠︎ 預存不見了</span>'):K==='save'&&par?' <span class="pill">📦 預存</span>':'';
+   const tag=misFund(b)?' <span class="pill" style="color:var(--bad);border-color:var(--bad)">⚠︎ 應該是存錢</span>':K==='out'&&b.fb?(fd?' <span class="pill">📦 有預存</span>':' <span class="pill" style="color:var(--amber);border-color:var(--amber)">⚠︎ 預存不見了</span>'):K==='save'&&par?' <span class="pill">📦 預存</span>':'';
    return`<div class="ar" data-a="billinfo" data-i="${b.id}"><div class="sp"><div>${E(b.name)}${b.sub?' <span class="pill">訂閱</span>':''}${tag}</div><div class="sub">${K==='save'&&par?'給「'+E(par.name)+'」・'+md(par.next)+' 要繳・':''}${fqName(b.freq)}・下次 ${md(b.next)}${b.next<t0?' <span class="late">逾期</span>':d<=3?'（'+(d?d+' 天後':'今天')+'）':''}</div></div><b class="num ${b.kind==='in'?'in':''}">${billAmtTxt(b)}</b>${d<=3&&!(isAuto(b)&&b.autoRec&&b.kind!=='inv')?`<button class="go q" style="width:auto;padding:3px 10px;font-size:12px;flex:none" data-a="paybill" data-i="${b.id}">${b.kind==='in'?'已入帳':b.kind==='save'?'已存':'已繳'}</button>`:'<span class="sub">›</span>'}</div>`}).join('')}</div>`}).join('')}
 function sheetBillInfo(o){const b=S.bills.find(x=>x.id===o.id);if(!b)return'<div class="sub">找不到這筆。</div>';const a=A(b.acct),K=b.kind||'out',hs=S.tx.filter(t=>t.bill===b.id).sort((x,y)=>x.d<y.d?1:-1).slice(0,6);
  const row=(k,v)=>v?`<div class="row" style="padding:6px 0;border-top:1px solid var(--line);gap:10px"><span class="sub" style="width:84px;flex:none">${k}</span><span class="sp">${v}</span></div>`:'';
@@ -426,7 +429,7 @@ function sheetBillInfo(o){const b=S.bills.find(x=>x.id===o.id);if(!b)return'<div
  ${b.end?row(K==='save'?'存到哪天':'最後一期',b.end.replace(/-/g,'/')+'（剩 '+occ(b,b.end).length+' 期）'):''}
  ${b.sub?row('續約提醒','前 '+(b.warn==null?3:b.warn)+' 天'+(b.quit?'・打算取消':'')):''}
  ${b.note?row('備註',E(b.note)):''}
- ${K==='out'&&b.link?'<div class="note keep" style="border-color:var(--bad);color:var(--ink);margin-top:8px">⚠︎ 這筆原本是預存，被改成「要繳的錢」，會被當成多一筆帳單。按「修改」把類型改回「<b>存錢</b>」，或直接刪掉。</div>':''}
+ ${misFund(b)?'<div class="note keep" style="border-color:var(--bad);color:var(--ink);margin-top:8px">⚠︎ 這筆原本是預存，被改成「要繳的錢」，會被當成多一筆帳單。按「修改」把類型改回「<b>存錢</b>」，或直接刪掉。</div>':''}
  ${K==='out'&&b.fb&&!S.bills.some(x=>x.id===b.fb)?'<div class="note keep" style="border-color:var(--amber);color:var(--ink);margin-top:8px">⚠︎ 這筆帳單的預存（存錢那一筆）不見了。按「修改」→ 往下找「📦 每個月先存一點」→ 重新選存到哪個帳戶 → 儲存，就會重新產生。</div>':''}
  ${K==='out'&&+b.freq>1&&!b.fb?'<div class="sub" style="margin-top:8px">💡 '+fqName(b.freq)+'繳一次：可以按「修改」→「📦 每個月先存一點」，每月先存一點，到時候才不會一次一大筆。</div>':''}
  ${K==='save'&&b.link&&S.bills.find(x=>x.id===b.link)?row('給哪張帳單',E(S.bills.find(x=>x.id===b.link).name)+'（'+md(S.bills.find(x=>x.id===b.link).next)+' 要繳）'):''}
