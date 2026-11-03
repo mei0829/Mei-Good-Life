@@ -1141,8 +1141,8 @@ function vStock(){
   if(on.length>1&&val)h+=`<h2>資金分配（換成台幣）</h2><div class="card">${hbars(on.map(x=>[x.sym+' '+x.name,T(x,'val')]),val)}</div>`;
  }else h+=`<div class="card sub">還沒有持股。按上面的按鈕記第一筆「買進」。</div>`;
  if(off.length)h+=`<h2>已經全部賣掉</h2><div class="card">${off.map(x=>`<div class="row" style="padding:4px 0"><span class="sp">${E(x.sym)} ${E(x.name)}</span>${gain(x.real+x.div,null,x.cur)}</div>`).join('')}</div>`;
- const trAll=S.trades.filter(t=>!U.sa||tradeKey(t)===U.sa).slice().sort((a,b)=>a.d<b.d?1:a.d>b.d?-1:(b.ts||0)-(a.ts||0)),tr=trAll.slice(0,U.trN||30);
- if(tr.length)h+=`<h2>交易紀錄</h2><div class="card">${tr.map(t=>`<div class="li" data-a="edtrade" data-i="${t.id}"><div class="dt">${md(t.d)}<small>${t.d.slice(0,4)}</small></div><div class="sp"><div>${{buy:'買進',sell:'賣出',div:'股利'}[t.type]} ${E(t.sym)} ${E(t.name||'')}</div><div class="sub">${t.type==='div'?'現金股利':t.sh.toLocaleString('zh-TW')+' 股 × '+(+t.px).toFixed(2).replace(/\.?0+$/,'')}</div></div><div class="num">${t.type==='buy'?'−':'+'}${MC(Math.abs(tradeCash(t)),t.cur)}</div></div>`).join('')}</div>`+(trAll.length>tr.length?`<button class="go q" style="width:100%;margin-top:6px" data-a="trmore">再顯示 30 筆（一共 ${trAll.length} 筆，現在顯示 ${tr.length} 筆）</button>`:'');
+ const trBase=S.trades.filter(t=>!U.sa||tradeKey(t)===U.sa),trMs=[...new Set(trBase.map(t=>t.d.slice(0,7)))].sort().reverse(),trAll=trBase.filter(t=>!U.trM||t.d.startsWith(U.trM)).sort((a,b)=>a.d<b.d?1:a.d>b.d?-1:(b.ts||0)-(a.ts||0)),trLim=U.trM?0:U.trN==null?30:U.trN,tr=trLim?trAll.slice(0,trLim):trAll;
+ if(trBase.length)h+=`<h2>交易紀錄</h2><div class="row" style="gap:8px;margin:0 0 8px;flex-wrap:wrap"><select data-m="trM" data-r="1" style="width:auto;flex:none"><option value="">全部月份</option>${trMs.map(m=>`<option value="${m}" ${U.trM===m?'selected':''}>${m.slice(0,4)} 年 ${+m.slice(5)} 月</option>`).join('')}</select>${U.trM?`<span class="sub">${trAll.length} 筆</span>`:`<div class="chips">${[[30,'30 筆'],[50,'50 筆'],[100,'100 筆'],[0,'全部']].map(([n,l])=>`<button class="chip ${trLim===n?'on':''}" data-a="trn" data-i="${n}">${l}</button>`).join('')}</div>`}</div><div class="card">${tr.map(t=>`<div class="li" data-a="edtrade" data-i="${t.id}"><div class="dt">${md(t.d)}<small>${t.d.slice(0,4)}</small></div><div class="sp"><div>${{buy:'買進',sell:'賣出',div:'股利'}[t.type]} ${E(t.sym)} ${E(t.name||'')}</div><div class="sub">${t.type==='div'?'現金股利':t.sh.toLocaleString('zh-TW')+' 股 × '+(+t.px).toFixed(2).replace(/\.?0+$/,'')}</div></div><div class="num">${t.type==='buy'?'−':'+'}${MC(Math.abs(tradeCash(t)),t.cur)}</div></div>`).join('')}</div>`+(trAll.length>tr.length?`<button class="go q" style="width:100%;margin-top:6px" data-a="trmore">再顯示 30 筆（一共 ${trAll.length} 筆，現在顯示 ${tr.length} 筆）</button>`:'');
  const ms={};SEV.forEach(e=>{const m=e.d.slice(0,7),x=ms[m]=ms[m]||{div:0,real:0};x.div+=conv(e.div,e.cur,'TWD');x.real+=conv(e.real,e.cur,'TWD')});
  const mk=Object.keys(ms).sort().reverse().slice(0,24),yr=today().slice(0,4),Y=Object.keys(ms).filter(m=>m.startsWith(yr)).reduce((a,m)=>a+ms[m].div+ms[m].real,0);
  if(mk.length)h+=`<h2>每月股票收益（今年合計 ${M(Y)}）</h2><div class="card"><table class="pv"><tr><th>月份</th><th style="text-align:right">股利</th><th style="text-align:right">賣出賺賠</th><th style="text-align:right">合計</th></tr>${mk.map(m=>`<tr><td>${m.slice(0,4)}/${+m.slice(5)}</td><td class="num" style="text-align:right">${M(ms[m].div)}</td><td style="text-align:right">${gain(ms[m].real)}</td><td style="text-align:right">${gain(ms[m].div+ms[m].real)}</td></tr>`).join('')}</table><div class="sub" style="margin-top:6px">只算已經落袋的錢（領到的股利、賣掉時的賺賠）；還沒賣的漲跌看上面的「還沒賣的賺賠」。</div></div>`;
@@ -2173,7 +2173,8 @@ const ACT={
   const P=R.src&&R.src.prices||{};R.tr.forEach(t=>{if(!S.prices[t.sym]&&P[t.sym])S.prices[t.sym]=P[t.sym]});
   S.accts.forEach(a=>{const d=bal(a)-before[a.id];if(Math.abs(d)>0.005)a.init=(+a.init||0)-d});
   const n=R.tr.length;U.stkRec=null;save();render();toast('✓ 補回 '+n+' 筆股票交易')},
- trmore:()=>{U.trN=(U.trN||30)+30;render()},
+ trmore:()=>{U.trN=(U.trN==null?30:U.trN)+30;render()},
+ trn:i=>{U.trN=+i;render()},
  caldue:()=>{U.calDue=!U.calDue;render()},
  billv:i=>{U.billV=i;try{localStorage.setItem('money-billv',i)}catch(e){}render()},
  billinfo:i=>{U.sheet={k:'binfo',o:{id:i}};render()},
@@ -2384,7 +2385,7 @@ function field(e){
  if(el.dataset.n)v=v===''?(p==='living'?null:''):+v;
  if(el.dataset.l)v=String(v).split(/[,，、\s]+/).map(x=>x.trim()).filter(Boolean);
  if(el.dataset.l&&!v.length)return;
- setP(p.startsWith('imp.')||p.startsWith('sheet.')||p==='q'||p==='rq'||p==='tripQ'?U:S,p,v);
+ setP(p.startsWith('imp.')||p.startsWith('sheet.')||p==='q'||p==='rq'||p==='tripQ'||p==='trM'?U:S,p,v);
  if(el.dataset.s)save();
  if(el.dataset.fs)U.sheet.o.feeSet=1;
  if(el.dataset.fxm&&e.type==='change'){const v=pAmt(el.value);if(v>0){S.fx={USD:v,d:today(),auto:0};save();render()}return}
