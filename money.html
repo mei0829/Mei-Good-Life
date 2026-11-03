@@ -544,7 +544,8 @@ function vSet(){
  ${window.FBU?`<div class="row" style="margin-bottom:8px"><span class="sp sub">帳號：${E(FBU.email)}</span><button class="go q" data-a="logout">登出</button></div>`:''}
  <div class="sub" style="margin-bottom:8px">${E(CL.st)}</div>
  <div class="row" style="gap:6px;flex-wrap:wrap"><button class="go q" data-a="export">下載備份檔</button><button class="go q" data-a="importjson">從備份還原</button><a href="https://mei0829.github.io/Uultra/" class="sp" style="text-align:right">新人名單 →</a></div>
- <input type="file" id="bkf" accept=".json,application/json" style="display:none"></div>
+ <input type="file" id="bkf" accept=".json,application/json" style="display:none">
+ <div style="border-top:1px solid var(--line);margin-top:10px;padding-top:10px">${stkRecUI()}</div><input type="file" id="stkf" accept=".json,application/json" style="display:none"></div>
  <h2>從零開始</h2><div class="card"><div class="sub" style="margin-bottom:8px">把所有帳戶、紀錄、帳單、股票、預算全部清掉，回到剛開始的樣子（顏色風格會保留）。手機和雲端都會清掉，建議先按上面「下載備份檔」。</div><button class="go r" data-a="reset">清空全部資料，重新開始</button></div>`;
  return h;
 }
@@ -1239,6 +1240,20 @@ function sheetFReset(o){const xs=fundItems();
  <h2 style="margin-top:12px">② 每個帳戶今天的餘額</h2>${S.accts.filter(a=>!isCard(a)).map(a=>`<label class="fl" style="margin-top:6px"><span>${E(nm(a))}（網站算 ${MA(a)}）</span><input inputmode="decimal" value="${E(o.v[a.id]==null?'':o.v[a.id])}" data-m="sheet.o.v.${a.id}" placeholder="${Math.round(bal(a))}"></label>`).join('')}
  <div class="sub" style="margin-top:6px">信用卡不用填，照刷卡紀錄和帳單算。</div>
  <div class="row" style="margin-top:14px"><span class="sp"></span><button class="go" data-a="fresetsave">從今天開始</button></div>`}
+// ── 找回不見的股票：從這支手機「雲端資料蓋過來之前」自動留的備份（money-prev），或下載過的備份檔，
+// 只補回現在沒有的股票交易和證券戶；帳戶餘額維持現在的數字（今天的餘額本來就已經包含那些買賣）
+function stkMissing(src){if(!src||!Array.isArray(src.trades))return{tr:[],bk:[],src};const have=new Set(S.trades.map(t=>t.id)),hb=new Set((S.brokers||[]).map(b=>b.id)),key=t=>[t.d,t.sym,t.type,+t.sh||0,+t.px||0,+t.amt||0].join('|'),hk=new Set(S.trades.map(key));
+ return{tr:src.trades.filter(t=>t&&t.id&&t.sym&&!have.has(t.id)&&!hk.has(key(t))),bk:(Array.isArray(src.brokers)?src.brokers:[]).filter(b=>b&&b.id&&!hb.has(b.id)),src}}
+function prevSrc(){try{const r=localStorage.getItem('money-prev');return r?JSON.parse(r):null}catch(e){return null}}
+function stkRecUI(){const R=U.stkRec;
+ if(!R)return`<div class="row" style="gap:8px"><span class="sp"><b>🔎 找回不見的股票</b><div class="sub">股票交易不見了？從這支手機的自動備份或備份檔找回來</div></span><button class="go q" style="width:auto;flex:none" data-a="stkscan">找找看</button></div>`;
+ const n=R.tr.length,syms=[...new Set(R.tr.map(t=>t.sym))];
+ return`<b>🔎 找回不見的股票</b>${n?`<div class="msg">在${R.from}找到 <b>${n}</b> 筆現在沒有的股票交易${R.bk.length?'、'+R.bk.length+' 個證券戶':''}：${syms.slice(0,8).map(E).join('、')}${syms.length>8?'…':''}</div>
+ <div class="card" style="margin-top:6px;padding:4px 10px;max-height:240px;overflow:auto">${R.tr.slice().sort((a,b)=>a.d<b.d?-1:1).map(t=>`<div class="row" style="padding:3px 0;font-size:13px"><span class="sp">${t.d.replace(/-/g,'/')} ${E(t.sym)} ${E(t.name||'')}</span><span>${{buy:'買',sell:'賣',div:'股利'}[t.type]||''} ${t.type==='div'?M(+t.amt||0):(+t.sh||0).toLocaleString('zh-TW')+' 股'}</span></div>`).join('')}</div>
+ <div class="row" style="gap:8px;margin-top:8px"><button class="go g" data-a="stkcancel">先不要</button><span class="sp"></span><button class="go" data-a="stkrestore">補回這 ${n} 筆</button></div>
+ <div class="sub" style="margin-top:4px">只會補回股票交易和證券戶，你今天填的其他資料、帳戶餘額都不會變。</div>`
+ :`<div class="msg">${R.from}沒有找到不見的股票交易。</div><div class="sub" style="margin-top:4px">如果你在<b>別台裝置</b>（電腦、iPad、另一支手機）填過，請在那台打開這個網站再按「找找看」；先不要在那台登出。有下載過備份檔的話，也可以從備份檔找。</div>
+ <div class="row" style="gap:8px;margin-top:8px"><button class="go g" data-a="stkcancel">關閉</button><span class="sp"></span><button class="go q" data-a="stkfile">從備份檔找</button></div>`}`}
 function vRetire(){const R=RT(),P=retPlan(),yrs=P.m/12,ok=isFinite(P.m),pct=P.target?Math.max(0,Math.min(100,P.now/P.target*100)):0,yr=new Date().getFullYear();
  const inp=(k,lab,auto,ph,unit)=>`<label class="fl"><span>${lab}</span><input inputmode="decimal" value="${E(R[k]==null?'':R[k])}" data-m="retire.${k}" data-s="1" data-r="1" placeholder="${E(ph!=null?ph:auto)}"></label>`;
  let h=`<h1>退休計畫</h1>`;
@@ -2148,6 +2163,16 @@ const ACT={
    else{S.budget.envBase=S.budget.envBase||{};S.budget.envBase[x.c]=(+S.budget.envBase[x.c]||0)+d}});
   S.accts.forEach(a=>{if(isCard(a))return;const r=o.v[a.id];if(r==null||String(r).trim()==='')return;const x=pAmt(r);if(isNaN(x))return;const d=x-bal(a);if(Math.abs(d)<0.005)return;a.init=(+a.init||0)+d;n++});
   fundSync();U.sheet=null;save();render();toast(n?'✓ 已經從今天重新開始，改了 '+n+' 項':'沒有變更')},
+ stkscan:()=>{const P=prevSrc(),R=stkMissing(P);R.from=P?'這支手機的自動備份':'這支手機（沒有自動備份）';U.stkRec=R;render()},
+ stkfile:()=>$('stkf').click(),
+ stkcancel:()=>{U.stkRec=null;render()},
+ stkrestore:()=>{const R=U.stkRec;if(!R||!R.tr.length)return;if(!confirm('補回 '+R.tr.length+' 筆股票交易？帳戶餘額會維持現在的數字。'))return;
+  // 補回的交易本來就會影響交割帳戶餘額；今天的餘額已經包含它們，所以把差額扣回期初，餘額不變
+  const before={};S.accts.forEach(a=>{before[a.id]=bal(a)});
+  S.trades.push(...R.tr);S.brokers=(S.brokers||[]).concat(R.bk);
+  const P=R.src&&R.src.prices||{};R.tr.forEach(t=>{if(!S.prices[t.sym]&&P[t.sym])S.prices[t.sym]=P[t.sym]});
+  S.accts.forEach(a=>{const d=bal(a)-before[a.id];if(Math.abs(d)>0.005)a.init=(+a.init||0)-d});
+  const n=R.tr.length;U.stkRec=null;save();render();toast('✓ 補回 '+n+' 筆股票交易')},
  caldue:()=>{U.calDue=!U.calDue;render()},
  billv:i=>{U.billV=i;try{localStorage.setItem('money-billv',i)}catch(e){}render()},
  billinfo:i=>{U.sheet={k:'binfo',o:{id:i}};render()},
@@ -2387,6 +2412,7 @@ document.addEventListener('change',async e=>{
   else{const[k,id]=v.split(':');x.type='xfer';x.cat='';if(k==='to'){x.acct=me;x.to=id}else{x.acct=id;x.to=me}}
   render();return}
  if(el.id==='snapf'&&el.files[0]){const f=el.files[0];el.value='';runSnap(f);return}
+ if(el.id==='stkf'&&el.files[0]){try{const o=JSON.parse(await readFile(el.files[0])),m=o.money||o,R=stkMissing(m);R.from='備份檔「'+el.files[0].name+'」';U.stkRec=R}catch(x){toast('讀不到這個備份檔')}el.value='';render();return}
  if(el.id==='bkf'&&el.files[0]){try{const o=JSON.parse(await readFile(el.files[0])),m=o.money||o;if(!Array.isArray(m.tx)||!Array.isArray(m.accts))throw 0;if(!confirm('用備份檔取代目前全部資料？'))return;S=Object.assign(DEF(),m);save();render();toast('已還原')}catch(x){toast('不是記帳備份檔')}return}
  field(e);
 });
