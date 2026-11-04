@@ -1135,6 +1135,8 @@ function sheetBroker(o){const known=BROKERS.includes(o.name);return`<div class="
  <div class="row" style="margin-top:14px;gap:8px">${o.id?'<button class="go r" data-a="bkdel">刪除</button>':''}<span class="sp"></span><button class="go" data-a="bksave">儲存</button></div>`}
 
 function vStock(){
+ // 一次性：以前記的買進全部設成「全部是新拿的錢」（使用者要求）；不另外存檔，下次存檔時一起存
+ if(!S.capMig1){S.trades.forEach(t=>{if(t.type==='buy')t.capNew=1});S.capMig1=1}
  const acs=BK().map(b=>b.id);S.trades.forEach(t=>{const k=tradeKey(t);if(!acs.includes(k))acs.push(k)});
  if(U.sa&&!acs.includes(U.sa))U.sa='';const curB=BK().find(b=>b.id===U.sa);
  const hs=holdings(U.sa),on=hs.filter(h=>h.sh>0),off=hs.filter(h=>h.sh<=0);
@@ -2413,7 +2415,7 @@ Object.assign(ACT,{
  capsel:()=>{U.sheet={k:'cap',o:{}};render()},
  capon:i=>{const t=S.trades.find(x=>String(x.id)===String(i));if(!t)return;if(t.noCap)delete t.noCap;else t.noCap=1;save();render()},
  capall:i=>{S.trades.filter(t=>!U.sa||tradeKey(t)===U.sa).forEach(t=>{if(i)delete t.noCap;else t.noCap=1});save();render()},
- addtrade:()=>{symLoad();const b=BK().find(x=>x.id===U.sa)||(!U.sa&&BK().find(x=>x.id===S.lastBK));U.sheet={k:'trade',o:{type:'buy',cur:'TWD',sym:'',name:'',d:today(),sh:'',px:'',fee:'',tax:'',amt:'',bk:b?b.id:'',acct:b?b.acct:U.sa&&U.sa.startsWith('a:')?U.sa.slice(2):(A(S.lastTA)?S.lastTA:'')}};render()},
+ addtrade:()=>{symLoad();const b=BK().find(x=>x.id===U.sa)||(!U.sa&&BK().find(x=>x.id===S.lastBK));U.sheet={k:'trade',o:{type:'buy',capNew:1,cur:'TWD',sym:'',name:'',d:today(),sh:'',px:'',fee:'',tax:'',amt:'',bk:b?b.id:'',acct:b?b.acct:U.sa&&U.sa.startsWith('a:')?U.sa.slice(2):(A(S.lastTA)?S.lastTA:'')}};render()},
  stk:i=>{U.sheet={k:'stk',o:{sym:i,ac:U.sa||''}};render()},
  stkadd:i=>{const h=holdings().find(x=>x.sym===i)||{};ACT.addtrade();Object.assign(U.sheet.o,{sym:i,name:h.name||'',cur:h.cur||'TWD'});render()},
  edtrade:i=>{symLoad();const t=S.trades.find(x=>x.id===i);if(t){const k=tradeKey(t);U.sheet={k:'trade',o:Object.assign({amt:'',fee:'',tax:''},t,{feeSet:1,bk:BK().some(b=>b.id===k)?k:''})};render()}},
