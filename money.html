@@ -1100,11 +1100,11 @@ const keyName=k=>{const b=BK().find(x=>x.id===k);if(b)return b.name+(b.no&&BK().
 function holdings(ac){
  const by={};SEV=[];
  S.trades.filter(t=>!ac||tradeKey(t)===ac).slice().sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:(a.ts||0)-(b.ts||0)).forEach(t=>{
-  const h=by[t.sym]=by[t.sym]||{sym:t.sym,name:'',sh:0,cost:0,real:0,div:0,cur:t.cur||'TWD'};if(t.name)h.name=t.name;
-  if(t.type==='buy'){h.sh+=t.sh;h.cost+=t.sh*t.px+(+t.fee||0)}
-  else if(t.type==='sell'){const sh=Math.min(t.sh,h.sh),co=h.sh?h.cost/h.sh*sh:0,r=t.sh*t.px-(+t.fee||0)-(+t.tax||0)-co;h.real+=r;h.cost-=co;h.sh-=sh;SEV.push({d:t.d,sym:t.sym,real:r,div:0,cur:h.cur})}
+  const h=by[t.sym]=by[t.sym]||{sym:t.sym,name:'',sh:0,cost:0,real:0,div:0,cur:t.cur||'TWD',lots:[]};if(t.name)h.name=t.name;
+  if(t.type==='buy'){h.sh+=t.sh;h.cost+=t.sh*t.px+(+t.fee||0);if(t.sh>0)h.lots.push({sh:t.sh,c:(t.sh*t.px+(+t.fee||0))/t.sh})}
+  else if(t.type==='sell'){let n=t.sh;while(n>1e-9&&h.lots.length){const l=h.lots[0],k=Math.min(n,l.sh);l.sh-=k;n-=k;if(l.sh<=1e-9)h.lots.shift()}const sh=Math.min(t.sh,h.sh),co=h.sh?h.cost/h.sh*sh:0,r=t.sh*t.px-(+t.fee||0)-(+t.tax||0)-co;h.real+=r;h.cost-=co;h.sh-=sh;SEV.push({d:t.d,sym:t.sym,real:r,div:0,cur:h.cur})}
   else{h.div+=+t.amt||0;SEV.push({d:t.d,sym:t.sym,real:0,div:+t.amt||0,cur:h.cur})}});
- return Object.values(by).map(h=>{const p=S.prices[h.sym];h.px=p?+p.p:null;h.pd=p?p.d:'';h.val=h.px!=null?h.sh*h.px:h.cost;h.unreal=h.px!=null?h.val-h.cost:0;return h});
+ return Object.values(by).map(h=>{h.fifo=h.lots.reduce((a,l)=>a+l.sh*l.c,0);const p=S.prices[h.sym];h.px=p?+p.p:null;h.pd=p?p.d:'';h.val=h.px!=null?h.sh*h.px:h.cost;h.unreal=h.px!=null?h.val-h.cost:0;return h});
 }
 // 本金帳：賣掉的錢會留著拿去買下一檔，只有「不夠付」的部分才是新從外面（例如媽媽帳戶）拿進來的錢
 function capital(ac){let pool=0,out=0;const hs={};
@@ -1139,11 +1139,11 @@ function vStock(){
  if(U.sa&&!acs.includes(U.sa))U.sa='';const curB=BK().find(b=>b.id===U.sa);
  const hs=holdings(U.sa),on=hs.filter(h=>h.sh>0),off=hs.filter(h=>h.sh<=0);
  const T=(h,k)=>conv(h[k],h.cur,'TWD'),sum=(xs,k)=>xs.reduce((s,h)=>s+T(h,k),0);
- const val=sum(on,'val'),cost=sum(on,'cost'),un=sum(on,'unreal'),re=sum(hs,'real'),dv=sum(hs,'div'),hasUS=hs.some(h=>h.cur==='USD')||S.accts.some(a=>a.cur==='USD');
+ const val=sum(on,'val'),cost=sum(on,'cost'),fifo=sum(on,'fifo'),un=sum(on,'unreal'),re=sum(hs,'real'),dv=sum(hs,'div'),hasUS=hs.some(h=>h.cur==='USD')||S.accts.some(a=>a.cur==='USD');
  let h=`<h1>股票</h1>${stkSeg()}<div class="fs" style="margin-bottom:10px;scrollbar-width:none">${acs.length?`<button class="chip ${U.sa?'':'on'}" data-a="sa" data-i="">全部</button>`:''}${acs.map(k=>`<button class="chip ${U.sa===k?'on':''}" data-a="sa" data-i="${k}">${E(keyName(k))}</button>`).join('')}<button class="chip" data-a="bkadd">＋ 證券戶</button></div>
  ${curB?`<div class="card"><div class="row"><div class="sp"><b>${E(curB.name)}</b><div class="sub">證券帳號 ${curB.no?copyTag(curB.no,curB.no):'沒填'}</div><div class="sub">交割帳戶 ${A(curB.acct)?E(nm(A(curB.acct)))+' '+MA(A(curB.acct)):'沒選'}</div>${curB.note?`<div class="sub">${E(curB.note)}</div>`:''}<div class="sub">手續費 ${+curB.disc>0?(+curB.disc*10).toFixed(2).replace(/\.?0+$/,'')+' 折':'還沒填（按修改填這家的折扣）'}${curB.min!=null&&curB.min!==''?'・最低 $'+curB.min:''}</div></div><button class="go q" data-a="bkedit" data-i="${curB.id}">修改</button></div>
 </div>`:''}
- <div class="card"><div class="sub">${U.sa?E(keyName(U.sa))+' ':''}目前市值</div><div class="big">${M(val)}</div><div class="sub">投入成本 ${M(cost)}</div>
+ <div class="card"><div class="sub">${U.sa?E(keyName(U.sa))+' ':''}目前市值</div><div class="big">${M(val)}</div><div class="sub">投入成本 ${M(cost)}${Math.abs(fifo-cost)>=1?`・先買先賣算 ${M(fifo)}`:''}</div>
  <div class="tiles"><div><span class="sub">還沒賣的賺賠</span><b>${gain(un)}</b></div><div><span class="sub">已經賣掉賺賠</span><b>${gain(re)}</b></div><div><span class="sub">領到的股利</span><b class="num">${M(dv)}</b></div></div>
  <div class="msg">全部加起來：${gain(un+re+dv)}</div><div class="note" data-t="顏色、股價怎麼更新？">紅色＝賺、綠色＝賠（台股習慣）。股價<b>不是即時跳動</b>的：每天第一次打開會自動抓一次（台股用證交所公布的<b>收盤價</b>，下午收盤後才會更新；美股抓最新價），想再抓按「更新股價」。旁邊會顯示當天漲跌，漲停跌停（±10%）也會標出來。抓不到的點「現價」手動改。${hasUS?'美股都用目前匯率換成台幣加總。':''}</div></div>
  ${S.trades.some(t=>!U.sa||tradeKey(t)===U.sa)?(()=>{const cp=Object.assign(capital(U.sa),(()=>{const x=S.trades.filter(t=>!U.sa||tradeKey(t)===U.sa);return{all:x.length,n:x.filter(t=>!t.noCap).length}})()),src=E(S.capFrom||'本金帳戶');return`<div class="card"><b>本金帳</b>${U.capEd?`<div class="row" style="gap:8px;margin-top:6px"><span class="sub">錢從</span><input id="capin" class="sp" value="${E(S.capFrom||'')}" placeholder="例：第一銀行爸媽的帳戶" data-m="capFrom" data-s="1"><span class="sub">來</span><button class="go q" data-a="capdone">好</button></div>`:`<div class="sub" data-a="caped" style="cursor:pointer;margin-top:2px">${S.capFrom?`錢從<b style="color:var(--ink)">${E(S.capFrom)}</b>來`:'錢從哪裡來？按這裡填'}</div>`}
@@ -1154,7 +1154,7 @@ function vStock(){
  <button class="go" style="width:100%;margin-bottom:8px" data-a="addtrade">＋ 記一筆交易（買、賣、股利）</button>
  <div class="row" style="gap:8px;margin-bottom:10px"><button class="go g sp" data-a="snaphold">截圖匯入持股</button>${on.length?'<button class="go g sp" data-a="pxnow">更新股價</button>':''}</div>`;
  if(on.length){
-  h+=`<h2>持股</h2><div class="card">${on.sort((a,b)=>b.val-a.val).map(x=>`<div class="li" style="cursor:default;flex-wrap:wrap"><div class="sp" data-a="stk" data-i="${E(x.sym)}" style="cursor:pointer"><b>${E(x.sym)}</b> ${E(x.name)} <span class="sub">›</span><div class="sub">${x.cur==='USD'?'<span class="pill">美股</span> ':''}${+x.sh.toFixed(4)} 股${x.cur!=='USD'&&x.sh>=1000?'（'+ +(x.sh/1000).toFixed(3)+' 張）':''}・均價 ${x.cur==='USD'?'US$':''}${(x.cost/x.sh).toFixed(2)}${x.cur==='USD'?'<br>市值 '+MC(x.val,'USD')+' ≈ '+M(conv(x.val,'USD','TWD')):''}</div></div>
+  h+=`<h2>持股</h2><div class="card">${on.sort((a,b)=>b.val-a.val).map(x=>`<div class="li" style="cursor:default;flex-wrap:wrap"><div class="sp" data-a="stk" data-i="${E(x.sym)}" style="cursor:pointer"><b>${E(x.sym)}</b> ${E(x.name)} <span class="sub">›</span><div class="sub">${x.cur==='USD'?'<span class="pill">美股</span> ':''}${+x.sh.toFixed(4)} 股${x.cur!=='USD'&&x.sh>=1000?'（'+ +(x.sh/1000).toFixed(3)+' 張）':''}・均價 ${x.cur==='USD'?'US$':''}${(x.cost/x.sh).toFixed(2)}${Math.abs(x.fifo-x.cost)>=0.5?'<br>先買先賣均價 '+(x.cur==='USD'?'US$':'')+(x.fifo/x.sh).toFixed(2):''}${x.cur==='USD'?'<br>市值 '+MC(x.val,'USD')+' ≈ '+M(conv(x.val,'USD','TWD')):''}</div></div>
   <div style="text-align:right"><button class="go q" data-a="px" data-i="${E(x.sym)}">現價 ${x.px!=null?(x.cur==='USD'?'US$':'')+ +(+x.px).toFixed(2):'未填'}</button><div style="margin-top:2px">${x.px!=null?gain(x.unreal,x.unreal/x.cost,x.cur):'<span class="sub">填現價才能算</span>'}</div>${x.pd?`<div class="sub">${md(x.pd)} ${S.prices[x.sym]&&S.prices[x.sym].auto?(x.cur==='USD'?'自動':'收盤'):'更新'}${(()=>{const c=(S.prices[x.sym]||{}).c;if(c==null||!x.px)return'';const pc=c/(x.px-c)*100,lim=x.cur!=='USD'&&Math.abs(pc)>=9.5;return` <span class="num ${c>0?'up':c<0?'down':''}">${c>0?'▲':c<0?'▼':''}${Math.abs(c).toFixed(2)}（${pc>0?'+':''}${pc.toFixed(1)}%）${lim?(c>0?' 漲停':' 跌停'):''}</span>`})()}</div>`:''}</div></div>`).join('')}</div>`;
   if(on.length>1&&val)h+=`<h2>資金分配（換成台幣）</h2><div class="card">${hbars(on.map(x=>[x.sym+' '+x.name,T(x,'val')]),val)}</div>`;
  }else h+=`<div class="card sub">還沒有持股。按上面的按鈕記第一筆「買進」。</div>`;
@@ -1833,7 +1833,7 @@ function sheetStk(o){const ac=o.ac||'',SX=sellStats(ac),h=holdings(ac).find(x=>x
  <div class="tiles" style="margin-top:0"><div><span class="sub">${all<0?'總共賠了':'總共賺了'}</span><b>${gain(all,null,c)}</b></div><div><span class="sub">報酬率</span><b>${pctTxt(pc)}</b></div><div><span class="sub">${all<0?'相當於白上班':'相當於少上班'}</span><b style="font-size:15px">${ht||'—'}</b></div></div>
  <div class="msg">${first?first.d.replace(/-/g,'/'):''} 第一次買 → ${last.d.replace(/-/g,'/')} 全部賣完，前後 ${daysTxt(days)}・一共 ${xs.length} 筆交易</div>
  <div class="sub" style="margin-top:4px">總共賺了＝賣出賺賠＋股利；報酬率＝總共賺了 ÷ 賣掉的那些股票當初的成本（賣掉又買回來的錢不會重複算）。</div>`})():''}
- ${h&&!(h.sh<=0.00001&&xs.some(t=>t.type==='sell'))?`<div class="tiles"><div><span class="sub">現在持有</span><b>${(+h.sh.toFixed(4)).toLocaleString('zh-TW')} 股</b></div><div><span class="sub">均價</span><b>${h.sh?P(h.cost/h.sh):'—'}</b></div><div><span class="sub">投入成本</span><b>${MC(h.cost,c)}</b></div></div>
+ ${h&&!(h.sh<=0.00001&&xs.some(t=>t.type==='sell'))?`<div class="tiles"><div><span class="sub">現在持有</span><b>${(+h.sh.toFixed(4)).toLocaleString('zh-TW')} 股</b></div><div><span class="sub">均價</span><b>${h.sh?P(h.cost/h.sh):'—'}</b>${h.sh&&Math.abs(h.fifo-h.cost)>=0.5?`<span class="sub">先買先賣 ${P(h.fifo/h.sh)}</span>`:''}</div><div><span class="sub">投入成本</span><b>${MC(h.cost,c)}</b>${h.sh&&Math.abs(h.fifo-h.cost)>=0.5?`<span class="sub">先買先賣 ${MC(h.fifo,c)}</span>`:''}</div></div>
  <div class="tiles" style="margin-top:0"><div><span class="sub">${h.px!=null?'市值（現價 '+P(h.px)+'）':'市值（沒填現價）'}</span><b>${h.px!=null?MC(h.val,c):'—'}</b></div><div><span class="sub">還沒賣的賺賠</span><b>${h.px!=null?gain(h.unreal,null,c):'—'}</b>${h.px!=null&&h.cost?`<span class="sub">${h.unreal>0?'+':''}${(h.unreal/h.cost*100).toFixed(1)}%</span>`:''}</div><div><span class="sub">已賣出賺賠＋股利</span><b>${gain(h.real+h.div,null,c)}</b></div></div>
  <div class="msg">${first?'從 '+first.d.replace(/-/g,'/')+' 開始買，':''}一共 ${xs.length} 筆交易・全部加起來 <b>${gain(tot,null,c)}</b>${h.px==null?'（沒算還沒賣的部分）':''}</div>`:''}
  <div class="row" style="margin:14px 2px 6px"><h2 class="sp" style="margin:0">交易紀錄（點賣出看成績，點其他可以修改）</h2><button class="chip" data-a="trsort" title="箭頭指向最新的日期" aria-label="${U.trAsc?'最新的在下面':'最新的在上面'}" style="font-weight:700">日期 ${U.trAsc?'↓':'↑'}</button></div><div class="card" style="padding:4px 12px">${rows.map(({t,sh,avg,r})=>`<div class="li" data-a="${r!=null?'sellx':'edtrade'}" data-i="${r!=null?t.id+'|'+ac+'|1':t.id}" style="flex-wrap:wrap"><div class="dt">${md(t.d)}<small>${t.d.slice(0,4)}</small></div>
@@ -1842,7 +1842,7 @@ function sheetStk(o){const ac=o.ac||'',SX=sellStats(ac),h=holdings(ac).find(x=>x
   <div class="sub">${t.type==='div'?'':`之後持有 ${(+sh.toFixed(4)).toLocaleString('zh-TW')} 股${sh>0.00001?'・均價 '+P(avg):''}`}</div>${r!=null&&SX[t.id]?`<div class="sub">${sellLine(SX[t.id],c)} ›</div>`:''}</div>
   <div class="num ${t.type==='buy'?'':'in'}" style="text-align:right">${t.type==='buy'?'−':'+'}${MC(Math.abs(tradeCash(t)),c)}</div></div>`).join('')||'<div class="sub" style="padding:8px 0">沒有交易紀錄。</div>'}</div>
  <button class="go" style="width:100%;margin-top:10px" data-a="stkadd" data-i="${E(o.sym)}">＋ 記一筆這檔的交易</button>
- <div class="sub" style="margin-top:6px">均價＝還持有的股票總成本（含買進手續費）÷ 股數。賣出時用當時的均價算這次賺賠。</div>`}
+ <div class="sub" style="margin-top:6px">均價＝還持有的股票總成本（含買進手續費）÷ 股數。賣出時用當時的均價算這次賺賠。「先買先賣」是券商常用的算法：賣出時先賣掉最早買的那批，剩下的用後來買的價錢算成本，所以會跟券商 App 的「成本均」一樣。兩種算法全部賣完後，總共賺的錢會一樣。</div>`}
 function sheetHold(o){
  const on=o.items.filter(x=>x.on);
  return`<div class="row"><b class="sp" style="font-size:17px">截圖讀到的持股</b><button class="x" data-a="close">×</button></div>
