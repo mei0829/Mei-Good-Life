@@ -1107,12 +1107,18 @@ function holdings(ac){
  return Object.values(by).map(h=>{const p=S.prices[h.sym];h.px=p?+p.p:null;h.pd=p?p.d:'';h.val=h.px!=null?h.sh*h.px:h.cost;h.unreal=h.px!=null?h.val-h.cost:0;return h});
 }
 // 本金帳：賣掉的錢會留著拿去買下一檔，只有「不夠付」的部分才是新從外面（例如媽媽帳戶）拿進來的錢
-function capital(ac){let pool=0,out=0;
- S.trades.filter(t=>!ac||tradeKey(t)===ac).slice().sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:(a.ts||0)-(b.ts||0)).forEach(t=>{const c=t.cur||'TWD';
-  if(t.type==='buy'){const need=conv(t.sh*t.px+(+t.fee||0),c,'TWD');if(need>pool){out+=need-pool;pool=0}else pool-=need}
-  else if(t.type==='sell')pool+=conv(t.sh*t.px-(+t.fee||0)-(+t.tax||0),c,'TWD');
+function capital(ac){let pool=0,out=0;const hs={};
+ S.trades.filter(t=>(!ac||tradeKey(t)===ac)&&!t.noCap).slice().sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:(a.ts||0)-(b.ts||0)).forEach(t=>{const c=t.cur||'TWD',h=hs[t.sym]=hs[t.sym]||{sh:0,cost:0};
+  if(t.type==='buy'){const need=conv(t.sh*t.px+(+t.fee||0),c,'TWD');h.sh+=t.sh;h.cost+=need;if(need>pool){out+=need-pool;pool=0}else pool-=need}
+  else if(t.type==='sell'){const sh=Math.min(t.sh,h.sh);h.cost-=h.sh?h.cost/h.sh*sh:0;h.sh-=sh;pool+=conv(t.sh*t.px-(+t.fee||0)-(+t.tax||0),c,'TWD')}
   else pool+=conv(+t.amt||0,c,'TWD')});
- return{out,pool}}
+ return{out,pool,cost:Object.values(hs).reduce((s,h)=>s+(h.sh>0?h.cost:0),0)}}
+const trAmt=t=>t.type==='buy'?t.sh*t.px+(+t.fee||0):t.type==='sell'?t.sh*t.px-(+t.fee||0)-(+t.tax||0):+t.amt||0;
+function sheetCap(){const src=E(S.capFrom||'本金帳戶'),ts=S.trades.filter(t=>!U.sa||tradeKey(t)===U.sa).slice().sort((a,b)=>a.d<b.d?1:a.d>b.d?-1:(b.ts||0)-(a.ts||0)),n=ts.filter(t=>!t.noCap).length;
+ return`<div class="row"><b class="sp" style="font-size:17px">哪幾筆用${src}的錢</b><button class="x" data-a="close">×</button></div>
+ <div class="row" style="gap:8px;margin:6px 0 10px"><span class="sub sp">已勾 ${n} / ${ts.length} 筆</span><button class="chip" data-a="capall" data-i="1">全部勾</button><button class="chip" data-a="capall" data-i="">全部不勾</button></div>
+ <div class="card">${ts.map(t=>`<label class="row" style="padding:7px 0;gap:10px;border-bottom:1px solid var(--line)"><input type="checkbox" data-a="capon" data-i="${E(t.id)}" ${t.noCap?'':'checked'}><span class="sp">${md(t.d)} <b>${t.type==='buy'?'買':t.type==='sell'?'賣':'股利'}</b> ${E(t.sym)} ${E(t.name||'')}</span><span class="num">${MC(trAmt(t),t.cur||'TWD')}</span></label>`).join('')}</div>
+ <div class="sub" style="margin-top:8px">有勾的才算進本金帳。新記的交易會自動勾起來，不是用${src}的錢就把勾拿掉。</div>`}
 function stockMonth(m){holdings();const xs=SEV.filter(e=>e.d.startsWith(m));return{div:xs.reduce((s,e)=>s+conv(e.div,e.cur,'TWD'),0),real:xs.reduce((s,e)=>s+conv(e.real,e.cur,'TWD'),0),n:xs.length}}
 const gain=(v,pct,c)=>HIDE?'<span class="num">$ ••••</span>':`<span class="num ${v>0.005?'up':v<-0.005?'down':''}">${v>0.005?'▲ +':v<-0.005?'▼ ':''}${MC(v,c)}${pct!=null&&isFinite(pct)?` (${v>0?'+':''}${(pct*100).toFixed(1)}%)`:''}</span>`;
 function calcFee(o){const a=(+o.sh||0)*(+o.px||0);if(!a||o.type==='div'||o.cur==='USD')return{fee:0,tax:0};const b=o.bk&&(S.brokers||[]).find(x=>x.id===o.bk),disc=b&&+b.disc>0?+b.disc:+S.fee.disc||1,mn=b&&b.min!=null&&b.min!==''?+b.min:+S.fee.min||0;return{fee:Math.max(mn,Math.floor(a*0.001425*disc)),tax:o.type==='sell'?Math.floor(a*(/^00/.test(String(o.sym||'').trim())?0.001:0.003)):0}}
@@ -1140,9 +1146,10 @@ function vStock(){
  <div class="card"><div class="sub">${U.sa?E(keyName(U.sa))+' ':''}目前市值</div><div class="big">${M(val)}</div><div class="sub">投入成本 ${M(cost)}</div>
  <div class="tiles"><div><span class="sub">還沒賣的賺賠</span><b>${gain(un)}</b></div><div><span class="sub">已經賣掉賺賠</span><b>${gain(re)}</b></div><div><span class="sub">領到的股利</span><b class="num">${M(dv)}</b></div></div>
  <div class="msg">全部加起來：${gain(un+re+dv)}</div><div class="note" data-t="顏色、股價怎麼更新？">紅色＝賺、綠色＝賠（台股習慣）。股價<b>不是即時跳動</b>的：每天第一次打開會自動抓一次（台股用證交所公布的<b>收盤價</b>，下午收盤後才會更新；美股抓最新價），想再抓按「更新股價」。旁邊會顯示當天漲跌，漲停跌停（±10%）也會標出來。抓不到的點「現價」手動改。${hasUS?'美股都用目前匯率換成台幣加總。':''}</div></div>
- ${S.trades.some(t=>!U.sa||tradeKey(t)===U.sa)?(()=>{const cp=capital(U.sa),src=E(S.capFrom||'本金帳戶');return`<div class="card"><div class="row"><b class="sp">本金帳</b><span class="sub">錢從</span><input style="width:96px;text-align:center" value="${E(S.capFrom||'')}" placeholder="例：媽媽" data-m="capFrom" data-s="1" data-r="1"><span class="sub">那邊來</span></div>
- <div class="tiles"><div><span class="sub">總共從${src}拿出</span><b class="num">${M(cp.out)}</b></div><div><span class="sub">現在在股市裡的成本</span><b class="num">${M(cost)}</b></div><div><span class="sub">賣掉還沒再買的錢</span><b class="num">${M(cp.pool)}</b></div></div>
- <div class="note" data-t="這幾個數字怎麼算？">賣掉股票拿回的錢（和股利）會先留著，下次買股票先用這筆；不夠的部分才算新從${src}拿出來的。例：買 1 萬 → 賣得 1 萬 1 → 再買 1 萬，總共只從${src}拿出 1 萬，還剩 1 千沒再買。</div></div>`})():''}
+ ${S.trades.some(t=>!U.sa||tradeKey(t)===U.sa)?(()=>{const cp=Object.assign(capital(U.sa),(()=>{const x=S.trades.filter(t=>!U.sa||tradeKey(t)===U.sa);return{all:x.length,n:x.filter(t=>!t.noCap).length}})()),src=E(S.capFrom||'本金帳戶');return`<div class="card"><div class="row"><b class="sp">本金帳</b><span class="sub">錢從</span><input style="width:96px;text-align:center" value="${E(S.capFrom||'')}" placeholder="例：媽媽" data-m="capFrom" data-s="1" data-r="1"><span class="sub">那邊來</span></div>
+ <div class="tiles"><div><span class="sub">總共從${src}拿出</span><b class="num">${M(cp.out)}</b></div><div><span class="sub">現在在股市裡的成本</span><b class="num">${M(cp.cost)}</b></div><div><span class="sub">賣掉還沒再買的錢</span><b class="num">${M(cp.pool)}</b></div></div>
+ <div class="note" data-t="這幾個數字怎麼算？">賣掉股票拿回的錢（和股利）會先留著，下次買股票先用這筆；不夠的部分才算新從${src}拿出來的。例：買 1 萬 → 賣得 1 萬 1 → 再買 1 萬，總共只從${src}拿出 1 萬，還剩 1 千沒再買。只算有勾的交易。</div>
+ <button class="chip" style="margin-top:8px" data-a="capsel">選哪幾筆用${src}的錢（已勾 ${cp.n}/${cp.all} 筆）›</button></div>`})():''}
  <div class="card"><div class="row"><span class="sp">美元匯率 1 USD ＝</span><input inputmode="decimal" style="width:92px;text-align:right" value="${E((S.fx||{}).USD||32)}" data-m="fx.USD" data-fxm="1"><span>TWD</span></div><div class="sub" style="margin-top:4px">${S.fx&&S.fx.d?md(S.fx.d)+(S.fx.auto?' 自動更新':' 手動填的'):'還沒更新過，先用 32'}・可以自己改</div></div>
  <button class="go" style="width:100%;margin-bottom:8px" data-a="addtrade">＋ 記一筆交易（買、賣、股利）</button>
  <div class="row" style="gap:8px;margin-bottom:10px"><button class="go g sp" data-a="snaphold">截圖匯入持股</button>${on.length?'<button class="go g sp" data-a="pxnow">更新股價</button>':''}</div>`;
@@ -1612,7 +1619,7 @@ function renderNow(){
  CI={};LM=null;normAcct();$('tip').style.display='none';$('eye').textContent='•••• 已隱藏・點兩下顯示';$('eye').classList.toggle('on',HIDE);$('eye').setAttribute('aria-label',HIDE?'顯示金額':'隱藏金額');
  $('app').innerHTML=`<div class="row" style="gap:10px;padding-right:44px;min-height:32px;margin-top:calc(16px + env(safe-area-inset-top,0px))">${U.tab==='trip'&&tripOf(U.trip)?'<button class="back" data-a="tripx">‹ 所有旅行</button>':sub?'<button class="back" data-a="tab" data-i="more">‹ 更多</button>':'<a class="back" href="./" style="text-decoration:none">‹ 首頁</a>'}<span class="sp"></span><b class="today">今天 ${todayLab()}</b></div>`+V[U.tab]();
  $('nav').innerHTML=TABS.map(([k,i,n])=>`<button class="${U.tab===k||(k==='more'&&sub)||(k==='stock'&&STK.some(x=>x[0]===U.tab))?'on':''}" data-a="tab" data-i="${k}"><b>${i}</b>${n}</button>`).join('');
- const sh=U.sheet,SH={freset:sheetFReset,binfo:sheetBillInfo,envp:sheetEnv,catx:sheetCat,stk:sheetStk,tsp:sheetSp,trip:sheetTrip,idea:sheetIdea,broker:sheetBroker,pay:sheetPay,acctv:sheetAcctV,iou:sheetIou,iback:sheetIback,help:sheetHelp,cyc:sheetCyc,pcard:sheetPCard,pitem:sheetPItem,payee:sheetPayee,start:sheetStart,tx:sheetTx,bill:sheetBill,acct:sheetAcct,trade:sheetTrade,recon:sheetRecon,hold:sheetHold};$('sheet').innerHTML=sh?`<div class="sheet" data-a="bg"><div>${SH[sh.k](sh.o)}</div></div>`:'';
+ const sh=U.sheet,SH={freset:sheetFReset,binfo:sheetBillInfo,envp:sheetEnv,catx:sheetCat,stk:sheetStk,tsp:sheetSp,trip:sheetTrip,idea:sheetIdea,broker:sheetBroker,pay:sheetPay,acctv:sheetAcctV,iou:sheetIou,iback:sheetIback,help:sheetHelp,cyc:sheetCyc,pcard:sheetPCard,pitem:sheetPItem,payee:sheetPayee,start:sheetStart,tx:sheetTx,bill:sheetBill,acct:sheetAcct,trade:sheetTrade,cap:sheetCap,recon:sheetRecon,hold:sheetHold};$('sheet').innerHTML=sh?`<div class="sheet" data-a="bg"><div>${SH[sh.k](sh.o)}</div></div>`:'';
  calmNotes();window.scrollTo(0,y);
  document.querySelectorAll('[data-entry]').forEach(el=>{const k=el.dataset.entry,P=S.perk||{},r=k==='sum'?P.sum&&P.sum.r:k==='idea'?(((U.sheet||{}).o||{}).ai||{}).r:(P.cache[pkKey(P.q,P.amt)]||{}).r,html=r&&r._entry;if(html){try{el.attachShadow({mode:'open'}).innerHTML=html}catch(e){}}});
  if(am){const f=document.querySelector(`[data-m="${am}"]`);if(f&&f.tagName!=='SELECT'){f.focus();try{f.setSelectionRange(cp,cp)}catch(e){}}}
@@ -2366,6 +2373,9 @@ Object.assign(ACT,{
  cn:i=>{U.cn=+i;render()},
  chm:i=>{U.chm=i;render()},
  px:i=>{const p=S.prices[i],h=holdings().find(x=>x.sym===i),v=prompt(i+' 現在的股價'+(h&&h.cur==='USD'?'（美元）':''),p?p.p:'');if(v===null)return;const n=pAmt(v);if(!(n>0))return toast('股價不正確');S.prices[i]={p:n,d:today()};save();render()},
+ capsel:()=>{U.sheet={k:'cap',o:{}};render()},
+ capon:i=>{const t=S.trades.find(x=>String(x.id)===String(i));if(!t)return;if(t.noCap)delete t.noCap;else t.noCap=1;save();render()},
+ capall:i=>{S.trades.filter(t=>!U.sa||tradeKey(t)===U.sa).forEach(t=>{if(i)delete t.noCap;else t.noCap=1});save();render()},
  addtrade:()=>{symLoad();const b=BK().find(x=>x.id===U.sa)||(!U.sa&&BK().find(x=>x.id===S.lastBK));U.sheet={k:'trade',o:{type:'buy',cur:'TWD',sym:'',name:'',d:today(),sh:'',px:'',fee:'',tax:'',amt:'',bk:b?b.id:'',acct:b?b.acct:U.sa&&U.sa.startsWith('a:')?U.sa.slice(2):(A(S.lastTA)?S.lastTA:'')}};render()},
  stk:i=>{U.sheet={k:'stk',o:{sym:i,ac:U.sa||''}};render()},
  stkadd:i=>{const h=holdings().find(x=>x.sym===i)||{};ACT.addtrade();Object.assign(U.sheet.o,{sym:i,name:h.name||'',cur:h.cur||'TWD'});render()},
