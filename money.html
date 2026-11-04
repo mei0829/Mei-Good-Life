@@ -1104,7 +1104,7 @@ function holdings(ac){
   if(t.type==='buy'){h.sh+=t.sh;h.cost+=t.sh*t.px+(+t.fee||0);if(t.sh>0)h.lots.push({sh:t.sh,c:(t.sh*t.px+(+t.fee||0))/t.sh})}
   else if(t.type==='sell'){let n=t.sh;while(n>1e-9&&h.lots.length){const l=h.lots[0],k=Math.min(n,l.sh);l.sh-=k;n-=k;if(l.sh<=1e-9)h.lots.shift()}const sh=Math.min(t.sh,h.sh),co=h.sh?h.cost/h.sh*sh:0,r=t.sh*t.px-(+t.fee||0)-(+t.tax||0)-co;h.real+=r;h.cost-=co;h.sh-=sh;SEV.push({d:t.d,sym:t.sym,real:r,div:0,cur:h.cur})}
   else{h.div+=+t.amt||0;SEV.push({d:t.d,sym:t.sym,real:0,div:+t.amt||0,cur:h.cur})}});
- return Object.values(by).map(h=>{h.fifo=h.lots.reduce((a,l)=>a+l.sh*l.c,0);const p=S.prices[h.sym];h.px=p?+p.p:null;h.pd=p?p.d:'';h.val=h.px!=null?h.sh*h.px:h.cost;h.unreal=h.px!=null?h.val-h.cost:0;return h});
+ return Object.values(by).map(h=>{h.fifo=h.lots.reduce((a,l)=>a+l.sh*l.c,0);if(h.cur!=='USD')h.fifo=Math.round(h.fifo);/* 跟券商一樣：每一檔的成本先取到整數元，再加總 */const p=S.prices[h.sym];h.px=p?+p.p:null;h.pd=p?p.d:'';h.val=h.px!=null?h.sh*h.px:h.cost;h.unreal=h.px!=null?h.val-h.cost:0;return h});
 }
 // 本金帳：賣掉的錢會留著拿去買下一檔，只有「不夠付」的部分才是新從外面（例如媽媽帳戶）拿進來的錢
 function capital(ac){let pool=0,out=0;const hs={};
