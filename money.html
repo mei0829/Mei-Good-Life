@@ -344,7 +344,7 @@ function shopField(o){const used=shopUsed(),top=[...new Set(used.concat(['7-ELEV
  ${U.shopAll?SHOPS.map(([g,ns])=>`<div class="sub" style="margin:8px 0 2px">${g}</div><div class="chips">${ns.map(n=>`<button class="chip ${o.shop===n?'on':''}" data-a="shop" data-i="${E(n)}">${E(n)}</button>`).join('')}</div>`).join(''):''}`}
 function txLine(t){
  const a=A(t.acct),to=A(t.to),x=t.type==='xfer';
- return`<div class="li" data-a="edtx" data-i="${t.id}"><div class="ic">${E(x?'轉':(t.cat||'?').slice(0,1))}</div><div class="sp"><div>${E(t.note||(x?'轉帳':t.cat)||'')}</div><div class="sub">${x?E(nm(a)+' → '+nm(to)):E(t.cat||'')+(t.sub?'・'+E(t.sub):'')+(t.shop?' · '+PIN+E(t.shop):'')+' · '+E(nm(a))}${t.bill?' · 帳單':''}${t.src&&t.src!=='m'?' · 匯入':''}${lentOf(t.id)?' · 幫人代墊 '+M(lentOf(t.id))+'，自己 '+M(myA(t)):''}${t.iou&&t.type==='in'?' · 朋友還錢，不算收入':''}${t.fee?' · 含手續費 '+M(t.fee):''}</div>${stPill(t)}</div><div class="num ${t.type==='in'?'in':''}">${t.type==='in'?'+':x?'':'−'}${M(t.amt)}</div></div>`;
+ return`<div class="li" data-a="edtx" data-i="${t.id}"><div class="ic">${E(x?'轉':(t.cat||'?').slice(0,1))}</div><div class="sp"><div>${E(t.note||(x?'轉帳':t.cat)||'')}</div><div class="sub">${x?E(nm(a)+' → '+nm(to)):E(t.cat||'')+(t.sub?'・'+E(t.sub):'')+(t.shop?' · '+PIN+E(t.shop):'')+' · '+E(nm(a))}${t.bill?' · 帳單':''}${t.src&&t.src!=='m'&&t.src!=='fix'?' · 匯入':''}${lentOf(t.id)?' · 幫人代墊 '+M(lentOf(t.id))+'，自己 '+M(myA(t)):''}${t.iou&&t.type==='in'?' · 朋友還錢，不算收入':''}${t.fee?' · 含手續費 '+M(t.fee):''}</div>${stPill(t)}</div><div class="num ${t.type==='in'?'in':''}">${t.type==='in'?'+':x?'':'−'}${M(t.amt)}</div></div>`;
 }
 function vTx(){
  const q=U.q.toLowerCase(),fc=isCard(A(U.fa))&&U.fs,xs=S.tx.filter(t=>t.d.startsWith(U.mon)&&(!U.fa||t.acct===U.fa||t.to===U.fa)&&(!fc||(txStatus(t)||{}).k===U.fs)&&(!q||((t.note||'')+' '+(t.cat||'')+' '+(t.sub||'')+' '+(t.shop||'')).toLowerCase().includes(q)))
@@ -629,7 +629,7 @@ function vCard(){
  if(!list.length)return h+'<div class="card sub">這張卡還沒有紀錄。</div>';
  h+=list.map(s=>{const L=lab(s),o=U.cyc===s.close,pend=s.tx.filter(t=>!t.pd).length;return`<div class="card"><div class="row" data-a="cyc" data-i="${s.close}" style="cursor:pointer"><div class="sp"><b>${s.close==='init'?'期初（開始記帳前的帳單）':md(s.close)+' 結帳'}</b>　<span class="st ${L[1]}">${L[0]}</span><div class="sub">${s.close==='init'?'開始記帳時已出帳、還沒繳的':s.tx.length+' 筆'+(c.start&&+c.cur0&&s.close===closeOf(c,c.start)?'＋開始記帳前已刷 '+M(c.cur0):'')}${pend&&L[1]!=='paid'?`・${pend} 筆未入帳`:''}${s.left>0.5&&s.left<s.amt-0.5?`・已繳 ${M(s.amt-s.left)}`:''}</div></div><div style="text-align:right"><b class="num">${M(s.amt)}</b>${s.left>0.5&&L[1]!=='open'?`<div class="sub num">還要繳 ${M(s.left)}</div>`:''}</div><span class="sub">${o?'▴':'▾'}</span></div>
  ${o?`<div style="margin-top:6px">${s.tx.slice().sort((a,b)=>a.d<b.d?1:-1).map(t=>txLine(t)+(t.pd||L[1]==='paid'?'':`<div style="text-align:right;margin:-4px 0 6px"><button class="go q" data-a="posted" data-i="${t.id}">銀行已入帳</button></div>`)).join('')||'<div class="sub">沒有明細（期初金額）</div>'}</div>`:''}
- <div class="row" style="gap:6px;margin-top:8px;justify-content:flex-end">${s.close!=='init'?`<button class="go q" data-a="cycedit" data-i="${s.close}">改這期日期</button>`:''}${s.left>0.5&&L[1]==='billed'?`<button class="go q" data-a="paycard" data-i="${c.id}">記錄繳卡費</button>`:''}</div></div>`}).join('');
+ <div class="row" style="gap:6px;margin-top:8px;justify-content:flex-end;flex-wrap:wrap">${s.close!=='init'?`<button class="go q" data-a="cycfix" data-i="${s.close}">照銀行金額修正</button><button class="go q" data-a="cycedit" data-i="${s.close}">改這期日期</button>`:''}${s.left>0.5&&L[1]==='billed'?`<button class="go q" data-a="paycard" data-i="${c.id}">記錄繳卡費</button>`:''}</div></div>`}).join('');
  return h;
 }
 // ── 分帳戶（信封理財）：每月收入先分到幾個用途，每個用途可以放到一個帳戶 ──
@@ -783,6 +783,15 @@ function sheetHelp(o){return`<div class="row"><b class="sp" style="font-size:17p
  <input style="margin:8px 0 4px" placeholder="🔍 搜尋整個網站，例：國泰、房租、0050" value="${E(o.q||'')}" data-m="sheet.o.q" data-r="1">
  ${o.q&&String(o.q).trim()?gsearch(o.q):`<div class="sub" style="margin:4px 0 6px">點標題展開。還有不懂的，也可以看「更多 → 新手教學」。</div>`}
  ${o.q&&String(o.q).trim()?'':HELP.map(([k,t,,body])=>`<div class="hp"><button data-a="hpk" data-i="${k}"><span>${t}</span><span class="sub">${o.open===k?'▴':'▾'}</span></button>${o.open===k?`<div>${body}</div>`:''}</div>`).join('')}`}
+// 照銀行金額修正：App 算的這期卡費跟銀行帳單不一樣時，補一筆差額（多的記支出、少的記退款），讓總數一樣
+function sheetCycFix(o){const c=A(o.cid),s=c&&cardInfo(c).by[o.close];if(!s)return'<div class="sub">找不到這一期</div>';const v=pAmt(o.v),d=o.v!==''&&isFinite(v)?Math.round((v-s.amt)*100)/100:null;
+ return`<div class="row"><b class="sp" style="font-size:17px">${E(c.name)}・${md(o.close)} 結帳這期</b><button class="x" data-a="close">×</button></div>
+ <div class="row" style="margin:8px 0"><span class="sp sub">App 算的這期卡費</span><b class="num">${M(s.amt)}</b></div>
+ <label class="fl w"><span>銀行帳單上的金額</span><input inputmode="decimal" value="${E(o.v)}" data-m="sheet.o.v" data-r="1" placeholder="例：52,700"></label>
+ ${d==null?'':Math.abs(d)<0.5?'<div class="msg">跟銀行一樣，不用修正 👍</div>':`<div class="msg">差 <b>${M(Math.abs(d))}</b>，會補一筆「${d>0?'未記帳差額（支出）':'退款'}」${M(Math.abs(d))}，記在 ${md(cfDate(o.close))}，這期就會變成 ${M(v)}。</div>`}
+ <div class="sub" style="margin-top:6px">${d!=null&&d>0?`支出分類記成「${E(reconCat())}」，之後想起來是哪一筆，可以點那筆改成正確的。`:'補的那筆會出現在這期的明細裡，標「照銀行金額修正」，不對可以點它刪掉。'}</div>
+ <div class="row" style="margin-top:14px"><span class="sp"></span><button class="go" data-a="cycfixsave" ${d==null||Math.abs(d)<0.5?'disabled':''}>修正</button></div>`}
+const cfDate=cl=>cl<today()?cl:today();
 function sheetCyc(o){const c=A(o.cid);return`<div class="row"><b class="sp" style="font-size:17px">修改 ${E(c.name)} 這一期</b><button class="x" data-a="close">×</button></div>
  <div class="sub" style="margin:6px 0">照帳單或銀行 App 上寫的填。只會改這一期，其他月份還是照每月 ${c.close} 號結帳、${c.due} 號繳款。</div>
  <div class="grid"><label class="fl"><span>結帳日</span><input type="date" value="${o.close}" data-m="sheet.o.close"></label><label class="fl"><span>繳款截止日</span><input type="date" value="${o.due}" data-m="sheet.o.due"></label></div>
@@ -1622,7 +1631,7 @@ function renderNow(){
  CI={};LM=null;normAcct();$('tip').style.display='none';$('eye').textContent='•••• 已隱藏・點兩下顯示';$('eye').classList.toggle('on',HIDE);$('eye').setAttribute('aria-label',HIDE?'顯示金額':'隱藏金額');
  $('app').innerHTML=`<div class="row" style="gap:10px;padding-right:44px;min-height:32px;margin-top:calc(16px + env(safe-area-inset-top,0px))">${U.tab==='trip'&&tripOf(U.trip)?'<button class="back" data-a="tripx">‹ 所有旅行</button>':sub?'<button class="back" data-a="tab" data-i="more">‹ 更多</button>':'<a class="back" href="./" style="text-decoration:none">‹ 首頁</a>'}<span class="sp"></span><b class="today">今天 ${todayLab()}</b></div>`+V[U.tab]();
  $('nav').innerHTML=TABS.map(([k,i,n])=>`<button class="${U.tab===k||(k==='more'&&sub)||(k==='stock'&&STK.some(x=>x[0]===U.tab))?'on':''}" data-a="tab" data-i="${k}"><b>${i}</b>${n}</button>`).join('');
- const sh=U.sheet,SH={freset:sheetFReset,binfo:sheetBillInfo,envp:sheetEnv,catx:sheetCat,stk:sheetStk,tsp:sheetSp,trip:sheetTrip,idea:sheetIdea,broker:sheetBroker,pay:sheetPay,acctv:sheetAcctV,iou:sheetIou,iback:sheetIback,help:sheetHelp,cyc:sheetCyc,pcard:sheetPCard,pitem:sheetPItem,payee:sheetPayee,start:sheetStart,tx:sheetTx,bill:sheetBill,acct:sheetAcct,trade:sheetTrade,cap:sheetCap,sellx:sheetSellX,recon:sheetRecon,hold:sheetHold};$('sheet').innerHTML=sh?`<div class="sheet" data-a="bg"><div>${SH[sh.k](sh.o)}</div></div>`:'';
+ const sh=U.sheet,SH={freset:sheetFReset,binfo:sheetBillInfo,envp:sheetEnv,catx:sheetCat,stk:sheetStk,tsp:sheetSp,trip:sheetTrip,idea:sheetIdea,broker:sheetBroker,pay:sheetPay,acctv:sheetAcctV,iou:sheetIou,iback:sheetIback,help:sheetHelp,cyc:sheetCyc,pcard:sheetPCard,pitem:sheetPItem,payee:sheetPayee,start:sheetStart,tx:sheetTx,bill:sheetBill,acct:sheetAcct,trade:sheetTrade,cap:sheetCap,cycfix:sheetCycFix,sellx:sheetSellX,recon:sheetRecon,hold:sheetHold};$('sheet').innerHTML=sh?`<div class="sheet" data-a="bg"><div>${SH[sh.k](sh.o)}</div></div>`:'';
  calmNotes();window.scrollTo(0,y);
  document.querySelectorAll('[data-entry]').forEach(el=>{const k=el.dataset.entry,P=S.perk||{},r=k==='sum'?P.sum&&P.sum.r:k==='idea'?(((U.sheet||{}).o||{}).ai||{}).r:(P.cache[pkKey(P.q,P.amt)]||{}).r,html=r&&r._entry;if(html){try{el.attachShadow({mode:'open'}).innerHTML=html}catch(e){}}});
  if(am){const f=document.querySelector(`[data-m="${am}"]`);if(f&&f.tagName!=='SELECT'){f.focus();try{f.setSelectionRange(cp,cp)}catch(e){}}}
@@ -2076,6 +2085,9 @@ const ACT={
  close:()=>{U.sheet=null;render()},
  addtx:i=>openTx({type:'out',amt:'',acct:A(S.lastAcct)?S.lastAcct:S.accts[0].id,to:'',cat:'',d:i||today(),note:''}),
  edtx:i=>{const t=S.tx.find(x=>x.id===i);if(t)openTx(Object.assign({to:''},t,t.fee?{amt:String(Math.round((t.amt-t.fee)*100)/100),fee:String(t.fee)}:{},{catSet:1,shopSet:!!t.shop,lend:S.iou.filter(x=>x.tx===t.id&&x.dir==='in').map(x=>({iid:x.id,who:x.who,amt:String(x.amt),back:x.back}))}))},
+ cycfix:i=>{const c=A(U.cardId)||S.accts.find(isCard);U.sheet={k:'cycfix',o:{cid:c.id,close:i,v:''}};render()},
+ cycfixsave:()=>{const o=U.sheet.o,c=A(o.cid),s=c&&cardInfo(c).by[o.close],v=pAmt(o.v);if(!s||!isFinite(v))return toast('請輸入銀行帳單金額');const d=Math.round((v-s.amt)*100)/100;if(Math.abs(d)<0.5)return toast('已經一樣了');
+  const dt=cfDate(o.close);S.tx.push({id:nid(),d:dt,pd:dt,type:d>0?'out':'in',amt:Math.abs(d),acct:c.id,cat:d>0?reconCat():'退款',note:'照銀行金額修正',src:'fix',ts:Date.now()});U.sheet=null;save();render();toast('已修正成 '+M(v))},
  paycard:i=>{const c=A(i),I=cardInfo(c);openTx({type:'xfer',amt:Math.round(I.billed.reduce((s,x)=>s+x.left,0)),acct:firstBank(),to:i,cat:'',d:today(),note:'繳 '+c.name})},
  ty:i=>{const o=U.sheet.o;o.type=i;if(i==='in'&&isCard(A(o.acct)))o.acct=firstBank();if(!o.catSet||!S.cats[i==='in'?'in':'out'].includes(o.cat))o.cat=guess(o.note,i),o.catSet=0;if(i==='xfer'&&(!o.to||o.to===o.acct))o.to=(S.accts.find(a=>a.id!==o.acct&&isCard(a))||S.accts.find(a=>a.id!==o.acct)||{}).id;render()},
  shop:i=>{const o=U.sheet.o;o.shop=o.shop===i?'':i;o.shopSet=!!o.shop;const si=$('fshop');if(si)si.value=o.shop;document.querySelectorAll('[data-a="shop"]').forEach(b=>b.classList.toggle('on',b.dataset.i===o.shop));
