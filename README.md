@@ -59,6 +59,20 @@ https://mei0829.github.io/Mei-Good-Life/baby.html （只有管理員能打開，
 - **福利**：先放好常見的台灣準媽媽福利（孕前檢查、產檢補助、產檢假、產假、生育給付、育兒津貼…），記申請狀態和領到的金額。金額和資格每年會調整，申請前要確認最新規定。
 - 資料存在 `data/users/{uid}/b_baby`，跟記帳一樣只有本人能讀寫，不用改 Firebase 規則。
 
+## Blooming Days（備孕與孕期健康日誌）
+
+https://mei0829.github.io/Mei-Good-Life/blooming/
+
+高質感的個人備孕、孕期健康管理 Web App（女性生活雜誌、植物編輯風格）。原始碼在 `blooming/`，用 React + TypeScript + Vite + Tailwind CSS，部署時 GitHub Actions 會自動測試和編譯。
+
+- **不需要登入，資料只存在這個瀏覽器**（IndexedDB / Dexie），不會上傳，也不會在手機和電腦之間同步。清除瀏覽器資料就會不見，請到「設定與備份」定期下載完整備份（JSON，含照片與附件）。
+- 七個模組：Home、Cycle（月經日曆、基礎體溫、預測）、Wellness（身體、營養補充、睡眠、運動）、Medical（備孕檢查建議／產檢行事曆、看診紀錄、醫院醫師）、Lifestyle（運動與飲食建議、收藏、完成紀錄）、Finance（花費、預算、圖表、保險）、Journal（每日日記）。手機版把 Wellness、Medical、Lifestyle 合併成底部的「照護」。
+- 階段：備孕中、懷孕中、產後（預留）。要自己確認懷孕並輸入末次月經，月經延遲不會自動切換；切換不會刪除任何資料。
+- 週期預測只用自己的紀錄：少於兩次月經開始日不預測；資料少、週期不規律都會標示。
+- 資料存取都在 `blooming/src/data/repo.ts`（Repository / Service Layer），之後要換成雲端只要另外實作 `DataService`。
+
+開發：`cd blooming && npm install && npm run dev`；測試：`npm test`；編譯：`npm run build`。
+
 ## 行事曆
 
 https://mei0829.github.io/Mei-Good-Life/cal.html （只有管理員能打開）

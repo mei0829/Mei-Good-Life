@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+/* ---------- Blooming Days Design System ---------- */
+@theme {
+  --color-ivory: #F5F1E9;      /* primary background */
+  --color-paper: #FFFCF7;      /* white / surface */
+  --color-forest: #455C4A;     /* brand */
+  --color-forest-deep: #34463A;
+  --color-sage: #A8B5A0;
+  --color-sage-soft: #E4E8DF;
+  --color-oat: #D6C6AE;
+  --color-oat-soft: #EDE5D8;
+  --color-rose: #D8B7B0;
+  --color-rose-soft: #F1E4E0;
+  --color-ink: #343B34;        /* dark text */
+  --color-mute: #888478;       /* secondary text */
+  --color-line: #E6E0D5;       /* border */
+  --color-alert: #A65B4F;
+
+  --font-display: "Cormorant Garamond", "Noto Serif TC", serif;
+  --font-serif: "Noto Serif TC", "Cormorant Garamond", serif;
+  --font-sans: "Noto Sans TC", -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+  --font-num: ui-sans-serif, -apple-system, "Helvetica Neue", Arial, sans-serif;
+
+  --radius-soft: 14px;
+  --radius-card: 20px;
+}
+
+@layer base {
+:root { color-scheme: light; }
+html, body { background: var(--color-ivory); color: var(--color-ink); }
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  /* 很淡的紙張紋理 */
+  background-image: radial-gradient(rgba(136,132,120,.035) 1px, transparent 1px);
+  background-size: 3px 3px;
+}
+button { cursor: pointer; touch-action: manipulation; }
+input, select, textarea, button { font: inherit; color: inherit; }
+}
+
+@utility eyebrow { font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color: var(--color-mute); font-family: var(--font-num); }
+@utility display { font-family: var(--font-display); font-weight: 500; letter-spacing: .01em; }
+@utility serif { font-family: var(--font-serif); }
+@utility num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+@utility surface { background: var(--color-paper); border: 1px solid var(--color-line); border-radius: 20px; }
+@utility field {
+  width: 100%; background: var(--color-paper); border: 1px solid var(--color-line); border-radius: 12px;
+  padding: 10px 12px; font-size: 16px; outline: none; transition: border-color .15s, box-shadow .15s;
+  &:focus { border-color: var(--color-sage); box-shadow: 0 0 0 3px rgba(168,181,160,.25); }
+}
+@utility btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 9999px;
+  padding: 8px 16px; font-size: 14px; transition: transform .1s, background-color .15s, opacity .15s;
+  &:active { transform: scale(.98); }
+  &:disabled { opacity: .4; cursor: not-allowed; }
+}
+@utility btn-primary { @apply btn; background: var(--color-forest); color: var(--color-paper); &:hover { background: var(--color-forest-deep); } }
+@utility btn-ghost { @apply btn; border: 1px solid var(--color-line); background: var(--color-paper); color: var(--color-ink); }
+@utility btn-quiet { @apply btn; color: var(--color-forest); padding-left: 8px; padding-right: 8px; }
+@utility chip {
+  display: inline-flex; align-items: center; border-radius: 9999px; border: 1px solid var(--color-line); padding: 4px 12px;
+  font-size: 13px; background: var(--color-paper); color: var(--color-ink); white-space: nowrap; transition: background-color .15s;
+}
+@utility chip-on { background: var(--color-forest); border-color: var(--color-forest); color: var(--color-paper); }
+@utility tag { display: inline-flex; align-items: center; border-radius: 9999px; padding: 1px 8px; font-size: 11.5px; white-space: nowrap; }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+.pt-safe { padding-top: env(safe-area-inset-top); }
+@media (prefers-reduced-motion: no-preference) {
+  .fade-in { animation: fadeIn .35s ease both; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+}

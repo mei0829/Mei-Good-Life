@@ -27,6 +27,18 @@ jobs:
       - uses: actions/checkout@v4
       - name: Prepare site
         run: mkdir _site && cp index.html money.html auth.js firebase-config.js money.webmanifest money.svg cabinet.html cabinet.webmanifest cabinet.svg home.webmanifest home.svg biz.html biz.webmanifest biz.svg cal.html baby.html baby.webmanifest baby.svg sw.js _site/
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: blooming/package-lock.json
+      - name: Build Blooming Days
+        working-directory: blooming
+        run: |
+          npm ci
+          npm test
+          npm run build
+          cp -r dist ../_site/blooming
       - name: Fetch news and quotes
         # 抓不到也照樣部署，網頁會顯示「新聞還沒更新」
         continue-on-error: true

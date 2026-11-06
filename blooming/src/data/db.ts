@@ -1,0 +1,28 @@
+import Dexie, { type Table } from 'dexie';
+import type { Tables, Settings, FileRec } from './types';
+
+// IndexedDB（透過 Dexie）：資料只存在這個瀏覽器
+export class BloomDB extends Dexie {
+  periods!: Table<Tables['periods'], string>;
+  body!: Table<Tables['body'], string>;
+  supplements!: Table<Tables['supplements'], string>;
+  supplementLogs!: Table<Tables['supplementLogs'], string>;
+  sleep!: Table<Tables['sleep'], string>;
+  exercise!: Table<Tables['exercise'], string>;
+  hospitals!: Table<Tables['hospitals'], string>;
+  doctors!: Table<Tables['doctors'], string>;
+  visits!: Table<Tables['visits'], string>;
+  insurance!: Table<Tables['insurance'], string>;
+  expenses!: Table<Tables['expenses'], string>;
+  journal!: Table<Tables['journal'], string>;
+  files!: Table<FileRec, string>;
+  settings!: Table<Settings, string>;
+  constructor(name = 'blooming-days') {
+    super(name);
+    this.version(1).stores({
+      periods: 'id, start', body: 'id, &date', supplements: 'id, name', supplementLogs: 'id, date, supplementId, [date+supplementId]',
+      sleep: 'id, &date', exercise: 'id, date', hospitals: 'id, name', doctors: 'id, name', visits: 'id, date, nextDate',
+      insurance: 'id, name', expenses: 'id, date, category', journal: 'id, &date', files: 'id', settings: 'id'
+    });
+  }
+}
