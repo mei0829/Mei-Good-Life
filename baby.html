@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F6EFEE">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="好孕">
+<link rel="manifest" href="baby.webmanifest">
+<link rel="icon" href="baby.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="baby.svg">
+<title>備孕懷孕</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F6EFEE;--card:#fff;--ink:#2B2A27;--sub:#7A766E;--line:#E7DCDA;--acc:#B5677A;--on:#fff;--ok:#3F8A5F;--bad:#C94A4A;--soft:#F5E1E4}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171614;--card:#22211E;--ink:#EDEAE4;--sub:#A29D94;--line:#34322E;--acc:#E59AAE;--on:#171614;--ok:#7CC49A;--bad:#F07070;--soft:#3A2A2E}}
+:root[data-theme="dark"]{--bg:#171614;--card:#22211E;--ink:#EDEAE4;--sub:#A29D94;--line:#34322E;--acc:#E59AAE;--on:#171614;--ok:#7CC49A;--bad:#F07070;--soft:#3A2A2E}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Noto Sans TC","PingFang TC",-apple-system,"Microsoft JhengHei",sans-serif}
+#app{max-width:760px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top)) 16px 90px}
+#app::after{content:"© 2026 mei0829 版權所有";display:block;text-align:center;font-size:11px;color:var(--sub);margin-top:28px;opacity:.8}
+h1{font-size:24px;margin:4px 0 0;font-weight:700}
+h2{font-size:14px;margin:18px 2px 8px;color:var(--sub);font-weight:500}
+a{color:var(--acc)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;touch-action:manipulation}
+input,select,textarea{font-size:16px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 10px;width:100%;min-width:0}
+textarea{min-height:72px;resize:vertical}
+.card{background:var(--card);border-radius:16px;padding:12px 14px;margin-bottom:10px;border:1px solid var(--line)}
+.sub{font-size:13px;color:var(--sub)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.go{background:var(--acc);color:var(--on);border:0;border-radius:12px;padding:10px 16px;font-weight:700}
+.bt{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 12px}
+.bad{color:var(--bad)}.ok{color:var(--ok)}
+#authwrap{max-width:420px;margin:0 auto;padding:40px 16px}#authwrap a{color:var(--acc)}
+.afl{display:block;margin-bottom:10px}.afl span{display:block;font-size:13px;color:var(--sub);margin-bottom:4px}
+
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.home{font-size:14px;text-decoration:none}
+#st{font-size:12px;color:var(--sub);margin:2px 0 10px}
+.hero{background:var(--soft);border:0;width:100%;text-align:left;display:block}
+.hero .big{font-size:26px;font-weight:700;color:var(--acc);line-height:1.25}
+.hero .ln{font-size:13.5px;margin-top:4px}
+.pg{height:8px;border-radius:4px;background:var(--card);margin-top:10px;overflow:hidden}.pg i{display:block;height:100%;background:var(--acc);border-radius:4px}
+.tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px;margin-bottom:10px}
+.tabs button{border:0;background:none;border-radius:10px;padding:7px 2px;font-weight:500;color:var(--sub);font-size:14px}
+.tabs button.on{background:var(--acc);color:var(--on)}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:0 0 4px;scrollbar-width:none;flex:1;min-width:0}
+.chips::-webkit-scrollbar{display:none}
+.chips button{flex:none;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:4px 12px;font-size:13px}
+.chips button.on{background:var(--acc);border-color:var(--acc);color:var(--on)}
+.bar{display:flex;gap:8px;align-items:center;margin-bottom:8px}.bar .go{flex:none;padding:7px 14px}
+.it{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:8px}
+.it .tx{flex:1;min-width:0}
+.it .hd{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.it b{font-size:16px;overflow-wrap:anywhere;font-weight:500}
+.it .r{text-align:right;white-space:nowrap;font-weight:700}
+.it .ln{font-size:13px;color:var(--sub);margin-top:2px;overflow-wrap:anywhere}
+.it .ex{font-size:13.5px;margin-top:4px;white-space:pre-wrap;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.it.done b{color:var(--sub);text-decoration:line-through}
+.ck{flex:none;width:26px;height:26px;border-radius:8px;border:1.5px solid var(--line);background:var(--card);display:grid;place-items:center;font-size:15px;color:var(--on);padding:0;margin-top:1px}
+.ck.on{background:var(--acc);border-color:var(--acc)}
+.tag{display:inline-block;font-size:12px;border-radius:999px;padding:1px 8px;background:var(--soft);color:var(--acc);margin-right:4px;font-weight:500;white-space:nowrap}
+.tag.g{background:none;border:1px solid var(--line);color:var(--sub)}
+.tag.k{background:none;border:1px solid var(--ok);color:var(--ok)}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center}
+.sum b{display:block;font-size:17px}.sum span{font-size:12px;color:var(--sub)}
+.bars .b{display:grid;grid-template-columns:76px 1fr 78px;gap:8px;align-items:center;font-size:13px;margin-top:6px}
+.bars .b span:last-child{text-align:right}
+.bars .b i{display:block;height:8px;border-radius:4px;background:var(--acc);min-width:2px}
+.empty{text-align:center;padding:28px 12px;color:var(--sub)}
+.dh{font-size:13px;color:var(--sub);margin:14px 2px 6px;font-weight:700}
+
+#sheet{position:fixed;inset:0;z-index:50;display:none}
+#sheet.on{display:block}
+#sheet .bk{position:absolute;inset:0;background:rgba(0,0,0,.35)}
+#sheet .pn{position:absolute;left:0;right:0;bottom:0;margin:0 auto;max-width:560px;max-height:90vh;overflow:auto;background:var(--bg);border-radius:20px 20px 0 0;padding:16px 16px calc(18px + env(safe-area-inset-bottom))}
+#sheet h3{margin:0 0 12px;font-size:18px}
+#sheet .back{position:sticky;top:-16px;z-index:2;margin:-16px -16px 6px;padding:12px 16px 6px;background:var(--bg)}
+#sheet .back button{border:0;background:none;color:var(--acc);font-size:16px;font-weight:500;padding:4px 0}
+.fs{display:grid;grid-template-columns:1fr 1fr;gap:0 8px}
+.f{display:block;margin-bottom:12px;grid-column:span 2}.f.h{grid-column:span 1}.f>span{display:block;font-size:13px;color:var(--sub);margin-bottom:4px}
+.f.c{display:flex;align-items:center;gap:8px}.f.c input{width:22px;height:22px;flex:none}.f.c span{margin:0;font-size:15px;color:var(--ink)}
+.foot{display:flex;gap:8px;justify-content:space-between;margin-top:14px}
+.del{color:var(--bad)}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:60;background:var(--ink);color:var(--bg);border-radius:12px;padding:9px 14px;font-size:14px;display:none;align-items:center;gap:12px;max-width:calc(100% - 32px);box-shadow:0 6px 20px rgba(0,0,0,.25)}
+#toast.on{display:flex}
+#toast button{border:0;background:none;color:var(--acc);font-weight:700;padding:0;white-space:nowrap}
+</style>
+</head>
+<body>
+<div id="auth" data-title="備孕懷孕" data-only="admin"></div>
+<div id="app"></div><div id="sheet"></div><div id="toast"></div>
+<input type="file" id="impf" accept="application/json,.json" style="display:none">
+<script type="module" src="auth.js"></script>
+<script type="text/plain" id="app-src">
+const E=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const $=id=>document.getElementById(id);
+const nid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3);
+const KEY='baby-v1',KT='baby-t';
+const DAY=864e5,z2=n=>String(n).padStart(2,'0');
+const isoD=d=>d.getFullYear()+'-'+z2(d.getMonth()+1)+'-'+z2(d.getDate());
+const pdD=s=>new Date(s+'T00:00:00');
+const okD=s=>/^\d{4}-\d{2}-\d{2}$/.test(s||'');
+const shift=(s,n)=>isoD(new Date(pdD(s).getTime()+n*DAY+36e5));
+const diff=(a,b)=>Math.round((pdD(b)-pdD(a))/DAY);
+const TODAY=isoD(new Date());
+const WD='日一二三四五六';
+const md=s=>okD(s)?+s.slice(5,7)+'/'+ +s.slice(8):'';
+const mdw=s=>okD(s)?md(s)+'（'+WD[pdD(s).getDay()]+'）':'';
+const money=n=>(n<0?'-':'')+'$'+Math.round(Math.abs(n)).toLocaleString();
+const num=v=>v===''||v==null||isNaN(+v)?'':+v;
+
+// ---------- 每一種資料的欄位 ----------
+const LOG_K=['月經','基礎體溫','排卵試紙','驗孕','產檢','身體狀況','胎動','心情日記','其他'];
+const COST_C=['備孕檢查','產檢','營養品','生產住院','月子','嬰兒用品','媽媽用品','保險費','其他'];
+const INS_C=['孕婦保險','寶寶保險','醫療險','意外險','壽險','其他'];
+const INS_W=['媽媽','寶寶','爸爸'];
+const INS_ST=['考慮中','已投保','已理賠','不考慮'];
+const INS_F=['年繳','半年繳','季繳','月繳','躉繳'];
+const ITEM_C=['哺餵','衣物','清潔','睡眠','外出','媽媽','其他'];
+const BEN_C=['備孕','孕期','生產','產後育兒','工作請假'];
+const BEN_ST=['還沒申請','已申請','已領取','不適用'];
+const FORMS={
+ log:{name:'紀錄',f:[['d','日期','date',0,1],['k','類型','sel',LOG_K,1],['w','體重（kg）','num',0,1],['bt','體溫（°C）','num',0,1],['x','內容','area'],['nx','下次產檢日期','date',0,1]]},
+ cost:{name:'費用',f:[['d','日期','date',0,1],['amt','金額','num',0,1],['n','項目','text'],['cat','分類','sel',COST_C,1],['inc','這是補助／理賠（收入）','chk',0,1],['note','備註','area']]},
+ ins:{name:'保險',f:[['n','保險名稱','text'],['cat','類別','sel',INS_C,1],['who','被保險人','sel',INS_W,1],['co','保險公司','text',0,1],['st','狀態','sel',INS_ST,1],['prem','保費','num',0,1],['freq','繳費方式','sel',INS_F,1],['start','生效日','date',0,1],['end','繳費年期／到期','text',0,1],['note','保障內容、理賠條件','area']]},
+ item:{name:'嬰兒用品',f:[['n','品項','text'],['cat','分類','sel',ITEM_C,1],['q','數量','text',0,1],['price','花費（買了填實際金額）','num',0,1],['budget','預算','num',0,1],['done','已經準備好','chk'],['src','哪裡買／誰送的','text'],['note','備註','area']]},
+ ben:{name:'福利',f:[['n','福利名稱','text'],['cat','階段','sel',BEN_C,1],['st','狀態','sel',BEN_ST,1],['amt','領到的金額','num',0,1],['d','申請／領取日期','date',0,1],['note','怎麼申請、要準備什麼','area']]}
+};
+const LIST={log:'logs',cost:'costs',ins:'ins',item:'items',ben:'bens'};
+
+// 第一次打開：先放好常見的嬰兒用品和準媽媽福利（台灣），內容自己再改
+function seed(){
+ const it=(cat,ns)=>ns.map(n=>({id:nid(),n,cat,q:'',price:'',budget:'',done:false,src:'',note:''}));
+ const items=[
+  ...it('哺餵',['奶瓶','奶嘴','奶瓶刷','消毒烘乾鍋','溫奶器／調乳器','擠乳器','母乳儲存袋','溢乳墊','奶粉','拍嗝巾']),
+  ...it('衣物',['紗布衣','包屁衣','包巾','嬰兒帽','襪子','防抓手套','外出服']),
+  ...it('清潔',['尿布','濕紙巾','澡盆','嬰兒沐浴乳','浴巾','護臀膏','嬰兒指甲剪','棉花棒','紗布巾']),
+  ...it('睡眠',['嬰兒床','床墊','防蟎床包','睡袋／防踢被','安撫巾']),
+  ...it('外出',['汽座','推車','媽媽包','揹巾','遮陽罩']),
+  ...it('媽媽',['待產包','產褥墊','哺乳內衣','月子服','托腹帶','妊娠霜','束腹帶']),
+  ...it('其他',['耳溫槍','吸鼻器','口水巾','尿布台','嬰兒監視器'])
+ ];
+ const b=(cat,n,note)=>({id:nid(),n,cat,st:'還沒申請',amt:'',d:'',note});
+ const bens=[
+  b('備孕','孕前健康檢查補助','國健署補助的孕前檢查，夫妻都可以做，到合約醫院、診所預約'),
+  b('備孕','人工生殖（試管）補助','符合資格的夫妻做試管療程可以申請補助，向做療程的醫院詢問'),
+  b('孕期','孕婦健康手冊','第一次產檢確認懷孕時，在醫院或衛生所領；之後產檢都要帶'),
+  b('孕期','產前檢查補助（14 次）','健保補助的例行產檢，產檢時帶健保卡和孕婦健康手冊'),
+  b('孕期','產前超音波補助','孕期有補助的超音波次數，產檢時醫院會安排'),
+  b('孕期','孕期篩檢補助','妊娠糖尿病、貧血、乙型鏈球菌等篩檢有補助，產檢時問醫院'),
+  b('孕期','產前遺傳診斷補助','符合條件（例如高齡、家族史）做羊膜穿刺等可以補助'),
+  b('孕期','孕婦專用停車位','部分縣市可以申請孕婦停車證，到戶籍地縣市政府網站查'),
+  b('工作請假','產檢假 7 天','懷孕期間可以請，薪水照給'),
+  b('工作請假','陪產檢及陪產假 7 天','給爸爸用，可以陪產檢或生產前後請'),
+  b('生產','產假 8 週','生產後請，工作滿 6 個月薪水照給，未滿 6 個月減半'),
+  b('生產','勞保生育給付','有勞保的媽媽，依平均月投保薪資發；生產後向勞保局申請'),
+  b('生產','國民年金生育給付','沒有勞保、有國民年金的媽媽可以申請'),
+  b('生產','中央生育補助','新生兒的生育補助，跟勞保／國保生育給付一起或另外申請，查衛福部、勞保局最新規定'),
+  b('生產','縣市生育津貼','各縣市金額和條件不同，到戶籍地區公所申請，通常要在期限內'),
+  b('產後育兒','新生兒篩檢、聽力篩檢','出生後醫院會做，有補助'),
+  b('產後育兒','兒童健康手冊、預防接種','出生時醫院給，公費疫苗照時間打'),
+  b('產後育兒','育兒津貼','沒有送托育、也沒有請育嬰假領津貼時，每個月可以領，到戶籍地區公所申請'),
+  b('產後育兒','托育補助','送公共或準公共托育可以申請'),
+  b('產後育兒','育嬰留職停薪津貼','請育嬰假時向勞保局申請，爸爸媽媽都可以'),
+  b('產後育兒','幼兒學前特別扣除額','報所得稅時記得列')
+ ];
+ return {mode:'try',start:'',lmp:'',cyc:28,edd:'',born:'',nick:'',logs:[],costs:[],ins:[],items,bens};
+}
+const arr=a=>Array.isArray(a)?a:[];
+function fix(o){
+ if(!o||typeof o!=='object'||!Array.isArray(o.items))throw new Error('bad');
+ const d=seed();
+ o.mode=['try','preg','born'].includes(o.mode)?o.mode:'try';
+ ['start','lmp','edd','born'].forEach(k=>{if(!okD(o[k]))o[k]=''});
+ o.cyc=+o.cyc>=20&&+o.cyc<=45?+o.cyc:28;o.nick=String(o.nick||'');
+ Object.values(LIST).forEach(k=>{o[k]=arr(o[k]).filter(x=>x&&typeof x==='object').map(x=>({...x,id:x.id||nid()}))});
+ if(!o.bens.length&&!o._benSeeded)o.bens=d.bens;
+ return o;
+}
+let S=null,T=0;
+try{S=fix(JSON.parse(localStorage.getItem(KEY)));T=+localStorage.getItem(KT)||0}catch(e){S=null}
+if(!S){S=fix(seed());T=0}
+let TAB='log';try{TAB=localStorage.getItem('baby-tab')||'log'}catch(e){}
+const FIL={log:'全部',cost:'全部',ins:'全部',item:'全部',ben:'全部'};
+
+// ---------- 週數、預產期 ----------
+// 備孕：用「最後一次月經」（或最新一筆「月經」紀錄）推算下次月經、排卵日
+function lastPeriod(){
+ let l=S.lmp;S.logs.forEach(x=>{if(x.k==='月經'&&okD(x.d)&&x.d<=TODAY&&x.d>l)l=x.d});
+ return l;
+}
+const eddOf=()=>okD(S.edd)?S.edd:okD(S.lmp)?shift(S.lmp,280):'';
+const lmpOf=()=>okD(S.lmp)?S.lmp:okD(S.edd)?shift(S.edd,-280):'';
+function nextVisit(){
+ let n='';S.logs.forEach(x=>{if(okD(x.nx)&&x.nx>=TODAY&&(!n||x.nx<n))n=x.nx});return n;
+}
+function hero(){
+ const nv=nextVisit(),nvL=nv?`<div class="ln">📅 下次產檢 ${mdw(nv)}${diff(TODAY,nv)===0?' 今天':diff(TODAY,nv)===1?' 明天':'，還有 '+diff(TODAY,nv)+' 天'}</div>`:'';
+ if(S.mode==='preg'){
+  const l=lmpOf(),e=eddOf();
+  if(!l)return `<div class="big">懷孕中</div><div class="ln">填上最後一次月經或預產期，就會算週數 ›</div>${nvL}`;
+  const n=diff(l,TODAY),w=Math.floor(n/7),d=n%7,left=diff(TODAY,e);
+  const tri=w<14?'第一孕期':w<28?'第二孕期':'第三孕期';
+  return `<div class="big">懷孕 ${w} 週 ${d} 天</div><div class="ln">${tri} · 預產期 ${e.slice(0,4)}/${md(e)}（${WD[pdD(e).getDay()]}）· ${left>0?'還有 '+left+' 天':left===0?'就是今天！':'已過 '+(-left)+' 天'}</div>
+   <div class="pg"><i style="width:${Math.max(1,Math.min(100,n/280*100))}%"></i></div>${nvL}`;
+ }
+ if(S.mode==='born'){
+  if(!okD(S.born))return `<div class="big">寶寶出生了</div><div class="ln">填上出生日期，就會算寶寶幾個月 ›</div>`;
+  const b=pdD(S.born),t=pdD(TODAY);let m=(t.getFullYear()-b.getFullYear())*12+t.getMonth()-b.getMonth();if(t.getDate()<b.getDate())m--;
+  const dd=diff(isoD(new Date(b.getFullYear(),b.getMonth()+m,b.getDate())),TODAY);
+  return `<div class="big">${E(S.nick||'寶寶')} ${m>0?m+' 個月 ':''}${dd} 天</div><div class="ln">出生 ${S.born.replace(/-/g,'/')} · 第 ${diff(S.born,TODAY)+1} 天</div>${nvL}`;
+ }
+ const l=lastPeriod(),cyc=S.cyc||28;
+ let h=`<div class="big">備孕中${okD(S.start)?' · 第 '+(diff(S.start,TODAY)+1)+' 天':''}</div>`;
+ if(okD(l)){
+  let np=shift(l,cyc);while(np<=TODAY&&diff(l,np)<cyc*6)np=shift(np,cyc);
+  const ov=shift(np,-14),cd=diff(l,TODAY)+1;
+  h+=`<div class="ln">月經第 ${cd} 天 · 下次月經約 ${mdw(np)}</div><div class="ln">排卵日約 ${mdw(ov)} · 易孕期 ${md(shift(ov,-5))}–${md(shift(ov,1))}${TODAY>=shift(ov,-5)&&TODAY<=shift(ov,1)?' <b>（現在是易孕期）</b>':''}</div>`;
+ }else h+=`<div class="ln">填上最後一次月經第一天，就會推算排卵日和易孕期 ›</div>`;
+ return h+`<div class="ln sub">週期 ${cyc} 天推算，只是參考</div>`+nvL;
+}
+
+// ---------- 儲存：先存手機，再同步到雲端（data/users/{uid}/b_baby，只有自己看得到）----------
+const CL={ref:null,tm:0,busy:false,again:false,dirty:false,st:'連線中…'};
+function status(t){if(t)CL.st=t;const s=$('st');if(s)s.textContent=CL.st}
+function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(S));localStorage.setItem(KT,String(T))}catch(e){}}
+function commit(){T=Date.now();saveLocal();render();CL.dirty=true;status('同步中…');clearTimeout(CL.tm);CL.tm=setTimeout(cloudPush,700)}
+async function cloudPush(){
+ if(!CL.ref){status(CL.st.startsWith('⚠︎')?CL.st:'⚠︎ 沒有連到雲端，資料只存在這支手機');return}
+ if(CL.busy){CL.again=true;return}
+ CL.busy=true;CL.dirty=false;
+ try{await CL.ref.set({j:JSON.stringify(S),t:T});status('✓ 已同步到雲端')}
+ catch(e){CL.dirty=true;status('⚠︎ 還沒同步，變更先存在這支手機，連上網路會再試')}
+ CL.busy=false;
+ if(CL.again){CL.again=false;cloudPush()}
+}
+async function cloudInit(){
+ try{
+  const db=await claude.use('db'),us=await claude.use('user'),uid=us&&await us.id();
+  if(!db||!uid)return status('⚠︎ 沒有連到雲端（請重新登入），資料只存在這支手機');
+  CL.ref=db.collection('data/users/'+uid).doc('b_baby');
+  const d=await CL.ref.get(),ct=d?+d.t||0:0;
+  if(ct>T){try{S=fix(JSON.parse(d.j));T=ct;saveLocal();render()}catch(e){}status('✓ 已同步到雲端')}
+  else if(T>ct||!d){if(!T)T=Date.now();cloudPush()}
+  else status('✓ 已同步到雲端');
+ }catch(e){status('⚠︎ 無法連線，先顯示這支手機上的資料')}
+}
+addEventListener('online',()=>{if(CL.dirty)cloudPush()});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&CL.dirty){clearTimeout(CL.tm);cloudPush()}});
+
+// 每次變更都可以「復原」
+function op(fn,msg){const prev=JSON.stringify(S);fn();commit();if(msg)toast(msg,()=>{S=fix(JSON.parse(prev));commit();toast('已復原')})}
+let TT=0;
+function toast(msg,undo){
+ const t=$('toast');t.innerHTML=E(msg)+(undo?'<button>復原</button>':'');t.classList.add('on');
+ if(undo)t.querySelector('button').onclick=()=>{t.classList.remove('on');undo()};
+ clearTimeout(TT);TT=setTimeout(()=>t.classList.remove('on'),undo?5000:2200);
+}
+
+// ---------- 畫面 ----------
+const TABS=[['log','紀錄'],['cost','費用'],['ins','保險'],['item','用品'],['ben','福利']];
+function shell(){
+ $('app').innerHTML=`<div class="top"><div><a class="home" href="./">‹ 首頁</a><h1>備孕懷孕</h1></div><button class="bt" data-a="set" aria-label="設定">⋯</button></div>
+ <div id="st"></div>
+ <button class="card hero" data-a="stage" id="hero"></button>
+ <div class="tabs" id="tabs"></div>
+ <div class="bar"><div class="chips" id="chips"></div><button class="go" data-a="new">＋ 新增</button></div>
+ <div id="list"></div>`;
+}
+function render(){
+ if(!$('list'))return;
+ $('hero').innerHTML=hero();
+ $('tabs').innerHTML=TABS.map(([k,n])=>`<button data-a="tab" data-k="${k}" class="${TAB===k?'on':''}">${n}</button>`).join('');
+ const cats=TAB==='log'?LOG_K:TAB==='cost'?['支出','補助理賠',...COST_C]:TAB==='ins'?[...INS_W,...INS_ST]:TAB==='item'?['還沒準備','已準備',...ITEM_C]:[...BEN_C,...BEN_ST];
+ const ch=['全部',...cats.filter(c=>has(c))];
+ if(!ch.includes(FIL[TAB]))FIL[TAB]='全部';
+ $('chips').innerHTML=ch.length>1?ch.map(c=>`<button data-a="fil" data-v="${E(c)}" class="${FIL[TAB]===c?'on':''}">${E(c)}</button>`).join(''):'';
+ $('list').innerHTML=({log:logList,cost:costList,ins:insList,item:itemList,ben:benList})[TAB]();
+ status();
+}
+// 這個分類有沒有資料（沒有的就不顯示篩選按鈕）
+function has(c){
+ const L=S[LIST[TAB]];
+ if(TAB==='cost'){if(c==='支出')return L.some(x=>!x.inc)||S.items.some(x=>x.price!=='');if(c==='補助理賠')return L.some(x=>x.inc)||S.bens.some(x=>x.amt!=='');return L.some(x=>x.cat===c)||(c==='嬰兒用品'&&S.items.some(x=>x.price!==''))}
+ if(TAB==='item'){if(c==='還沒準備')return L.some(x=>!x.done);if(c==='已準備')return L.some(x=>x.done)}
+ return L.some(x=>x.k===c||x.cat===c||x.who===c||x.st===c);
+}
+const pass=(x,f)=>f==='全部'||x.k===f||x.cat===f||x.who===f||x.st===f;
+const empty=t=>`<div class="empty">${t}</div>`;
+
+function logList(){
+ const f=FIL.log,ls=S.logs.filter(x=>pass(x,f)).sort((a,b)=>(b.d||'').localeCompare(a.d||'')||(b.u||0)-(a.u||0));
+ if(!ls.length)return empty(f==='全部'?'還沒有紀錄<br>月經、基礎體溫、驗孕、產檢、身體狀況都可以記':'沒有「'+E(f)+'」的紀錄');
+ let h='',cur='';
+ ls.forEach(x=>{
+  const mo=(x.d||'').slice(0,7);if(mo!==cur){cur=mo;h+=`<div class="dh">${mo?mo.replace('-',' 年 ')+' 月':'沒有日期'}</div>`}
+  const meta=[x.w!==''&&x.w!=null?x.w+' kg':'',x.bt!==''&&x.bt!=null?x.bt+' °C':'',okD(x.nx)?'下次產檢 '+md(x.nx):''].filter(Boolean).join(' · ');
+  h+=`<button class="it" data-a="ed" data-id="${x.id}"><span class="tx"><span class="hd"><b>${mdw(x.d)} <span class="tag">${E(x.k)}</span></b><span class="sub">${preg(x.d)}</span></span>${meta?`<span class="ln" style="display:block">${E(meta)}</span>`:''}${x.x?`<span class="ex" style="display:block">${E(x.x)}</span>`:''}</span></button>`;
+ });
+ return h;
+}
+// 這天是懷孕第幾週
+function preg(d){const l=lmpOf();if(!okD(d)||!l||S.mode==='try'||d<l)return '';const n=diff(l,d);return n<=300?Math.floor(n/7)+'w'+(n%7)+'d':''}
+
+// 費用：自己記的＋「用品」裡填了花費的＋「福利」裡領到的金額
+function costRows(){
+ const a=S.costs.map(x=>({...x,kind:'cost',amt:+x.amt||0}));
+ S.items.forEach(x=>{if(x.price!=='')a.push({id:x.id,kind:'item',d:'',n:x.n,cat:'嬰兒用品',amt:+x.price||0,inc:false,note:x.src})});
+ S.bens.forEach(x=>{if(x.amt!=='')a.push({id:x.id,kind:'ben',d:x.d,n:x.n,cat:'福利',amt:+x.amt||0,inc:true,note:''})});
+ return a;
+}
+function costList(){
+ const all=costRows(),out=all.filter(x=>!x.inc),inc=all.filter(x=>x.inc);
+ const so=out.reduce((s,x)=>s+x.amt,0),si=inc.reduce((s,x)=>s+x.amt,0);
+ const by={};out.forEach(x=>by[x.cat]=(by[x.cat]||0)+x.amt);
+ const top=Object.entries(by).sort((a,b)=>b[1]-a[1]),mx=top.length?top[0][1]:1;
+ let h=`<div class="card"><div class="sum"><div><b>${money(so)}</b><span>支出</span></div><div><b class="ok">${money(si)}</b><span>補助理賠</span></div><div><b>${money(so-si)}</b><span>實際花費</span></div></div>
+  ${top.length?`<div class="bars" style="margin-top:8px">${top.map(([c,v])=>`<div class="b"><span>${E(c)}</span><i style="width:${Math.max(1,v/mx*100)}%"></i><span>${money(v)}</span></div>`).join('')}</div>`:''}</div>`;
+ const f=FIL.cost,ls=all.filter(x=>f==='全部'||(f==='支出'&&!x.inc)||(f==='補助理賠'&&x.inc)||x.cat===f).sort((a,b)=>(b.d||'').localeCompare(a.d||''));
+ if(!ls.length)return h+empty('還沒有費用<br>「用品」填了花費、「福利」填了金額也會算進來');
+ return h+ls.map(x=>`<button class="it" data-a="${x.kind==='cost'?'ed':'go'}" data-id="${x.id}" data-k="${x.kind}"><span class="tx"><span class="hd"><b>${E(x.n||x.cat)}</b><span class="r${x.inc?' ok':''}">${x.inc?'+':''}${money(x.amt)}</span></span>
+  <span class="ln" style="display:block">${x.d?mdw(x.d)+' · ':''}<span class="tag${x.inc?' k':''}">${E(x.cat)}</span>${x.kind==='item'?'來自「用品」':x.kind==='ben'?'來自「福利」':''}${x.note?' · '+E(x.note):''}</span></span></button>`).join('');
+}
+const PER={年繳:1,半年繳:2,季繳:4,月繳:12,躉繳:0};
+function insList(){
+ const on=S.ins.filter(x=>x.st==='已投保'),yr=on.reduce((s,x)=>s+(+x.prem||0)*(PER[x.freq]||0),0);
+ let h=S.ins.length?`<div class="card"><div class="sum"><div><b>${on.length}</b><span>已投保</span></div><div><b>${S.ins.filter(x=>x.st==='考慮中').length}</b><span>考慮中</span></div><div><b>${money(yr)}</b><span>每年保費</span></div></div></div>`:'';
+ const f=FIL.ins,ls=S.ins.filter(x=>pass(x,f)).sort((a,b)=>INS_ST.indexOf(a.st)-INS_ST.indexOf(b.st)||INS_W.indexOf(a.who)-INS_W.indexOf(b.who));
+ if(!ls.length)return h+empty('還沒有保險<br>孕婦保險、寶寶出生前規劃的保險都可以記下來比較');
+ return h+ls.map(x=>`<button class="it" data-a="ed" data-id="${x.id}"><span class="tx"><span class="hd"><b>${E(x.n||'（沒有名稱）')}</b><span class="r">${x.prem!==''&&x.prem!=null?money(+x.prem)+'<span class="sub" style="font-weight:400">/'+E((x.freq||'').replace('繳',''))+'</span>':''}</span></span>
+  <span class="ln" style="display:block"><span class="tag">${E(x.cat)}</span><span class="tag g">${E(x.who)}</span><span class="tag${x.st==='已投保'||x.st==='已理賠'?' k':' g'}">${E(x.st)}</span>${x.co?' '+E(x.co):''}</span>${x.note?`<span class="ex" style="display:block">${E(x.note)}</span>`:''}</span></button>`).join('');
+}
+function itemList(){
+ const L=S.items,dn=L.filter(x=>x.done).length,sp=L.reduce((s,x)=>s+(+x.price||0),0),bg=L.filter(x=>!x.done).reduce((s,x)=>s+(+x.budget||0),0);
+ let h=`<div class="card"><div class="sum"><div><b>${dn}/${L.length}</b><span>已準備</span></div><div><b>${money(sp)}</b><span>已花費</span></div><div><b>${money(bg)}</b><span>還要準備（預算）</span></div></div></div>`;
+ const f=FIL.item,ls=L.filter(x=>f==='全部'||(f==='已準備'&&x.done)||(f==='還沒準備'&&!x.done)||x.cat===f);
+ if(!ls.length)return h+empty('沒有東西');
+ const cats=ITEM_C.filter(c=>ls.some(x=>x.cat===c)).concat([...new Set(ls.map(x=>x.cat))].filter(c=>!ITEM_C.includes(c)));
+ return h+cats.map(c=>{const g=ls.filter(x=>x.cat===c);return `<div class="dh">${E(c)}（${g.filter(x=>x.done).length}/${g.length}）</div>`+g.map(x=>{
+  const meta=[x.q?'×'+x.q:'',x.price!==''?money(+x.price):x.budget!==''?'預算 '+money(+x.budget):'',x.src].filter(Boolean).join(' · ');
+  return `<div class="it${x.done?' done':''}"><button class="ck${x.done?' on':''}" data-a="tick" data-id="${x.id}" aria-label="已準備">${x.done?'✓':''}</button><button class="tx" data-a="ed" data-id="${x.id}" style="border:0;background:none;padding:0;text-align:left"><b>${E(x.n)}</b>${meta||x.note?`<span class="ln" style="display:block">${E([meta,x.note].filter(Boolean).join(' · '))}</span>`:''}</button></div>`}).join('')}).join('');
+}
+function benList(){
+ const L=S.bens,got=L.filter(x=>x.st==='已領取'),sum=L.reduce((s,x)=>s+(+x.amt||0),0);
+ let h=`<div class="card"><div class="sum"><div><b>${got.length}</b><span>已領取</span></div><div><b>${L.filter(x=>x.st==='已申請').length}</b><span>申請中</span></div><div><b class="ok">${money(sum)}</b><span>領到的金額</span></div></div>
+  <div class="sub" style="margin-top:8px">內容是常見的台灣準媽媽福利，金額和資格每年會調整，申請前請到衛福部、勞保局、戶籍地區公所確認最新規定。</div></div>`;
+ const f=FIL.ben,ls=L.filter(x=>pass(x,f));
+ if(!ls.length)return h+empty('沒有福利');
+ const cats=BEN_C.filter(c=>ls.some(x=>x.cat===c)).concat([...new Set(ls.map(x=>x.cat))].filter(c=>!BEN_C.includes(c)));
+ return h+cats.map(c=>`<div class="dh">${E(c)}</div>`+ls.filter(x=>x.cat===c).map(x=>{const dn=x.st==='已領取'||x.st==='不適用';
+  return `<button class="it${x.st==='不適用'?' done':''}" data-a="ed" data-id="${x.id}"><span class="tx"><span class="hd"><b>${E(x.n)}</b><span class="tag${x.st==='已領取'?' k':x.st==='已申請'?'':' g'}">${E(x.st)}</span></span>
+   ${x.amt!==''||okD(x.d)?`<span class="ln" style="display:block">${[okD(x.d)?mdw(x.d):'',x.amt!==''?money(+x.amt):''].filter(Boolean).join(' · ')}</span>`:''}${x.note&&!dn?`<span class="ex" style="display:block">${E(x.note)}</span>`:''}</span></button>`}).join('')).join('');
+}
+
+// ---------- 彈出視窗 ----------
+function sheet(html,bind){
+ const s=$('sheet');
+ if(!s.classList.contains('on'))try{history.pushState({sheet:1},'')}catch(e){}
+ s.innerHTML=`<div class="bk"></div><div class="pn"><div class="back"><button data-x>‹ 返回</button></div>${html}</div>`;s.classList.add('on');
+ s.querySelector('.bk').onclick=closeSheet;
+ s.querySelectorAll('[data-x]').forEach(b=>b.onclick=closeSheet);
+ if(bind)bind(s.querySelector('.pn'));
+}
+function hideSheet(){const s=$('sheet');if(!s.classList.contains('on'))return;s.classList.remove('on');s.innerHTML=''}
+function closeSheet(){if(history.state&&history.state.sheet)history.back();else hideSheet()}
+addEventListener('popstate',hideSheet);
+
+function fieldHTML([k,l,t,o,half],v){
+ const cls='f'+(half?' h':'')+(t==='chk'?' c':'');
+ if(t==='chk')return `<label class="${cls}"><input type="checkbox" name="${k}"${v?' checked':''}><span>${l}</span></label>`;
+ let inp;
+ if(t==='sel'){const opts=o.includes(v)||v==null||v===''?o:[v,...o];inp=`<select name="${k}">${opts.map(x=>`<option${x===v?' selected':''}>${E(x)}</option>`).join('')}</select>`}
+ else if(t==='area')inp=`<textarea name="${k}">${E(v)}</textarea>`;
+ else inp=`<input name="${k}" type="${t==='num'?'number':t==='date'?'date':'text'}"${t==='num'?' inputmode="decimal" step="any"':''} value="${E(v==null?'':v)}">`;
+ return `<label class="${cls}"><span>${l}</span>${inp}</label>`;
+}
+function readForm(p,fs){
+ const o={};fs.forEach(([k,,t])=>{const el=p.querySelector(`[name="${k}"]`);if(!el)return;o[k]=t==='chk'?el.checked:t==='num'?num(el.value):el.value.trim()});return o;
+}
+// 依類型隱藏用不到的欄位（例如「紀錄」只有產檢才要填下次產檢）
+function logVis(p){
+ const k=p.querySelector('[name="k"]').value,sh=(n,on)=>{const el=p.querySelector(`[name="${n}"]`);if(el)el.closest('.f').style.display=on?'':'none'};
+ sh('nx',k==='產檢');sh('bt',['基礎體溫','月經','排卵試紙','其他'].includes(k));sh('w',!['月經','排卵試紙','驗孕','胎動'].includes(k));
+}
+function edit(kind,id){
+ const F=FORMS[kind],L=S[LIST[kind]],x=id?L.find(y=>y.id===id):null;
+ if(id&&!x)return;
+ const def={log:{d:TODAY,k:S.mode==='preg'?'產檢':S.mode==='try'?'基礎體溫':'身體狀況'},cost:{d:TODAY,cat:'產檢'},ins:{cat:S.mode==='preg'?'寶寶保險':'孕婦保險',who:S.mode==='try'?'媽媽':'寶寶',st:'考慮中',freq:'年繳'},item:{cat:FIL.item&&ITEM_C.includes(FIL.item)?FIL.item:'哺餵'},ben:{cat:'孕期',st:'還沒申請'}}[kind];
+ const v=x||def;
+ sheet(`<h3>${x?'修改':'新增'}${F.name}</h3><div class="fs">${F.f.map(f=>fieldHTML(f,v[f[0]])).join('')}</div>
+  <div class="foot">${x?'<button class="bt del" id="dl">刪除</button>':'<span></span>'}<button class="go" id="sv">儲存</button></div>`,p=>{
+  if(kind==='log'){logVis(p);p.querySelector('[name="k"]').onchange=()=>logVis(p)}
+  p.querySelector('#sv').onclick=()=>{
+   const o=readForm(p,F.f);
+   if(kind!=='log'&&kind!=='cost'&&!o.n)return alert('請填名稱');
+   if(kind==='cost'&&o.amt==='')return alert('請填金額');
+   closeSheet();
+   if(x)op(()=>Object.assign(x,o,{u:Date.now()}));
+   else op(()=>L.push({id:nid(),...o,u:Date.now()}),'已新增');
+  };
+  const dl=p.querySelector('#dl');
+  if(dl)dl.onclick=()=>{closeSheet();op(()=>{S[LIST[kind]]=L.filter(y=>y!==x);if(kind==='ben')S._benSeeded=1},'已刪除')};
+ });
+}
+const STAGE=[['try','備孕中'],['preg','懷孕中'],['born','寶寶出生了']];
+function stageSheet(){
+ sheet(`<h3>現在的階段</h3>
+  <label class="f"><span>階段</span><select id="md">${STAGE.map(([k,n])=>`<option value="${k}"${S.mode===k?' selected':''}>${n}</option>`).join('')}</select></label>
+  <div class="fs">
+   <label class="f h" data-m="try"><span>開始備孕的日期</span><input type="date" id="s1" value="${S.start}"></label>
+   <label class="f h" data-m="try preg"><span>最後一次月經第一天</span><input type="date" id="s2" value="${S.lmp}"></label>
+   <label class="f h" data-m="try"><span>月經週期（天）</span><input type="number" inputmode="numeric" id="s3" value="${S.cyc}"></label>
+   <label class="f h" data-m="preg"><span>預產期（醫生說的）</span><input type="date" id="s4" value="${S.edd}"></label>
+   <label class="f h" data-m="born"><span>寶寶出生日期</span><input type="date" id="s5" value="${S.born}"></label>
+   <label class="f h" data-m="preg born"><span>寶寶小名</span><input id="s6" value="${E(S.nick)}"></label>
+  </div>
+  <div class="sub" id="sh"></div>
+  <div class="foot"><span></span><button class="go" id="sv">儲存</button></div>`,p=>{
+  const vis=()=>{const m=p.querySelector('#md').value;p.querySelectorAll('[data-m]').forEach(el=>el.style.display=el.dataset.m.split(' ').includes(m)?'':'none');
+   p.querySelector('#sh').textContent=m==='try'?'下次月經、排卵日用「最後一次月經」推算；之後記一筆「月經」紀錄會自動更新。':m==='preg'?'預產期沒填的話，用最後一次月經 + 280 天推算；醫生有調整就填醫生說的。':''};
+  vis();p.querySelector('#md').onchange=vis;
+  p.querySelector('#sv').onclick=()=>{
+   const g=id=>p.querySelector(id).value;
+   const o={mode:g('#md'),start:g('#s1'),lmp:g('#s2'),cyc:+g('#s3')>=20&&+g('#s3')<=45?+g('#s3'):28,edd:g('#s4'),born:g('#s5'),nick:g('#s6').trim()};
+   closeSheet();op(()=>Object.assign(S,o));
+  };
+ });
+}
+const csvCell=v=>{const s=String(v==null?'':v);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};
+function download(name,text,type){
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+const stamp=()=>TODAY;
+function setSheet(){
+ sheet(`<h3>設定</h3>
+  <div class="sub" style="margin-bottom:6px">資料只有你自己看得到（跟記帳一樣存在你的帳號裡）。</div>
+  <div class="sub" style="margin:12px 0 6px">匯出與備份</div>
+  <div class="row" style="margin-bottom:14px"><button class="bt" id="csv">費用表（Excel 可開）</button><button class="bt" id="exp">下載備份檔</button><button class="bt" id="imp">從備份檔還原</button></div>
+  <div class="foot">${window.fbLogout?'<button class="bt" id="lo">登出</button>':'<span></span>'}<button class="go" data-x>完成</button></div>`,p=>{
+  p.querySelectorAll('[data-x]').forEach(b=>b.onclick=closeSheet);
+  p.querySelector('#csv').onclick=()=>{
+   const rows=[['日期','項目','分類','支出','補助理賠','備註']];
+   costRows().sort((a,b)=>(a.d||'').localeCompare(b.d||'')).forEach(x=>rows.push([x.d,x.n,x.cat,x.inc?'':x.amt,x.inc?x.amt:'',x.note]));
+   download('備孕懷孕費用-'+stamp()+'.csv','﻿'+rows.map(r=>r.map(csvCell).join(',')).join('\r\n'),'text/csv');
+  };
+  p.querySelector('#exp').onclick=()=>download('備孕懷孕-'+stamp()+'.json',JSON.stringify(S,null,1),'application/json');
+  p.querySelector('#imp').onclick=()=>$('impf').click();
+  const lo=p.querySelector('#lo');if(lo)lo.onclick=()=>window.fbLogout();
+ });
+}
+$('impf').onchange=async e=>{
+ const f=e.target.files[0];e.target.value='';if(!f)return;
+ let o;try{o=fix(JSON.parse(await f.text()))}catch(x){return alert('這不是「備孕懷孕」的備份檔。')}
+ if(!confirm('用備份檔取代現在的資料？（還原後可以按「復原」）'))return;
+ closeSheet();op(()=>{S=o},'已從備份還原');
+};
+
+function onClick(e){
+ const b=e.target.closest('[data-a]');if(!b)return;
+ const a=b.dataset.a;
+ if(a==='tab'){TAB=b.dataset.k;try{localStorage.setItem('baby-tab',TAB)}catch(x){}return render()}
+ if(a==='fil'){FIL[TAB]=b.dataset.v;return render()}
+ if(a==='new')return edit(TAB);
+ if(a==='ed')return edit(TAB,b.dataset.id);
+ // 費用裡來自「用品」「福利」的那幾筆：打開原本的那一項修改
+ if(a==='go')return edit(b.dataset.k,b.dataset.id);
+ if(a==='tick'){const x=S.items.find(y=>y.id===b.dataset.id);if(x)op(()=>{x.done=!x.done});return}
+ if(a==='stage')return stageSheet();
+ if(a==='set')return setSheet();
+}
+
+shell();
+$('app').addEventListener('click',onClick);
+render();
+cloudInit();
+</script>
+</body>
+</html>
