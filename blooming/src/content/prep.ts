@@ -1,3 +1,4 @@
+import { BENEFIT_WHERE } from './plans';
 // 寶寶準備：第一次打開時放好的嬰兒用品與台灣準媽媽福利清單（內容可以自己改、刪除、新增）
 export const ITEM_CAT = ['哺餵', '衣物', '清潔', '睡眠', '外出', '媽媽', '其他'];
 export const BEN_CAT = ['備孕', '孕期', '生產', '產後育兒', '工作請假'];
@@ -14,7 +15,7 @@ const items: [string, string[]][] = [
 ];
 export const ITEM_SEED = items.flatMap(([cat, ns]) => ns.map(name => ({ name, cat, done: false })));
 
-const b = (cat: string, name: string, note: string) => ({ cat, name, note, status: '還沒申請' });
+const b = (cat: string, name: string, note: string) => ({ cat, name, note, status: '還沒申請', ...BENEFIT_WHERE[name] });
 export const BENEFIT_SEED = [
   b('備孕', '孕前健康檢查補助', '國健署補助的孕前檢查，夫妻都可以做，到合約醫院、診所預約'),
   b('備孕', '人工生殖（試管）補助', '符合資格的夫妻做試管療程可以申請補助，向做療程的醫院詢問'),

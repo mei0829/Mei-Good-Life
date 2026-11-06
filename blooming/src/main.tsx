@@ -12,9 +12,10 @@ import Lifestyle from './pages/Lifestyle';
 import Finance from './pages/Finance';
 import Journal from './pages/Journal';
 import Prep from './pages/Prep';
+import Calendar from './pages/Calendar';
 import SettingsPage from './pages/Settings';
 
-const PAGES = { home: Home, cycle: Cycle, wellness: Wellness, medical: Medical, lifestyle: Lifestyle, finance: Finance, prep: Prep, journal: Journal, settings: SettingsPage };
+const PAGES = { home: Home, cycle: Cycle, calendar: Calendar, wellness: Wellness, medical: Medical, lifestyle: Lifestyle, finance: Finance, prep: Prep, journal: Journal, settings: SettingsPage };
 function Router() { const { route } = useApp(); const P = PAGES[route]; return <P />; }
 
 createRoot(document.getElementById('root')!).render(

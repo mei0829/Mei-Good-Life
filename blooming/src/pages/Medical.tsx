@@ -5,24 +5,25 @@ import { useTable } from '../data/hooks';
 import { data } from '../data/repo';
 import { daysBetween, md, mdw, relDay, ymd } from '../lib/dates';
 import { pregnancy, TRI, weekLabel, weekOf } from '../lib/pregnancy';
-import { PRECONCEPTION_CHECKS, PRENATAL_CHECKS, PRENATAL_VISITS, type CheckItem } from '../content/medical';
+import { PlanList } from './Plans';
 import { VISIT_KIND } from '../content/options';
 import { EntityForm, useEditor, type Field } from '../components/form';
-import { Badge, DateCell, Empty, Note, PageHeader, Row, Section, Sheet, Tabs, cx, useToast } from '../components/ui';
+import { Badge, DateCell, Empty, PageHeader, Row, Section, Sheet, Tabs, useToast } from '../components/ui';
 
-type Tab = 'guide' | 'visits' | 'care';
+type Tab = 'plans' | 'visits' | 'care';
 
 export default function Medical() {
   const { sub, go, s, today } = useApp();
-  const tab = (['guide', 'visits', 'care'].includes(sub) ? sub : 'guide') as Tab;
+  // 舊的「guide」連結也打開檢查規劃
+  const tab = (['visits', 'care'].includes(sub) ? sub : 'plans') as Tab;
   const preg = s.stage === 'pregnant';
   const p = preg ? pregnancy(s.lmp, s.edd, today) : null;
   return (
     <div>
       <PageHeader kicker="幸孕女子・檢查與產檢" title="醫療管理" sub={preg ? '孕週、預產期、產檢行事曆與每次看診的紀錄。' : '備孕檢查建議、看診紀錄、醫院與醫師資料。'} />
       {preg && <PregBanner p={p} />}
-      <Tabs value={tab} onChange={t => go('medical', t)} items={[['guide', preg ? '產檢行事曆' : '備孕檢查建議'], ['visits', preg ? '產檢與看診紀錄' : '看診紀錄'], ['care', '醫院與醫師']]} />
-      {tab === 'guide' && (preg ? <PrenatalGuide week={p ? p.weeks : null} /> : <CheckList items={PRECONCEPTION_CHECKS} />)}
+      <Tabs value={tab} onChange={t => go('medical', t)} items={[['plans', preg ? '產檢與檢查規劃' : '備孕檢查與申請'], ['visits', preg ? '產檢與看診紀錄' : '看診紀錄'], ['care', '醫院與醫師']]} />
+      {tab === 'plans' && <PlanList />}
       {tab === 'visits' && <Visits />}
       {tab === 'care' && <Care />}
     </div>
@@ -54,45 +55,6 @@ function PregBanner({ p }: { p: ReturnType<typeof pregnancy> }) {
           <button className="btn-primary" disabled={!lmp && !edd} onClick={async () => { await data.saveSettings({ lmp: lmp || undefined, edd: edd || undefined }); toast('已更新'); setOpen(false); }}>儲存</button></div>
       </Sheet>
     </div>
-  );
-}
-
-const COST_TONE = { 公費: 'sage', 健保: 'sage', 部分補助: 'oat', 自費: 'rose' } as const;
-function CheckCard({ c, state }: { c: CheckItem; state?: 'now' | 'past' | 'next' }) {
-  return (
-    <div className={cx('py-4 border-b border-line grid grid-cols-[76px_1fr] gap-4', state === 'past' && 'opacity-55')}>
-      <div>{c.weeks ? <><div className="display text-[26px] leading-none text-forest">{c.weeks[0] === c.weeks[1] ? c.weeks[0] : `${c.weeks[0]}–${c.weeks[1]}`}</div><div className="text-[11px] text-mute mt-1">孕週</div></> : <div className="serif text-[16px] text-forest">懷孕前</div>}</div>
-      <div>
-        <div className="flex flex-wrap items-center gap-2"><span className="serif text-[15.5px]">{c.title}</span>{state === 'now' && <Badge tone="forest">現在</Badge>}</div>
-        <p className="text-[13px] text-ink/80 mt-1 leading-relaxed">{c.purpose}</p>
-        <div className="flex flex-wrap gap-1.5 mt-2">
-          <Badge tone={COST_TONE[c.cost]}>{c.cost}</Badge>
-          <Badge tone={c.optional ? 'line' : 'sage'}>{c.optional ? '選擇性，請與醫師討論' : '常規建議'}</Badge>
-        </div>
-        {c.note && <p className="text-[12px] text-mute mt-2">{c.note}</p>}
-        <p className="text-[11px] text-mute mt-1">資料來源：{c.source}</p>
-      </div>
-    </div>
-  );
-}
-
-function Disclaimer() {
-  return <div className="mb-6"><Note tone="oat">依衛生福利部國民健康署公告與一般孕產照護資訊整理，實際時程、項目與補助以國健署最新公告、孕婦健康手冊和你的醫院安排為準。「選擇性」檢查不是每個人都要做，請跟醫師討論是否適合你。</Note></div>;
-}
-function CheckList({ items }: { items: CheckItem[] }) {
-  return <><Disclaimer />{items.map(c => <CheckCard key={c.id} c={c} />)}</>;
-}
-
-function PrenatalGuide({ week }: { week: number | null }) {
-  const [show, setShow] = useState<'all' | 'visits' | 'checks'>('all');
-  const list = [...(show !== 'checks' ? PRENATAL_VISITS : []), ...(show !== 'visits' ? PRENATAL_CHECKS : [])].sort((a, b) => a.weeks![0] - b.weeks![0] || a.weeks![1] - b.weeks![1]);
-  const stateOf = (c: CheckItem) => week == null ? undefined : week > c.weeks![1] ? 'past' : week >= c.weeks![0] ? 'now' : 'next';
-  return (
-    <>
-      <Disclaimer />
-      <div className="flex gap-2 mb-2">{([['all', '全部'], ['visits', '14 次公費產檢'], ['checks', '超音波與篩檢']] as const).map(([k, n]) => <button key={k} className={cx('chip', show === k && 'chip-on')} onClick={() => setShow(k)}>{n}</button>)}</div>
-      {list.map(c => <CheckCard key={c.id} c={c} state={stateOf(c)} />)}
-    </>
   );
 }
 

@@ -6,8 +6,8 @@ import { today } from './lib/dates';
 import { Brand } from './components/Brand';
 import { applyTheme, resolveTheme, THEMES, type Theme, type ThemeId } from './lib/theme';
 
-export type Route = 'home' | 'cycle' | 'wellness' | 'medical' | 'lifestyle' | 'finance' | 'prep' | 'journal' | 'settings';
-export const ROUTES: Route[] = ['home', 'cycle', 'wellness', 'medical', 'lifestyle', 'finance', 'prep', 'journal', 'settings'];
+export type Route = 'home' | 'cycle' | 'calendar' | 'wellness' | 'medical' | 'lifestyle' | 'finance' | 'prep' | 'journal' | 'settings';
+export const ROUTES: Route[] = ['home', 'cycle', 'calendar', 'wellness', 'medical', 'lifestyle', 'finance', 'prep', 'journal', 'settings'];
 
 interface Ctx { s: Settings; today: string; route: Route; sub: string; go: (r: Route, sub?: string) => void; themeId: ThemeId; theme: Theme }
 const AppCtx = createContext<Ctx>(null!);

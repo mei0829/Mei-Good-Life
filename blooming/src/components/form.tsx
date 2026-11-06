@@ -6,7 +6,7 @@ import { Scale, Sheet, cx, useToast } from './ui';
 
 export type Field = {
   key: string; label: string; hint?: string; half?: boolean; required?: boolean;
-  type: 'text' | 'number' | 'date' | 'time' | 'select' | 'multi' | 'textarea' | 'scale' | 'check' | 'files' | 'images';
+  type: 'text' | 'number' | 'date' | 'time' | 'url' | 'select' | 'multi' | 'textarea' | 'scale' | 'check' | 'files' | 'images';
   options?: (string | [string, string])[]; min?: number; max?: number; step?: number; unit?: string; scaleLabels?: [string, string];
   show?: (v: Record<string, any>) => boolean;
 };
@@ -43,7 +43,7 @@ function Input({ f, value, set, onFile }: { f: Field; value: any; set: (v: any) 
     case 'check': return (
       <label className="flex items-center gap-2.5 text-[14.5px]"><input id={id} type="checkbox" className="w-5 h-5 accent-forest" checked={!!value} onChange={e => set(e.target.checked)} />{f.label}</label>);
     case 'files': case 'images': return <FilesInput ids={value || []} set={set} images={f.type === 'images'} onFile={onFile} />;
-    default: return <input id={id} className={cx('field', (f.type === 'date' || f.type === 'time') && 'num')} type={f.type} value={value ?? ''} onChange={e => set(e.target.value)} />;
+    default: return <input id={id} className={cx('field', (f.type === 'date' || f.type === 'time') && 'num')} type={f.type} inputMode={f.type === 'url' ? 'url' : undefined} value={value ?? ''} onChange={e => set(e.target.value)} />;
   }
 }
 

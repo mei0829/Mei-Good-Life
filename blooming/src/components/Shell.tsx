@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Baby, BookOpen, Flower2, HeartPulse, Home, Leaf, Settings as Gear, Sprout, Wallet, type LucideIcon } from 'lucide-react';
+import { Baby, BookOpen, CalendarDays, Flower2, HeartPulse, Home, Leaf, Settings as Gear, Sprout, Wallet, type LucideIcon } from 'lucide-react';
 import { Brand } from './Brand';
 import { useApp, STAGE_LABEL, type Route } from '../app';
 import { cx } from './ui';
@@ -7,6 +7,7 @@ import { cx } from './ui';
 const NAV: [Route, string, string, LucideIcon][] = [
   ['home', '首頁', '今日總覽', Home],
   ['cycle', '月經週期', '日曆與預測', Flower2],
+  ['calendar', '好孕行事曆', '檢查・預約・回診', CalendarDays],
   ['wellness', '健康管理', '身體・營養・睡眠', Leaf],
   ['medical', '醫療管理', '檢查與產檢', HeartPulse],
   ['lifestyle', '生活管理', '運動與飲食', Sprout],
@@ -18,6 +19,8 @@ const NAV: [Route, string, string, LucideIcon][] = [
 const CARE: Route[] = ['wellness', 'medical', 'lifestyle'];
 // 手機底部的「財務」也包含寶寶準備
 const MONEY: Route[] = ['finance', 'prep'];
+// 手機底部的「週期」也包含好孕行事曆
+const CYCLE: Route[] = ['cycle', 'calendar'];
 const MOBILE: [Route, string, LucideIcon][] = [['home', '首頁', Home], ['cycle', '週期', Flower2], ['wellness', '照護', Leaf], ['journal', '日記', BookOpen], ['finance', '財務', Wallet]];
 
 export function Shell({ children }: { children: ReactNode }) {
@@ -71,6 +74,15 @@ export function Shell({ children }: { children: ReactNode }) {
               ))}
             </div>
           )}
+          {CYCLE.includes(route) && (
+            <div className="flex gap-1 px-5 py-2 border-b border-line/70" role="tablist" aria-label="週期與行事曆">
+              {NAV.filter(n => CYCLE.includes(n[0])).map(([r, name]) => (
+                <button key={r} role="tab" aria-selected={route === r} onClick={() => go(r)} className={cx('flex-1 rounded-full py-1.5 text-[13px]', route === r ? 'bg-forest text-paper' : 'text-mute')}>
+                  {name}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         <main className="px-5 md:px-10 lg:px-14 pt-6 md:pt-10 pb-[calc(96px+env(safe-area-inset-bottom))] md:pb-16 max-w-[1080px] fade-in" key={route}>{children}</main>
       </div>
@@ -79,7 +91,7 @@ export function Shell({ children }: { children: ReactNode }) {
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-paper/95 backdrop-blur border-t border-line pb-safe" aria-label="主要功能">
         <div className="grid grid-cols-5">
           {MOBILE.map(([r, zh, I]) => {
-            const on = r === 'wellness' ? CARE.includes(route) : r === 'finance' ? MONEY.includes(route) : route === r;
+            const on = r === 'wellness' ? CARE.includes(route) : r === 'finance' ? MONEY.includes(route) : r === 'cycle' ? CYCLE.includes(route) : route === r;
             return (
               <button key={r} onClick={() => go(r)} aria-current={on ? 'page' : undefined} className={cx('flex flex-col items-center gap-0.5 pt-2.5 pb-2 text-[11px]', on ? 'text-forest' : 'text-mute')}>
                 <I size={21} strokeWidth={on ? 1.7 : 1.3} />{zh}

@@ -65,7 +65,7 @@ async function findDuplicate(db: BloomDB, name: TableName, r: any, selfId?: stri
         .find(e => e.amount === r.amount && e.category === r.category && (e.item || '') === (r.item || ''));
       return x ? new DuplicateError('同一天已經有一筆一樣的花費，確定要再新增一筆嗎？', x.id, false) : null;
     }
-    case 'hospitals': case 'doctors': case 'supplements': case 'insurance': case 'items': case 'benefits': {
+    case 'hospitals': case 'doctors': case 'supplements': case 'insurance': case 'items': case 'benefits': case 'plans': {
       const x = (await (db[name] as any).toArray()).filter(other).find((h: any) => h.name.trim() === String(r.name || '').trim());
       return x ? new DuplicateError(`已經有「${x.name}」了，確定要再新增一筆嗎？`, x.id, false) : null;
     }

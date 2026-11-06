@@ -28,7 +28,16 @@ export interface Journal extends Base {
 /** 嬰兒用品清單 */
 export interface BabyItem extends Base { name: string; cat?: string; qty?: string; budget?: number; price?: number; done?: boolean; src?: string; note?: string }
 /** 準媽媽福利 */
-export interface Benefit extends Base { name: string; cat?: string; status?: string; amount?: number; date?: string; note?: string }
+export interface Benefit extends Base { name: string; cat?: string; status?: string; amount?: number; date?: string; deadline?: string; where?: string; url?: string; note?: string }
+/**
+ * 檢查與申請規劃：什麼時候做、什麼時候預約、多少錢、能不能補助、去哪裡、相關網站
+ * stage：pre = 備孕、preg = 懷孕；weekFrom／weekTo = 建議孕週；lead = 提前幾週預約
+ */
+export interface Plan extends Base {
+  name: string; kind?: string; stage?: 'pre' | 'preg'; weekFrom?: number; weekTo?: number; lead?: number;
+  date?: string; time?: string; where?: string; cost?: number; paid?: number; subsidy?: string; subsidyAmt?: number;
+  applyAt?: string; url?: string; status?: string; note?: string; expenseId?: string; seedId?: string
+}
 export interface FileRec { id: string; name: string; type: string; size: number; blob: Blob; createdAt: number }
 
 export interface Settings {
@@ -37,18 +46,20 @@ export interface Settings {
   favorites?: string[]; heroPhoto?: string;
   /** 顏色主題；themeAuto = 夜間模式跟著手機自動切換 */ theme?: string; themeAuto?: boolean;
   /** 已經放好預設的嬰兒用品與福利清單 */ prepSeeded?: boolean;
+  /** 已經放好預設的檢查規劃 */ plansSeeded?: boolean;
+  /** 自己新增的花費類別 */ customCats?: string[];
   updatedAt: number
 }
 
 export interface Tables {
   periods: Period; body: BodyDay; supplements: Supplement; supplementLogs: SupplementLog; sleep: Sleep; exercise: Exercise;
   hospitals: Hospital; doctors: Doctor; visits: Visit; insurance: Insurance; expenses: Expense; journal: Journal;
-  items: BabyItem; benefits: Benefit
+  items: BabyItem; benefits: Benefit; plans: Plan
 }
 export type TableName = keyof Tables;
-export const TABLES: TableName[] = ['periods', 'body', 'supplements', 'supplementLogs', 'sleep', 'exercise', 'hospitals', 'doctors', 'visits', 'insurance', 'expenses', 'journal', 'items', 'benefits'];
+export const TABLES: TableName[] = ['periods', 'body', 'supplements', 'supplementLogs', 'sleep', 'exercise', 'hospitals', 'doctors', 'visits', 'insurance', 'expenses', 'journal', 'items', 'benefits', 'plans'];
 export const TABLE_LABEL: Record<TableName, string> = {
   periods: '月經紀錄', body: '身體紀錄', supplements: '營養補充品', supplementLogs: '補充品攝取', sleep: '睡眠', exercise: '運動',
   hospitals: '醫院', doctors: '醫師', visits: '看診與產檢', insurance: '保險', expenses: '花費', journal: '日記',
-  items: '嬰兒用品', benefits: '準媽媽福利'
+  items: '嬰兒用品', benefits: '準媽媽福利', plans: '檢查與申請'
 };

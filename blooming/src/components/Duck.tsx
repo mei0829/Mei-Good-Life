@@ -120,6 +120,7 @@ export const PAGE_DUCK: Record<string, DuckSpec> = {
   lifestyle: { pose: 'walk' },
   finance: { pose: 'sit' },
   prep: { pose: 'walk', kind: 'duckling' },
+  calendar: { pose: 'stand', prop: 'heart' },
   journal: { pose: 'sleep' },
   settings: { pose: 'sit', kind: 'duckling' },
   home: { pose: 'stand', prop: 'flower' },

@@ -37,10 +37,20 @@ export function validate<T extends TableName>(table: T, r: Partial<Tables[T]>): 
       if (typeof x.amount !== 'number' || !(x.amount > 0) || x.amount > 1e8) e.push('請填寫正確的金額'); break;
     case 'items': if (!x.name?.trim()) e.push('請填寫品項');
       if (!inRange(x.budget, 0, 1e8)) e.push('預算不正確'); if (!inRange(x.price, 0, 1e8)) e.push('花費不正確'); break;
-    case 'benefits': if (!x.name?.trim()) e.push('請填寫福利名稱'); optDate('date', '日期');
+    case 'benefits': if (!x.name?.trim()) e.push('請填寫福利名稱'); optDate('date', '日期'); optDate('deadline', '申請期限');
+      if (x.url && !okUrl(x.url)) e.push('網址格式不正確，請貼上完整網址（從瀏覽器網址列複製）');
       if (!inRange(x.amount, 0, 1e8)) e.push('金額不正確'); break;
+    case 'plans':
+      if (!x.name?.trim()) e.push('請填寫名稱'); optDate('date', '預約／檢查日期');
+      if (!inRange(x.weekFrom, 0, 42) || !inRange(x.weekTo, 0, 42)) e.push('孕週請填 0–42');
+      if (x.weekFrom != null && x.weekTo != null && x.weekTo < x.weekFrom) e.push('結束孕週不能小於開始孕週');
+      if (!inRange(x.lead, 0, 20)) e.push('提前預約請填 0–20 週');
+      if (!inRange(x.cost, 0, 1e7) || !inRange(x.paid, 0, 1e7) || !inRange(x.subsidyAmt, 0, 1e7)) e.push('金額不正確');
+      if (x.url && !okUrl(x.url)) e.push('網址格式不正確，請貼上完整網址（從瀏覽器網址列複製）');
+      break;
     case 'journal': needDate(); if (!inRange(x.nausea, 0, 5)) e.push('噁心程度請選 0–5'); if (!inRange(x.vomit, 0, 50)) e.push('孕吐次數不正確'); break;
   }
   return e;
 }
-export { okDate };
+const okUrl = (u: string) => /^https?:\/\/[^\s]+\.[^\s]+/.test(u);
+export { okDate, okUrl };

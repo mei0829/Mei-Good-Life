@@ -4,7 +4,9 @@ import { useApp, STAGE_LABEL, type Route } from '../app';
 import { useTable } from '../data/hooks';
 import { cycleStats } from '../lib/cycle';
 import { pregnancy, TRI, weekLabel } from '../lib/pregnancy';
-import { daysBetween, fullDate, md, mdw, relDay, ymd } from '../lib/dates';
+import { daysBetween, fullDate, md, mdw, relDay, shift, ymd } from '../lib/dates';
+import { buildEvents, lmpBase, planAlert, planWindow } from '../lib/events';
+import { EV_DOT } from './Calendar';
 import { quoteOf } from '../content/quotes';
 import { Duck, DuckPair, type DuckSpec } from '../components/Duck';
 import { Brand } from '../components/Brand';
@@ -23,7 +25,8 @@ export default function Home() {
   const journal = useTable('journal') || [];
   const visits = useTable('visits') || [];
   const exercise = useTable('exercise') || [];
-  const hospitals = useTable('hospitals') || [];
+  const plans = useTable('plans') || [];
+  const benefits = useTable('benefits') || [];
   const [confirm, setConfirm] = useState(false);
 
   const st = useMemo(() => cycleStats(periods, today), [periods, today]);
@@ -49,12 +52,13 @@ export default function Home() {
   activeSups.forEach(x => todos.push(['補充 ' + x.name, takenIds.has(x.id), 'wellness', 'nutrition']));
   todos.push([s.stage === 'pregnant' ? '今日日記（含孕期症狀）' : '今日日記', !!tj, 'journal']);
 
-  // 近期行程：看診日與醫師交代的下次回診
-  const hname = (id?: string) => hospitals.find(x => x.id === id)?.name;
-  const events = [
-    ...visits.filter(v => v.date >= today).map(v => ({ d: v.date, t: v.kind, m: hname(v.hospitalId) })),
-    ...visits.filter(v => v.nextDate && v.nextDate >= today && !visits.some(o => o.date === v.nextDate)).map(v => ({ d: v.nextDate!, t: '回診（' + v.kind + '）', m: hname(v.hospitalId) })),
-  ].sort((a, b) => a.d.localeCompare(b.d)).slice(0, 4);
+  // 該預約的檢查也放進待完成
+  const base = lmpBase(s, today);
+  plans.filter(x => (x.stage === 'preg') === (s.stage === 'pregnant')).forEach(x => { if (planAlert(x, planWindow(x, base), today) === 'book-now') todos.push(['預約 ' + x.name, false, 'medical', 'plans']); });
+
+  // 近期行程：檢查、預約提醒、看診回診、福利期限、預產期（月經另外在週期頁看）
+  const events = buildEvents({ s, today, plans, visits, benefits, periods: [] }, today, shift(today, 60)).slice(0, 5);
+  const nextCheck = events.find(e => e.kind === 'check' || e.kind === 'visit');
 
   return (
     <div>
@@ -101,7 +105,7 @@ export default function Home() {
       {/* 階段摘要 */}
       <div className="grid md:grid-cols-[1.25fr_1fr] gap-x-10 mt-9">
         <div>
-          {s.stage === 'pregnant' ? <PregSummary p={p} visits={events} /> : <CycleSummary st={st} />}
+          {s.stage === 'pregnant' ? <PregSummary p={p} next={nextCheck} /> : <CycleSummary st={st} />}
           <Today tb={tb} ts={ts} sup={[takenIds.size ? activeSups.filter(x => takenIds.has(x.id)).length : 0, activeSups.length]} ex={todayEx.reduce((a, e) => a + (e.minutes || 0), 0)} />
           {s.stage === 'preconception' && (
             <div className="mt-6 flex flex-wrap items-center gap-3 text-[13px] text-mute">
@@ -124,12 +128,14 @@ export default function Home() {
           </Block>
           <Block title="近期行程">
             {events.length ? events.map((e, i) => (
-              <button key={i} onClick={() => go('medical', 'visits')} className="w-full flex gap-4 py-2.5 border-b border-line text-left">
-                <span className="text-[13px] w-[128px] shrink-0 text-forest">{mdw(e.d)}</span>
-                <span className="flex-1 text-[14px]">{e.t}{e.m && <span className="text-mute text-[12.5px]">・{e.m}</span>}</span>
-                <span className="text-[12px] text-mute">{relDay(e.d, today)}</span>
+              <button key={i} onClick={() => go('calendar')} className="w-full flex gap-3 items-start py-2.5 border-b border-line text-left">
+                <span className={cx('w-2 h-2 rounded-full mt-2 shrink-0', EV_DOT[e.kind])} />
+                <span className="text-[13px] w-[118px] shrink-0 text-forest">{mdw(e.d)}</span>
+                <span className="flex-1 text-[14px] min-w-0">{e.title}</span>
+                <span className="text-[12px] text-mute shrink-0">{relDay(e.d, today)}</span>
               </button>
-            )) : <p className="text-[13px] text-mute py-2">沒有排定的行程。看診紀錄填上「下次回診日期」就會出現在這裡。</p>}
+            )) : <p className="text-[13px] text-mute py-2">沒有排定的行程。檢查規劃填上預約日期，或看診紀錄填上下次回診，就會出現在這裡。</p>}
+            <button className="btn-quiet text-[13px] mt-1 -ml-2" onClick={() => go('calendar')}>打開好孕行事曆 ›</button>
           </Block>
         </aside>
       </div>
@@ -172,10 +178,10 @@ function CycleSummary({ st }: { st: ReturnType<typeof cycleStats> }) {
   );
 }
 
-function PregSummary({ p, visits }: { p: ReturnType<typeof pregnancy>; visits: { d: string; t: string }[] }) {
+function PregSummary({ p, next }: { p: ReturnType<typeof pregnancy>; next?: { d: string } }) {
   const { go, today } = useApp();
   if (!p) return <Block title="孕期摘要"><Note>還沒有末次月經日期。<button className="underline text-forest" onClick={() => go('settings')}>到設定填寫</button></Note></Block>;
-  const nv = visits[0];
+  const nv = next;
   return (
     <Block title="孕期摘要">
       <div className="grid grid-cols-3 gap-4 py-2">

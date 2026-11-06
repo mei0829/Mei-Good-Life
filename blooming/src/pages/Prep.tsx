@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Check, Plus } from 'lucide-react';
+import { Check, ExternalLink, Plus } from 'lucide-react';
 import { useApp } from '../app';
 import { useTable } from '../data/hooks';
 import { data } from '../data/repo';
@@ -104,6 +104,9 @@ const BEN_FIELDS: Field[] = [
   { key: 'status', label: '狀態', type: 'select', options: BEN_STATUS, half: true },
   { key: 'amount', label: '領到的金額', type: 'number', unit: '元', half: true, min: 0 },
   { key: 'date', label: '申請／領取日期', type: 'date', half: true },
+  { key: 'deadline', label: '申請期限', type: 'date', half: true, hint: '會出現在行事曆' },
+  { key: 'where', label: '去哪裡申請', type: 'text' },
+  { key: 'url', label: '相關網站', type: 'url', hint: '從瀏覽器網址列複製貼上' },
   { key: 'note', label: '怎麼申請、要準備什麼', type: 'textarea' },
 ];
 const ST_TONE = { 已領取: 'sage', 已申請: 'oat', 還沒申請: 'line', 不適用: 'line' } as const;
@@ -134,14 +137,19 @@ function Benefits() {
           {list.filter(r => (r.cat || '其他') === c).map(r => {
             const st = (r.status || '還沒申請') as keyof typeof ST_TONE;
             return (
-              <button key={r.id} onClick={() => ed.edit(r.id)} className={cx('w-full text-left py-3 border-b border-line last:border-0', st === '不適用' && 'opacity-55')}>
+              <div key={r.id} className={cx('border-b border-line last:border-0', st === '不適用' && 'opacity-55')}>
+              <button onClick={() => ed.edit(r.id)} className="w-full text-left py-3">
                 <div className="flex justify-between gap-3 items-start">
                   <span className="text-[15px]">{r.name}</span>
                   <Badge tone={ST_TONE[st] || 'line'}>{st}</Badge>
                 </div>
                 {(r.amount != null || r.date) && <div className="text-[12.5px] text-forest mt-0.5">{[r.date && ymd(r.date), r.amount != null && money(r.amount)].filter(Boolean).join('・')}</div>}
+                {r.deadline && st !== '已領取' && st !== '不適用' && <div className="text-[12.5px] text-oat-ink mt-0.5">申請期限 {ymd(r.deadline)}</div>}
+                {r.where && st !== '不適用' && <div className="text-[12.5px] text-mute mt-0.5">📍 {r.where}</div>}
                 {r.note && st !== '已領取' && st !== '不適用' && <p className="text-[12.5px] text-mute mt-1 leading-relaxed">{r.note}</p>}
               </button>
+              {r.url && st !== '不適用' && <a href={r.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[13px] text-forest -mt-1.5 mb-3">相關網站<ExternalLink size={13} /></a>}
+              </div>
             );
           })}
         </section>

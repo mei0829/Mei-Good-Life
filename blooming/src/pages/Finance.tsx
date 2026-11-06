@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { addMonths, format } from 'date-fns';
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useApp } from '../app';
+import { FinanceCharts } from './FinanceCharts';
 import type { Palette } from '../lib/theme';
 import { useTable } from '../data/hooks';
 import { data } from '../data/repo';
@@ -15,14 +16,17 @@ import { Badge, DateCell, Empty, Figure, Note, PageHeader, Row, Section, Sheet, 
 const TT = (C: Palette) => ({ contentStyle: { borderRadius: 12, border: '1px solid ' + C.line, background: C.paper, color: C.ink, fontSize: 12 } });
 const PER_YEAR: Record<string, number> = { 年繳: 1, 半年繳: 2, 季繳: 4, 月繳: 12, 躉繳: 0 };
 
+/** 花費類別：預設類別＋自己新增的 */
+export const useCats = () => { const { s } = useApp(); return [...EXPENSE_CAT, ...(s.customCats || []).filter(c => !EXPENSE_CAT.includes(c))]; };
+
 export default function Finance() {
   const { sub, go } = useApp();
-  const tab = sub === 'insurance' ? 'insurance' : 'expenses';
+  const tab = sub === 'insurance' ? 'insurance' : sub === 'charts' ? 'charts' : 'expenses';
   return (
     <div>
       <PageHeader kicker="幸孕女子・花費與保單" title="財務與保險" sub="孕期花費、預算與保單資料。" />
-      <Tabs value={tab} onChange={t => go('finance', t)} items={[['expenses', '孕期花費'], ['insurance', '保險管理']]} />
-      {tab === 'expenses' ? <Expenses /> : <Insurance />}
+      <Tabs value={tab} onChange={t => go('finance', t)} items={[['expenses', '孕期花費'], ['charts', '費用圖表'], ['insurance', '保險管理']]} />
+      {tab === 'expenses' ? <Expenses /> : tab === 'charts' ? <FinanceCharts /> : <Insurance />}
     </div>
   );
 }
@@ -40,10 +44,10 @@ function PrepLink() {
   );
 }
 
-const EXP_FIELDS: Field[] = [
+const expFields = (cats: string[]): Field[] => [
   { key: 'date', label: '日期', type: 'date', required: true, half: true },
   { key: 'amount', label: '金額', type: 'number', unit: '元', required: true, half: true, min: 0 },
-  { key: 'category', label: '類別', type: 'select', options: EXPENSE_CAT, required: true },
+  { key: 'category', label: '類別', type: 'select', options: cats, required: true, hint: '想要別的類別，可以在「設定預算」新增' },
   { key: 'item', label: '項目', type: 'text', hint: '例如：非侵入性染色體檢測、計程車、葉酸' },
   { key: 'note', label: '備註', type: 'textarea' },
 ];
@@ -52,6 +56,7 @@ function Expenses() {
   const { today, s, theme } = useApp();
   const C = theme.c;
   const rows = useTable('expenses') || [];
+  const cats = useCats();
   const ed = useEditor();
   const [month, setMonth] = useState(today.slice(0, 7));
   const [budgetOpen, setBudgetOpen] = useState(false);
@@ -59,7 +64,7 @@ function Expenses() {
   const total = mrows.reduce((a, r) => a + r.amount, 0);
   const all = rows.reduce((a, r) => a + r.amount, 0);
   const budget = s.budgetMonthly;
-  const byCat = EXPENSE_CAT.map(c => ({ c, v: mrows.filter(r => r.category === c).reduce((a, r) => a + r.amount, 0), b: s.budgetByCat?.[c] })).filter(x => x.v || x.b);
+  const byCat = [...cats, ...new Set(mrows.map(r => r.category).filter(c => !cats.includes(c)))].map(c => ({ c, v: mrows.filter(r => r.category === c).reduce((a, r) => a + r.amount, 0), b: s.budgetByCat?.[c] })).filter(x => x.v || x.b);
   const months = Array.from({ length: 12 }, (_, i) => format(addMonths(parse(today.slice(0, 7) + '-01'), i - 11), 'yyyy-MM'));
   const trend = months.map(m => ({ m: +m.slice(5) + '月', key: m, v: rows.filter(r => r.date.startsWith(m)).reduce((a, r) => a + r.amount, 0) }));
   const shiftM = (n: number) => setMonth(format(addMonths(parse(month + '-01'), n), 'yyyy-MM'));
@@ -72,7 +77,7 @@ function Expenses() {
           <span className="serif text-[22px] w-[150px] text-center">{ym(month + '-01')}</span>
           <button className="p-1.5 text-mute" onClick={() => shiftM(1)} aria-label="下個月"><ChevronRight size={18} /></button>
         </div>
-        <div className="flex gap-2"><button className="btn-ghost" onClick={() => setBudgetOpen(true)}>設定預算</button><button className="btn-primary" onClick={() => ed.add({ date: month === today.slice(0, 7) ? today : month + '-01' })}><Plus size={16} />記一筆</button></div>
+        <div className="flex gap-2"><button className="btn-ghost" onClick={() => setBudgetOpen(true)}>設定預算與類別</button><button className="btn-primary" onClick={() => ed.add({ date: month === today.slice(0, 7) ? today : month + '-01' })}><Plus size={16} />記一筆</button></div>
       </div>
       <PrepLink />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-y-6 gap-x-4 mb-9">
@@ -111,7 +116,7 @@ function Expenses() {
         {mrows.length ? mrows.map(r => <Row key={r.id} onClick={() => ed.edit(r.id)} left={<DateCell date={r.date} />} title={r.item || r.category} meta={[r.item && r.category, r.note].filter(Boolean).join('・')} right={money(r.amount)} />)
           : <Empty title="這個月還沒有花費" hint="產檢費、掛號費、檢查費、營養補充品、交通費都可以記。" />}
       </Section>
-      <EntityForm table="expenses" title="花費" fields={EXP_FIELDS} {...ed} onClose={ed.close} />
+      <EntityForm table="expenses" title="花費" fields={expFields(cats)} {...ed} onClose={ed.close} />
       <BudgetSheet open={budgetOpen} onClose={() => setBudgetOpen(false)} />
     </>
   );
@@ -122,22 +127,45 @@ function BudgetSheet({ open, onClose }: { open: boolean; onClose: () => void }) 
   const toast = useToast();
   const [m, setM] = useState<string>('');
   const [c, setC] = useState<Record<string, string>>({});
+  const [custom, setCustom] = useState<string[]>([]);
+  const [nc, setNc] = useState('');
+  const [err, setErr] = useState('');
   useEffect(() => {
-    if (open) { setM(s.budgetMonthly ? String(s.budgetMonthly) : ''); setC(Object.fromEntries(Object.entries(s.budgetByCat || {}).map(([k, v]) => [k, String(v)]))); }
+    if (open) { setM(s.budgetMonthly ? String(s.budgetMonthly) : ''); setC(Object.fromEntries(Object.entries(s.budgetByCat || {}).map(([k, v]) => [k, String(v)]))); setCustom(s.customCats || []); setNc(''); setErr(''); }
   }, [open]);
+  const cats = [...EXPENSE_CAT, ...custom];
   const num = (v: string) => (v === '' || isNaN(+v) || +v < 0 ? undefined : +v);
+  const addCat = () => {
+    const n = nc.trim();
+    if (!n) return setErr('請輸入類別名稱');
+    if (n.length > 10) return setErr('類別名稱最多 10 個字');
+    if (cats.includes(n)) return setErr('已經有這個類別了');
+    setCustom(x => [...x, n]); setNc(''); setErr('');
+  };
   const save = async () => {
-    const byCat: Record<string, number> = {}; for (const [k, v] of Object.entries(c)) { const n = num(v); if (n) byCat[k] = n; }
-    await data.saveSettings({ budgetMonthly: num(m), budgetByCat: byCat }); toast('預算已更新'); onClose();
+    const byCat: Record<string, number> = {}; for (const [k, v] of Object.entries(c)) { const n = num(v); if (n && cats.includes(k)) byCat[k] = n; }
+    await data.saveSettings({ budgetMonthly: num(m), budgetByCat: byCat, customCats: custom }); toast('預算與類別已更新'); onClose();
   };
   return (
-    <Sheet open={open} onClose={onClose} title="每月預算">
+    <Sheet open={open} onClose={onClose} title="每月預算與類別">
       <label className="block text-[12.5px] text-mute mb-1.5" htmlFor="b-m">每月總預算（元）</label>
       <input id="b-m" className="field num" type="number" inputMode="numeric" value={m} onChange={e => setM(e.target.value)} />
-      <p className="eyebrow mt-6 mb-2">各類別預算（元）</p>
+      <p className="eyebrow mt-6 mb-2">各類別預算（元，可以留白）</p>
       <div className="grid grid-cols-2 gap-3">
-        {EXPENSE_CAT.map(k => <label key={k} className="block"><span className="block text-[12px] text-mute mb-1">{k}</span><input className="field num" type="number" inputMode="numeric" value={c[k] || ''} onChange={e => setC(o => ({ ...o, [k]: e.target.value }))} /></label>)}
+        {cats.map(k => (
+          <label key={k} className="block">
+            <span className="flex justify-between text-[12px] text-mute mb-1">{k}{custom.includes(k) && <button type="button" className="text-alert" onClick={e => { e.preventDefault(); setCustom(x => x.filter(y => y !== k)); }} aria-label={'刪除類別 ' + k}>刪除</button>}</span>
+            <input className="field num" type="number" inputMode="numeric" value={c[k] || ''} onChange={e => setC(o => ({ ...o, [k]: e.target.value }))} />
+          </label>
+        ))}
       </div>
+      <p className="eyebrow mt-6 mb-2">新增自己的類別</p>
+      <div className="flex gap-2">
+        <input className="field" value={nc} maxLength={10} placeholder="例如：月子中心、坐月子餐" onChange={e => { setNc(e.target.value); setErr(''); }} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCat(); } }} aria-label="新類別名稱" />
+        <button type="button" className="btn-ghost" onClick={addCat}><Plus size={15} />加入</button>
+      </div>
+      {err && <p className="text-[12.5px] text-alert mt-1.5">{err}</p>}
+      <p className="text-[12px] text-mute mt-2">刪除類別不會刪掉已經記的花費。</p>
       <div className="flex justify-end gap-2 mt-6"><button className="btn-ghost" onClick={onClose}>取消</button><button className="btn-primary" onClick={save}>儲存</button></div>
     </Sheet>
   );
