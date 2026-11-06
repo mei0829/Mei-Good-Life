@@ -13,13 +13,14 @@
   --color-rose: #D8B7B0;
   --color-rose-soft: #F1E4E0;
   --color-ink: #343B34;        /* dark text */
-  --color-mute: #888478;       /* secondary text */
+  --color-mute: #7D796E;       /* secondary text */
   --color-line: #E6E0D5;       /* border */
   --color-alert: #A65B4F;
 
-  /* 品牌名稱與大數字用 Cormorant；中文會自動用 Noto Serif TC */
-  --font-display: "Cormorant Garamond", "Noto Serif TC", serif;
-  --font-serif: "Noto Serif TC", "Cormorant Garamond", serif;
+  /* 標題與大數字用圓體（jf 粉圓），看起來柔和、不嚴肅；品牌名稱另外用 Cormorant */
+  --font-display: "Huninn", "Noto Sans TC", sans-serif;
+  --font-serif: "Huninn", "Noto Sans TC", sans-serif;
+  --font-brand: "Cormorant Garamond", "Huninn", serif;
   --font-sans: "Noto Sans TC", -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
   --font-num: ui-sans-serif, -apple-system, "Helvetica Neue", Arial, sans-serif;
 
@@ -44,9 +45,10 @@ button { cursor: pointer; touch-action: manipulation; }
 input, select, textarea, button { font: inherit; color: inherit; }
 }
 
-@utility eyebrow { font-size: 12px; letter-spacing: .24em; color: var(--color-mute); font-family: var(--font-serif); }
-@utility display { font-family: var(--font-display); font-weight: 500; letter-spacing: .01em; }
-@utility serif { font-family: var(--font-serif); }
+@utility eyebrow { font-size: 13px; letter-spacing: .06em; color: var(--color-mute); font-family: var(--font-serif); }
+@utility display { font-family: var(--font-display); font-weight: 400; letter-spacing: 0; }
+@utility brand { font-family: var(--font-brand); font-weight: 600; letter-spacing: .005em; }
+@utility serif { font-family: var(--font-serif); font-weight: 400; }
 @utility num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
 @utility surface { background: var(--color-paper); border: 1px solid var(--color-line); border-radius: 20px; }
 @utility field {
@@ -56,7 +58,7 @@ input, select, textarea, button { font: inherit; color: inherit; }
 }
 @utility btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 9999px;
-  padding: 8px 16px; font-size: 14px; transition: transform .1s, background-color .15s, opacity .15s;
+  padding: 8px 16px; font-size: 14px; white-space: nowrap; flex-shrink: 0; transition: transform .1s, background-color .15s, opacity .15s;
   &:active { transform: scale(.98); }
   &:disabled { opacity: .4; cursor: not-allowed; }
 }

@@ -18,7 +18,7 @@ export function PageHeader({ title, kicker, sub, action }: { title: string; kick
       </div>
       <div className="flex items-end justify-between gap-4">
         <div>
-          <h1 className="serif font-medium text-[34px] md:text-[44px] leading-tight mt-1.5 text-forest tracking-[.08em]">{title}</h1>
+          <h1 className="serif text-[34px] md:text-[44px] leading-tight mt-1.5 text-forest tracking-[.02em]">{title}</h1>
         </div>
         {action}
       </div>
@@ -32,7 +32,7 @@ export function Section({ title, action, children, className = '' }: { title: st
   return (
     <section className={cx('mb-9', className)}>
       <div className="flex items-baseline justify-between gap-3 border-b border-line pb-2 mb-4">
-        <h2 className="serif text-[17px] text-forest tracking-[.06em] flex items-center gap-2"><span className="w-4 h-px bg-sage inline-block" aria-hidden="true" />{title}</h2>
+        <h2 className="serif text-[17px] text-forest tracking-[.02em] flex items-center gap-2"><span className="w-4 h-px bg-sage inline-block" aria-hidden="true" />{title}</h2>
         {action}
       </div>
       {children}

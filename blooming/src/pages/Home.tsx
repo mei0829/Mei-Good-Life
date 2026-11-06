@@ -61,9 +61,9 @@ export default function Home() {
       <header className="flex items-end justify-between border-b border-ink/80 pb-3">
         <div>
           <p className="eyebrow">{fullDate(today)}</p>
-          <h1 className="display text-[54px] md:text-[84px] leading-[.9] text-forest mt-2 -ml-0.5">Blooming Days</h1>
+          <h1 className="brand text-[54px] md:text-[84px] leading-[.9] text-forest mt-2 -ml-0.5">Blooming Days</h1>
         </div>
-        <p className="hidden sm:block serif text-[13.5px] text-mute text-right max-w-[200px] leading-relaxed tracking-[.1em]">備孕與孕期<br />健康日誌</p>
+        <p className="hidden sm:block serif text-[13.5px] text-mute text-right max-w-[200px] leading-relaxed tracking-[.02em]">備孕與孕期<br />健康日誌</p>
       </header>
       <div className="flex justify-between items-baseline py-2.5 border-b border-line text-[12.5px] text-mute">
         <span className="serif">在成為媽媽之前，先好好照顧自己。</span>
@@ -71,7 +71,7 @@ export default function Home() {
       </div>
 
       <div className="mt-6 flex items-baseline gap-3 flex-wrap">
-        <span className="serif text-[24px] md:text-[28px] text-ink tracking-[.06em]">{hello}</span>
+        <span className="serif text-[24px] md:text-[28px] text-ink tracking-[.02em]">{hello}</span>
         <span className="text-[14px] text-mute">{helloSub}</span>
       </div>
 
@@ -89,8 +89,8 @@ export default function Home() {
             <div className="serif text-[20px] mt-2">產後階段（功能預留，之後擴充）</div>
           ) : (<>
             {st.cycleDay ? (
-              <div className="leading-none mt-2"><span className="serif text-[20px] md:text-[24px] mr-2">月經週期第</span><span className="display text-[50px] md:text-[64px]">{st.cycleDay}</span><span className="serif text-[20px] md:text-[24px] ml-2">天</span></div>
-            ) : <div className="serif text-[26px] md:text-[32px] mt-2 tracking-[.08em]">從今天開始</div>}
+              <div className="leading-none mt-2 whitespace-nowrap"><span className="serif text-[18px] md:text-[24px] mr-1.5">月經週期第</span><span className="display text-[46px] md:text-[64px]">{st.cycleDay}</span><span className="serif text-[18px] md:text-[24px] ml-1.5">天</span></div>
+            ) : <div className="serif text-[26px] md:text-[32px] mt-2 tracking-[.02em]">從今天開始</div>}
             <div className="serif text-[14px] mt-2 text-mute">{st.cycleDay ? (st.nextStart ? '下次月經預測在 ' + md(st.nextStart) : '再多記錄幾次月經，就能估算週期') : '記錄第一次月經，開始了解你的週期'}</div>
           </>)}
         </div>
@@ -137,7 +137,7 @@ export default function Home() {
       <blockquote className="relative mt-12 py-10 px-6 md:px-14 text-center border-y border-line">
         <DuckPair className="w-36 h-20 mx-auto mb-4" big={{ pose: 'walk' }} small={{ pose: 'walk', kind: 'duckling', flip: true }} />
         <p className="eyebrow mb-3">每日一句</p>
-        <p className="serif text-[22px] md:text-[28px] leading-relaxed text-forest tracking-[.08em]">「{quote}」</p>
+        <p className="serif text-[22px] md:text-[28px] leading-relaxed text-forest tracking-[.02em]">「{quote}」</p>
       </blockquote>
 
       <ConfirmPregnancy open={confirm} onClose={() => setConfirm(false)} />
@@ -146,7 +146,7 @@ export default function Home() {
 }
 
 function Block({ title, children }: { title: string; children: React.ReactNode }) {
-  return <section className="mb-8"><h2 className="serif text-[18px] text-forest tracking-[.08em] mb-1.5 flex items-center gap-2"><span className="w-4 h-px bg-sage inline-block" aria-hidden="true" />{title}</h2>{children}</section>;
+  return <section className="mb-8"><h2 className="serif text-[18px] text-forest tracking-[.02em] mb-1.5 flex items-center gap-2"><span className="w-4 h-px bg-sage inline-block" aria-hidden="true" />{title}</h2>{children}</section>;
 }
 
 function CycleSummary({ st }: { st: ReturnType<typeof cycleStats> }) {
