@@ -7,7 +7,7 @@ import { cycleStats } from '../lib/cycle';
 import { pregnancy, TRI, weekLabel } from '../lib/pregnancy';
 import { daysBetween, fullDate, md, mdw, relDay, ymd } from '../lib/dates';
 import { quoteOf } from '../content/quotes';
-import { HeroArt, Sprig } from '../components/Botanical';
+import { DuckPair } from '../components/Duck';
 import { Badge, Note, cx } from '../components/ui';
 import { ConfirmPregnancy } from '../components/Stage';
 
@@ -74,16 +74,19 @@ export default function Home() {
         <span className="text-[14px] text-mute">{helloSub}</span>
       </div>
 
-      {/* 主視覺 */}
-      <figure className="relative mt-5 rounded-[22px] overflow-hidden aspect-[1/1] sm:aspect-[16/9] md:aspect-[21/9] bg-oat-soft">
-        {photo ? <img src={photo} alt="主視覺照片" className="absolute inset-0 w-full h-full object-cover" /> : <HeroArt className="absolute inset-0 w-full h-full" />}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#2c372e]/75 via-[#2c372e]/15 to-transparent" />
-        <figcaption className="absolute left-5 right-5 bottom-5 md:left-8 md:bottom-7 text-paper">
-          <div className="eyebrow !text-paper/85">目前階段・{STAGE_LABEL[s.stage]}</div>
+      {/* 主視覺：柯爾鴨插畫（或自己的照片），文字放在旁邊的紙張面板，不蓋住鴨子 */}
+      <figure className="relative mt-5 md:grid md:grid-cols-[1.75fr_1fr] md:gap-6">
+        <div className="relative rounded-[22px] overflow-hidden aspect-[3/2] bg-oat-soft">
+          {photo ? <img src={photo} alt="主視覺照片" className="absolute inset-0 w-full h-full object-cover" />
+            : <img src="ducks.webp" srcSet="ducks-small.webp 1024w, ducks.webp 1536w" sizes="(min-width: 768px) 70vw, 100vw" alt="草地上的柯爾鴨" className="absolute inset-0 w-full h-full object-cover object-[50%_45%]" />}
+        </div>
+        <figcaption className="relative -mt-8 mx-3 md:m-0 rounded-[18px] bg-paper/95 backdrop-blur border border-line px-5 py-4 md:px-7 md:py-7 text-forest md:flex md:flex-col md:justify-end">
+          <DuckPair className="hidden md:block w-32 h-20 mb-auto" />
+          <div className="eyebrow">目前階段・{STAGE_LABEL[s.stage]}</div>
           {p ? (<>
             <div className="leading-none mt-2"><span className="display text-[50px] md:text-[64px]">{p.weeks}</span><span className="serif text-[20px] md:text-[24px] mx-2">週</span><span className="display text-[50px] md:text-[64px]">{p.dayOfWeek}</span><span className="serif text-[20px] md:text-[24px] ml-2">天</span></div>
-            <div className="serif text-[14px] mt-2 text-paper/90">{TRI[p.trimester]}・預產期 {ymd(p.edd)}・{p.left > 0 ? `還有 ${p.left} 天` : p.left === 0 ? '就是今天' : `已過 ${-p.left} 天`}</div>
-            <div className="h-[3px] bg-paper/25 rounded-full mt-3 max-w-md"><div className="h-full bg-paper rounded-full" style={{ width: p.progress * 100 + '%' }} /></div>
+            <div className="serif text-[14px] mt-2 text-mute">{TRI[p.trimester]}・預產期 {ymd(p.edd)}・{p.left > 0 ? `還有 ${p.left} 天` : p.left === 0 ? '就是今天' : `已過 ${-p.left} 天`}</div>
+            <div className="h-[3px] bg-line rounded-full mt-3 max-w-md"><div className="h-full bg-forest rounded-full" style={{ width: p.progress * 100 + '%' }} /></div>
           </>) : s.stage === 'pregnant' ? (
             <div className="serif text-[18px] mt-2">請到設定填寫末次月經日期，計算孕週</div>
           ) : s.stage === 'postpartum' ? (
@@ -92,7 +95,7 @@ export default function Home() {
             {st.cycleDay ? (
               <div className="leading-none mt-2"><span className="serif text-[20px] md:text-[24px] mr-2">月經週期第</span><span className="display text-[50px] md:text-[64px]">{st.cycleDay}</span><span className="serif text-[20px] md:text-[24px] ml-2">天</span></div>
             ) : <div className="serif text-[26px] md:text-[32px] mt-2 tracking-[.08em]">從今天開始</div>}
-            <div className="serif text-[14px] mt-2 text-paper/90">{st.cycleDay ? (st.nextStart ? '下次月經預測在 ' + md(st.nextStart) : '再多記錄幾次月經，就能估算週期') : '記錄第一次月經，開始了解你的週期'}</div>
+            <div className="serif text-[14px] mt-2 text-mute">{st.cycleDay ? (st.nextStart ? '下次月經預測在 ' + md(st.nextStart) : '再多記錄幾次月經，就能估算週期') : '記錄第一次月經，開始了解你的週期'}</div>
           </>)}
         </figcaption>
       </figure>
@@ -135,7 +138,7 @@ export default function Home() {
 
       {/* 每日一句 */}
       <blockquote className="relative mt-12 py-10 px-6 md:px-14 text-center border-y border-line">
-        <Sprig className="w-10 h-10 mx-auto mb-3" />
+        <DuckPair className="w-28 h-16 mx-auto mb-4" />
         <p className="eyebrow mb-3">每日一句</p>
         <p className="serif text-[22px] md:text-[28px] leading-relaxed text-forest tracking-[.08em]">「{quote}」</p>
       </blockquote>
@@ -157,9 +160,9 @@ function CycleSummary({ st }: { st: ReturnType<typeof cycleStats> }) {
         <Note tone="oat">預測尚待累積：{st.count === 0 ? '還沒有月經紀錄' : '目前只有 1 次月經紀錄'}，需要至少兩次月經開始日才能估算週期。<button className="underline ml-1 text-forest" onClick={() => go('cycle')}>前往記錄</button></Note>
       ) : (
         <div className="grid grid-cols-3 gap-4 py-2">
-          <div><div className="text-[12px] text-mute">下次月經</div><div className="serif text-[20px] mt-1">{md(st.nextStart)}</div><div className="text-[11.5px] text-mute">預測</div></div>
-          <div><div className="text-[12px] text-mute">排卵期</div><div className="serif text-[20px] mt-1">{md(st.ovulation)}</div><div className="text-[11.5px] text-mute">預測</div></div>
-          <div><div className="text-[12px] text-mute">易孕期</div><div className="serif text-[20px] mt-1">{md(st.fertileStart)}–{md(st.fertileEnd)}</div><div className="text-[11.5px] text-mute">預測</div></div>
+          <div><div className="text-[12px] text-mute">下次月經</div><div className="serif text-[17px] sm:text-[20px] mt-1">{md(st.nextStart)}</div><div className="text-[11.5px] text-mute">預測</div></div>
+          <div><div className="text-[12px] text-mute">排卵期</div><div className="serif text-[17px] sm:text-[20px] mt-1">{md(st.ovulation)}</div><div className="text-[11.5px] text-mute">預測</div></div>
+          <div><div className="text-[12px] text-mute">易孕期</div><div className="serif text-[17px] sm:text-[20px] mt-1 leading-snug">{md(st.fertileStart)}<br /><span className="text-[13px] text-mute">至</span> {md(st.fertileEnd)}</div><div className="text-[11.5px] text-mute">預測</div></div>
         </div>
       )}
       <div className="flex flex-wrap gap-2 mt-3">

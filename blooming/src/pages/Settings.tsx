@@ -87,10 +87,10 @@ export default function SettingsPage() {
 
           <Section title="首頁主視覺照片">
             <div className="flex items-start gap-4">
-              {s.heroPhoto ? <FileList ids={[s.heroPhoto]} /> : <p className="text-[13px] text-mute flex-1">目前使用植物插畫。可以換成自己的照片（只存在這個瀏覽器）。</p>}
+              {s.heroPhoto ? <FileList ids={[s.heroPhoto]} /> : <p className="text-[13px] text-mute flex-1">目前使用柯爾鴨插畫。可以換成自己的照片（只存在這個瀏覽器）。</p>}
               <div className="flex flex-col gap-2 shrink-0">
                 <button className="btn-ghost" onClick={() => photoInp.current?.click()}><ImagePlus size={15} strokeWidth={1.5} />選擇照片</button>
-                {s.heroPhoto && <button className="btn-quiet text-alert" onClick={async () => { await data.removeFile(s.heroPhoto!); await data.saveSettings({ heroPhoto: undefined }); }}>改回插畫</button>}
+                {s.heroPhoto && <button className="btn-quiet text-alert" onClick={async () => { await data.removeFile(s.heroPhoto!); await data.saveSettings({ heroPhoto: undefined }); }}>改回柯爾鴨插畫</button>}
               </div>
             </div>
             <input ref={photoInp} type="file" accept="image/*" hidden onChange={e => { photo(e.target.files?.[0]); e.target.value = ''; }} />

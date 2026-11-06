@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
-import { EmptyArt, Sprig } from './Botanical';
+import { Duck, DuckPair } from './Duck';
 
 export const cx = (...a: (string | false | null | undefined)[]) => a.filter(Boolean).join(' ');
 
@@ -17,7 +17,7 @@ export function PageHeader({ title, kicker, sub, action }: { title: string; kick
         {action}
       </div>
       {sub && <p className="text-[13.5px] text-mute mt-3 max-w-xl leading-relaxed">{sub}</p>}
-      <Sprig className="absolute right-0 -top-1 w-14 h-14 opacity-60 hidden md:block" />
+      <Duck className="absolute right-0 -top-3 w-20 h-20 hidden md:block" />
     </header>
   );
 }
@@ -57,7 +57,7 @@ export function Chips<T extends string>({ value, onChange, items }: { value: T; 
 export function Empty({ title, hint, action }: { title: string; hint?: string; action?: ReactNode }) {
   return (
     <div className="text-center py-10 px-4">
-      <EmptyArt className="w-16 h-16 mx-auto mb-3" />
+      <DuckPair className="w-32 h-20 mx-auto mb-3" />
       <p className="serif text-[15px]">{title}</p>
       {hint && <p className="text-[13px] text-mute mt-1 max-w-sm mx-auto leading-relaxed">{hint}</p>}
       {action && <div className="mt-4">{action}</div>}
