@@ -67,3 +67,19 @@ describe('repository', () => {
     expect(csv).toContain('經痛、腰痠'); expect(csv).toContain('"a,""b"""');
   });
 });
+
+describe('baby prep', () => {
+  it('bulk adds seed lists and skips invalid rows', async () => {
+    const d = createDexieService(new BloomDB('t' + Math.random()));
+    const n = await d.bulkAdd('items', [{ name: '奶瓶', cat: '哺餵' }, { name: '' } as any, { name: '尿布', price: -1 } as any]);
+    expect(n).toBe(1);
+    await d.bulkAdd('benefits', [{ name: '產假 8 週', cat: '生產', status: '還沒申請' }]);
+    const b = JSON.parse(JSON.stringify(await d.exportBackup()));
+    expect(b.tables.items.length).toBe(1); expect(b.tables.benefits.length).toBe(1);
+  });
+  it('old backups without the new lists still restore', async () => {
+    const d = createDexieService(new BloomDB('t' + Math.random()));
+    const r = await d.importBackup({ app: 'blooming-days', version: 1, exportedAt: 'x', settings: null, tables: { journal: [{ id: 'j', date: '2026-11-06', createdAt: 1, updatedAt: 1 }] }, files: [] });
+    expect(r.imported).toBe(1); expect(await d.table('items').list()).toEqual([]);
+  });
+});

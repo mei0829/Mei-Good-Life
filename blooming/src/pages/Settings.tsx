@@ -7,6 +7,7 @@ import { ConfirmPregnancy } from '../components/Stage';
 import { Note, PageHeader, Section, cx, useToast } from '../components/ui';
 import { today as todayStr } from '../lib/dates';
 import { THEMES, THEME_IDS, isTheme, type ThemeId } from '../lib/theme';
+import { Brand } from '../components/Brand';
 import { Check } from 'lucide-react';
 
 function download(name: string, text: string | Blob, type = 'application/json') {
@@ -144,7 +145,7 @@ function ThemeCard({ id, on, showing, onPick }: { id: ThemeId; on: boolean; show
     <button role="radio" aria-checked={on} onClick={onPick} className={cx('relative text-left rounded-[16px] border p-2.5 transition', on ? 'border-forest ring-1 ring-forest' : 'border-line')}>
       <div className="rounded-[11px] p-2.5 h-[78px] flex flex-col justify-between" style={{ background: c.ivory, border: '1px solid ' + c.line }}>
         <div className="flex items-center justify-between">
-          <span className="brand text-[13px]" style={{ color: c.forest }}>幸孕女子</span>
+          <span className="text-[13px]" style={{ color: c.forest }}><Brand small /></span>
           <span className="w-9 h-3.5 rounded-full" style={{ background: c.forest }} />
         </div>
         <div className="rounded-[8px] px-2 py-1.5" style={{ background: c.paper, border: '1px solid ' + c.line }}>

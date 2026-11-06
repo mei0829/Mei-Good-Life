@@ -17,8 +17,9 @@
   try { var t = JSON.parse(localStorage.getItem('bd-theme') || 'null'); if (t && t.c) { var r = document.documentElement; for (var k in t.c) r.style.setProperty('--color-' + k, t.c[k]); r.style.colorScheme = t.dark ? 'dark' : 'light'; if (t.dark) { r.style.setProperty('--noise', 'transparent'); r.style.setProperty('--backdrop', 'rgba(0,0,0,.55)'); } document.querySelector('meta[name="theme-color"]').setAttribute('content', t.c.ivory); } } catch (e) {}
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<!-- 標題與數字用圓體 jf 粉圓（Huninn），內文用 Noto Sans TC；品牌名稱「幸孕女子」用霞鶩文楷 -->
-<link href="https://fonts.googleapis.com/css2?family=Huninn&family=LXGW+WenKai+TC:wght@700&family=Noto+Sans+TC:wght@400;500&display=swap" rel="stylesheet">
+<!-- 標題與數字用圓體 jf 粉圓（Huninn），內文用 Noto Sans TC；品牌名稱「幸孕女子」用活潑的 Yusei Magic（只下載這四個字） -->
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Yusei+Magic&text=%E5%B9%B8%E5%AD%95%E5%A5%B3%E5%AD%90&display=swap" rel="stylesheet">
 </head>
 <body>
 <div id="root"></div>

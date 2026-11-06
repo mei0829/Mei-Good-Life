@@ -27,6 +27,19 @@ export default function Finance() {
   );
 }
 
+/** 寶寶準備頁的嬰兒用品花費與福利，在這裡也看得到 */
+function PrepLink() {
+  const { go } = useApp();
+  const items = useTable('items') || [], bens = useTable('benefits') || [];
+  const spent = items.reduce((a, r) => a + (r.price || 0), 0), got = bens.reduce((a, r) => a + (r.amount || 0), 0);
+  if (!spent && !got) return null;
+  return (
+    <button onClick={() => go('prep')} className="w-full text-left mb-6 rounded-[14px] bg-sage-soft px-4 py-3 text-[13px] flex justify-between gap-3">
+      <span>寶寶準備：嬰兒用品已花費 <b className="num">{money(spent)}</b>，準媽媽福利已領 <b className="num">{money(got)}</b></span><span className="text-forest shrink-0">查看 ›</span>
+    </button>
+  );
+}
+
 const EXP_FIELDS: Field[] = [
   { key: 'date', label: '日期', type: 'date', required: true, half: true },
   { key: 'amount', label: '金額', type: 'number', unit: '元', required: true, half: true, min: 0 },
@@ -61,6 +74,7 @@ function Expenses() {
         </div>
         <div className="flex gap-2"><button className="btn-ghost" onClick={() => setBudgetOpen(true)}>設定預算</button><button className="btn-primary" onClick={() => ed.add({ date: month === today.slice(0, 7) ? today : month + '-01' })}><Plus size={16} />記一筆</button></div>
       </div>
+      <PrepLink />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-y-6 gap-x-4 mb-9">
         <Figure value={money(total)} label="本月支出" tone="forest" />
         <Figure value={budget ? money(budget) : '—'} label="本月預算" />

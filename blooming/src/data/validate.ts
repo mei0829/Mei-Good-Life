@@ -35,6 +35,10 @@ export function validate<T extends TableName>(table: T, r: Partial<Tables[T]>): 
       if (!inRange(x.premium, 0, 1e8)) e.push('保費不正確'); if (!inRange(x.sum, 0, 1e10)) e.push('保額不正確'); break;
     case 'expenses': needDate(); if (!x.category) e.push('請選擇類別');
       if (typeof x.amount !== 'number' || !(x.amount > 0) || x.amount > 1e8) e.push('請填寫正確的金額'); break;
+    case 'items': if (!x.name?.trim()) e.push('請填寫品項');
+      if (!inRange(x.budget, 0, 1e8)) e.push('預算不正確'); if (!inRange(x.price, 0, 1e8)) e.push('花費不正確'); break;
+    case 'benefits': if (!x.name?.trim()) e.push('請填寫福利名稱'); optDate('date', '日期');
+      if (!inRange(x.amount, 0, 1e8)) e.push('金額不正確'); break;
     case 'journal': needDate(); if (!inRange(x.nausea, 0, 5)) e.push('噁心程度請選 0–5'); if (!inRange(x.vomit, 0, 50)) e.push('孕吐次數不正確'); break;
   }
   return e;

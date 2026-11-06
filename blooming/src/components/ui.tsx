@@ -80,7 +80,7 @@ export function Figure({ value, unit, label, tone = 'ink' }: { value: ReactNode;
   const c = { ink: 'text-ink', forest: 'text-forest', rose: 'text-rose-ink', mute: 'text-mute' }[tone];
   return (
     <div>
-      <div className={cx('num text-[26px] leading-tight', c)}>{value}{unit && <span className="text-[13px] text-mute ml-1">{unit}</span>}</div>
+      <div className={cx('num text-[22px] sm:text-[26px] leading-tight whitespace-nowrap', c)}>{value}{unit && <span className="text-[13px] text-mute ml-1">{unit}</span>}</div>
       <div className="text-[12px] text-mute mt-0.5">{label}</div>
     </div>
   );

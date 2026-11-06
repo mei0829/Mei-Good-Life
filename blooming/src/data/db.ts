@@ -15,6 +15,8 @@ export class BloomDB extends Dexie {
   insurance!: Table<Tables['insurance'], string>;
   expenses!: Table<Tables['expenses'], string>;
   journal!: Table<Tables['journal'], string>;
+  items!: Table<Tables['items'], string>;
+  benefits!: Table<Tables['benefits'], string>;
   files!: Table<FileRec, string>;
   settings!: Table<Settings, string>;
   constructor(name = 'blooming-days') {
@@ -24,5 +26,7 @@ export class BloomDB extends Dexie {
       sleep: 'id, &date', exercise: 'id, date', hospitals: 'id, name', doctors: 'id, name', visits: 'id, date, nextDate',
       insurance: 'id, name', expenses: 'id, date, category', journal: 'id, &date', files: 'id', settings: 'id'
     });
+    // 第 2 版：新增嬰兒用品與準媽媽福利（原本的資料不受影響）
+    this.version(2).stores({ items: 'id, cat', benefits: 'id, cat' });
   }
 }

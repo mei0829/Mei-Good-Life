@@ -3,10 +3,11 @@ import { useSettings } from './data/hooks';
 import { DEFAULT_SETTINGS } from './data/repo';
 import type { Settings } from './data/types';
 import { today } from './lib/dates';
+import { Brand } from './components/Brand';
 import { applyTheme, resolveTheme, THEMES, type Theme, type ThemeId } from './lib/theme';
 
-export type Route = 'home' | 'cycle' | 'wellness' | 'medical' | 'lifestyle' | 'finance' | 'journal' | 'settings';
-export const ROUTES: Route[] = ['home', 'cycle', 'wellness', 'medical', 'lifestyle', 'finance', 'journal', 'settings'];
+export type Route = 'home' | 'cycle' | 'wellness' | 'medical' | 'lifestyle' | 'finance' | 'prep' | 'journal' | 'settings';
+export const ROUTES: Route[] = ['home', 'cycle', 'wellness', 'medical', 'lifestyle', 'finance', 'prep', 'journal', 'settings'];
 
 interface Ctx { s: Settings; today: string; route: Route; sub: string; go: (r: Route, sub?: string) => void; themeId: ThemeId; theme: Theme }
 const AppCtx = createContext<Ctx>(null!);
@@ -37,7 +38,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return () => { removeEventListener('hashchange', h); clearInterval(t); };
   }, []);
   const go = (r: Route, sb = '') => { location.hash = '/' + r + (sb ? '/' + sb : ''); };
-  if (!s) return <div className="min-h-screen grid place-items-center text-mute brand text-2xl">幸孕女子</div>;
+  if (!s) return <div className="min-h-screen grid place-items-center text-forest text-[32px]"><Brand /></div>;
   return <AppCtx.Provider value={{ s: s || DEFAULT_SETTINGS, today: day, route, sub, go, themeId, theme: THEMES[themeId] }}>{children}</AppCtx.Provider>;
 }
 

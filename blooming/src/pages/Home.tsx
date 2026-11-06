@@ -7,6 +7,7 @@ import { pregnancy, TRI, weekLabel } from '../lib/pregnancy';
 import { daysBetween, fullDate, md, mdw, relDay, ymd } from '../lib/dates';
 import { quoteOf } from '../content/quotes';
 import { Duck, DuckPair, type DuckSpec } from '../components/Duck';
+import { Brand } from '../components/Brand';
 import { Badge, Note, cx } from '../components/ui';
 import { ConfirmPregnancy } from '../components/Stage';
 
@@ -61,7 +62,7 @@ export default function Home() {
       <header className="flex items-end justify-between border-b border-ink/80 pb-3">
         <div>
           <p className="eyebrow">{fullDate(today)}</p>
-          <h1 className="brand text-[52px] md:text-[84px] leading-none text-forest mt-2">幸孕女子</h1>
+          <h1 className="text-[54px] md:text-[86px] leading-none text-forest mt-3"><Brand /></h1>
         </div>
         <p className="hidden sm:block serif text-[13.5px] text-mute text-right max-w-[200px] leading-relaxed tracking-[.02em]">備孕與孕期<br />健康日誌</p>
       </header>

@@ -32,6 +32,8 @@ export interface DataService {
   exportBackup(): Promise<Backup>;
   importBackup(b: unknown): Promise<{ imported: number; skipped: number }>;
   exportCSV(name: TableName): Promise<string>;
+  /** 一次新增很多筆（例如預設清單），格式不對的略過 */
+  bulkAdd<K extends TableName>(name: K, rows: NewRec<Tables[K]>[]): Promise<number>;
   clearAll(): Promise<void>;
   subscribe(fn: () => void): () => void;
 }
@@ -63,7 +65,7 @@ async function findDuplicate(db: BloomDB, name: TableName, r: any, selfId?: stri
         .find(e => e.amount === r.amount && e.category === r.category && (e.item || '') === (r.item || ''));
       return x ? new DuplicateError('同一天已經有一筆一樣的花費，確定要再新增一筆嗎？', x.id, false) : null;
     }
-    case 'hospitals': case 'doctors': case 'supplements': case 'insurance': {
+    case 'hospitals': case 'doctors': case 'supplements': case 'insurance': case 'items': case 'benefits': {
       const x = (await (db[name] as any).toArray()).filter(other).find((h: any) => h.name.trim() === String(r.name || '').trim());
       return x ? new DuplicateError(`已經有「${x.name}」了，確定要再新增一筆嗎？`, x.id, false) : null;
     }
@@ -188,6 +190,11 @@ export function createDexieService(db = new BloomDB()): DataService {
       const rows: any[] = await (db as any)[name].toArray();
       const keys = [...new Set(rows.flatMap(r => Object.keys(r)))].filter(k => !['createdAt', 'updatedAt', 'files', 'photos'].includes(k));
       return '﻿' + [keys, ...rows.map(r => keys.map(k => r[k]))].map(r => r.map(csvCell).join(',')).join('\r\n');
+    },
+    async bulkAdd(name, rows) {
+      const now = Date.now();
+      const ok = rows.map(r => clean(r as any)).filter(r => !validate(name, r).length).map((r, i) => ({ ...r, id: uid(), createdAt: now + i, updatedAt: now + i }));
+      await (db as any)[name].bulkAdd(ok); changed(); return ok.length;
     },
     async clearAll() {
       await db.transaction('rw', [...TABLES.map(n => (db as any)[n]), db.files, db.settings], async () => {
