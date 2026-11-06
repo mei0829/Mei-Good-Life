@@ -18,7 +18,7 @@ export const CYCLE_DAY_FIELDS: Field[] = [
 ];
 export const BODY_FIELDS: Field[] = [
   { key: 'date', label: '日期', type: 'date', required: true, half: true },
-  { key: 'weight', label: '體重', type: 'number', unit: 'kg', step: 0.1, half: true },
+  { key: 'weight', label: '體重', type: 'number', unit: '公斤', step: 0.1, half: true },
   { key: 'bodyFat', label: '體脂率', type: 'number', unit: '%', step: 0.1, half: true },
   { key: 'bbt', label: '基礎體溫', type: 'number', unit: '°C', step: 0.01, half: true },
   { key: 'mood', label: '心情', type: 'select', options: O.MOODS, half: true },

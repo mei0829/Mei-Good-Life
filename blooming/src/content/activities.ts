@@ -14,7 +14,7 @@ export const ACTIVITIES: Activity[] = [
   { id: 'pwalk', title: '孕期散步', cat: '孕期活動', stage: 'preg', minutes: 20, intensity: '輕鬆', desc: '穿好走的鞋，依身體狀況分段完成。', caution: '出現規律宮縮、出血、破水、胎動明顯減少時請就醫。' },
   { id: 'folate', title: '葉酸與深綠色蔬菜', cat: '健康飲食', stage: 'both', desc: '菠菜、地瓜葉、花椰菜、豆類都含葉酸；補充劑劑量請與醫師或藥師確認。' },
   { id: 'protein', title: '每餐一份優質蛋白', cat: '健康飲食', stage: 'both', desc: '魚、蛋、豆腐、雞肉、瘦肉輪流吃，幫助穩定血糖與飽足感。' },
-  { id: 'iron', title: '鐵質與維生素 C 一起吃', cat: '健康飲食', stage: 'both', desc: '紅肉、深綠色蔬菜搭配水果，幫助鐵質吸收。' },
+  { id: 'iron', title: '鐵質搭配芭樂、柑橘一起吃', cat: '健康飲食', stage: 'both', desc: '紅肉、深綠色蔬菜搭配芭樂、柑橘、奇異果等水果，幫助鐵質吸收。' },
   { id: 'fish', title: '選擇低汞魚類', cat: '健康飲食', stage: 'both', desc: '鮭魚、鯖魚、秋刀魚等每週 2–3 份；避免大型掠食魚類（如鯊魚、旗魚）。' },
   { id: 'safe', title: '孕期飲食安全', cat: '健康飲食', stage: 'preg', desc: '避免生食、未全熟的蛋與肉、未殺菌乳品；含咖啡因飲料適量。', caution: '飲食限制依個人狀況（例如妊娠糖尿病）請遵照醫師與營養師建議。' },
   { id: 'cycle-food', title: '規律三餐、少精緻糖', cat: '健康飲食', stage: 'pre', desc: '以原型食物為主，維持穩定血糖與體重，有助荷爾蒙平衡。' },

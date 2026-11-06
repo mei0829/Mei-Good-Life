@@ -24,7 +24,7 @@ export default function SettingsPage() {
   const [persisted, setPersisted] = useState<boolean | null>(null);
   const restoreInp = useRef<HTMLInputElement>(null), photoInp = useRef<HTMLInputElement>(null);
   useEffect(() => {
-    navigator.storage?.estimate?.().then(e => setUsage(e.usage != null ? (e.usage / 1024 / 1024).toFixed(1) + ' MB' : ''));
+    navigator.storage?.estimate?.().then(e => setUsage(e.usage != null ? (e.usage / 1024 / 1024).toFixed(1) + ' 百萬位元組' : ''));
     navigator.storage?.persisted?.().then(setPersisted);
   }, []);
 
@@ -64,28 +64,28 @@ export default function SettingsPage() {
 
   return (
     <div>
-      <PageHeader en="Settings" zh="設定與備份" />
+      <PageHeader kicker="Blooming Days・個人與資料" title="設定與備份" />
       <div className="grid lg:grid-cols-2 gap-x-12">
         <div>
-          <Section en="Profile" title="個人">
+          <Section title="個人">
             <label className="block text-[12.5px] text-mute mb-1.5" htmlFor="nm">稱呼（顯示在首頁問候）</label>
             <div className="flex gap-2"><input id="nm" className="field" value={name} onChange={e => setName(e.target.value)} maxLength={20} /><button className="btn-primary" onClick={async () => { await data.saveSettings({ name: name.trim() }); toast('已儲存'); }}>儲存</button></div>
           </Section>
 
-          <Section en="Stage" title="目前階段">
+          <Section title="目前階段">
             <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="目前階段">
               {(['preconception', 'pregnant', 'postpartum'] as Stage[]).map(st => (
                 <button key={st} role="radio" aria-checked={s.stage === st} onClick={() => setStage(st)}
                   className={cx('rounded-[14px] border px-3 py-3 text-left transition', s.stage === st ? 'border-forest bg-paper' : 'border-line')}>
                   <div className="serif text-[15px]">{STAGE_LABEL[st]}</div>
-                  <div className="text-[11.5px] text-mute">{st === 'preconception' ? 'Preconception' : st === 'pregnant' ? 'Pregnancy' : '預留・未來擴充'}</div>
+                  <div className="text-[11.5px] text-mute">{st === 'preconception' ? '月經與備孕' : st === 'pregnant' ? '孕週與產檢' : '預留・未來擴充'}</div>
                 </button>
               ))}
             </div>
             <p className="text-[12.5px] text-mute mt-3 leading-relaxed">切換成懷孕需要你自己確認並輸入末次月經日期；月經延遲不會自動切換。切換階段不會刪除任何資料。</p>
           </Section>
 
-          <Section en="Cover" title="首頁主視覺照片">
+          <Section title="首頁主視覺照片">
             <div className="flex items-start gap-4">
               {s.heroPhoto ? <FileList ids={[s.heroPhoto]} /> : <p className="text-[13px] text-mute flex-1">目前使用植物插畫。可以換成自己的照片（只存在這個瀏覽器）。</p>}
               <div className="flex flex-col gap-2 shrink-0">
@@ -98,17 +98,17 @@ export default function SettingsPage() {
         </div>
 
         <div>
-          <Section en="Backup" title="備份與還原">
+          <Section title="備份與還原">
             <div className="mb-4"><Note tone="rose">資料只存在<b>這個瀏覽器</b>，不會上傳到任何伺服器。清除瀏覽器資料、使用無痕模式、換手機或換瀏覽器，資料都可能消失，也不會在手機和電腦之間同步。請定期下載備份檔，放在安全的地方。</Note></div>
             <div className="flex flex-wrap gap-2">
-              <button className="btn-primary" onClick={backup}><Download size={15} strokeWidth={1.5} />下載完整備份（JSON）</button>
+              <button className="btn-primary" onClick={backup}><Download size={15} strokeWidth={1.5} />下載完整備份檔</button>
               <button className="btn-ghost" onClick={() => restoreInp.current?.click()}><Upload size={15} strokeWidth={1.5} />從備份還原</button>
             </div>
             <input ref={restoreInp} type="file" accept="application/json,.json" hidden onChange={e => { restore(e.target.files?.[0]); e.target.value = ''; }} />
             <p className="text-[12px] text-mute mt-2">備份檔包含所有紀錄、設定、照片與附件。備份檔沒有加密，請小心保管、不要隨意分享。</p>
 
             <div className="mt-6">
-              <label className="block text-[12.5px] text-mute mb-1.5" htmlFor="csv">匯出 CSV（Excel 可以開）</label>
+              <label className="block text-[12.5px] text-mute mb-1.5" htmlFor="csv">匯出試算表檔案（可以用試算表軟體打開）</label>
               <div className="flex gap-2">
                 <select id="csv" className="field" value={csv} onChange={e => setCsv(e.target.value as TableName)}>{TABLES.map(t => <option key={t} value={t}>{TABLE_LABEL[t]}</option>)}</select>
                 <button className="btn-ghost shrink-0" onClick={async () => download(`blooming-${csv}-${todayStr()}.csv`, await data.exportCSV(csv), 'text/csv')}>匯出</button>
@@ -116,10 +116,10 @@ export default function SettingsPage() {
             </div>
           </Section>
 
-          <Section en="Privacy" title="隱私與儲存">
+          <Section title="隱私與儲存">
             <ul className="text-[13px] leading-relaxed space-y-1.5 text-ink/85">
               <li>・不需要登入，健康資料不會傳送到外部服務，也不會出現在網址裡。</li>
-              <li>・資料存在瀏覽器的 IndexedDB；這不是加密保險箱，能使用這台裝置的人就可能看到。</li>
+              <li>・資料存在瀏覽器內建的資料庫；這不是加密保險箱，能使用這台裝置的人就可能看到。</li>
               <li>・附件與照片也存在本機，會包含在完整備份裡。</li>
             </ul>
             <div className="flex flex-wrap items-center gap-3 mt-4 text-[13px]">
@@ -129,7 +129,7 @@ export default function SettingsPage() {
             </div>
           </Section>
 
-          <Section en="Danger" title="刪除資料">
+          <Section title="刪除資料">
             <button className="btn-ghost text-alert" onClick={wipe}><Trash2 size={15} strokeWidth={1.5} />刪除這個瀏覽器的全部資料</button>
           </Section>
         </div>

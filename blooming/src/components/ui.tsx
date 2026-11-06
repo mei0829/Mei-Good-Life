@@ -6,14 +6,13 @@ import { EmptyArt, Sprig } from './Botanical';
 export const cx = (...a: (string | false | null | undefined)[]) => a.filter(Boolean).join(' ');
 
 /** 頁面大標題：英文雜誌風標題＋中文副標 */
-export function PageHeader({ en, zh, sub, action }: { en: string; zh: string; sub?: ReactNode; action?: ReactNode }) {
+export function PageHeader({ title, kicker, sub, action }: { title: string; kicker: string; sub?: ReactNode; action?: ReactNode }) {
   return (
     <header className="relative mb-6 md:mb-9 pt-2">
       <div className="flex items-end justify-between gap-4">
         <div>
-          <p className="eyebrow">Blooming Days</p>
-          <h1 className="display text-[42px] md:text-[56px] leading-none mt-1 text-forest">{en}</h1>
-          <p className="serif text-[15px] mt-2 text-ink tracking-[.2em]">{zh}</p>
+          <p className="eyebrow">{kicker}</p>
+          <h1 className="serif font-medium text-[34px] md:text-[44px] leading-tight mt-1.5 text-forest tracking-[.08em]">{title}</h1>
         </div>
         {action}
       </div>
@@ -24,11 +23,11 @@ export function PageHeader({ en, zh, sub, action }: { en: string; zh: string; su
 }
 
 /** 區段：細線分隔＋小標題（不是每個都做成卡片） */
-export function Section({ en, title, action, children, className = '' }: { en?: string; title: string; action?: ReactNode; children: ReactNode; className?: string }) {
+export function Section({ title, action, children, className = '' }: { title: string; action?: ReactNode; children: ReactNode; className?: string }) {
   return (
     <section className={cx('mb-9', className)}>
       <div className="flex items-baseline justify-between gap-3 border-b border-line pb-2 mb-4">
-        <h2 className="serif text-[17px] text-ink">{en && <span className="display italic text-[19px] text-forest mr-2">{en}</span>}{title}</h2>
+        <h2 className="serif text-[17px] text-forest tracking-[.06em] flex items-center gap-2"><span className="w-4 h-px bg-sage inline-block" aria-hidden="true" />{title}</h2>
         {action}
       </div>
       {children}
@@ -101,7 +100,7 @@ export function Row({ left, title, meta, right, onClick, children }: { left?: Re
   );
 }
 export function DateCell({ date }: { date: string }) {
-  return <div className="leading-none"><div className="display text-[24px] text-ink">{+date.slice(8, 10)}</div><div className="num text-[10.5px] tracking-wider mt-1">{date.slice(0, 7).replace('-', '.')}</div></div>;
+  return <div className="leading-none"><div className="display text-[24px] text-ink">{+date.slice(8, 10)}<span className="text-[12px] text-mute ml-0.5">日</span></div><div className="text-[10.5px] mt-1 whitespace-nowrap">{+date.slice(0, 4)} 年 {+date.slice(5, 7)} 月</div></div>;
 }
 
 // ---------- 彈出視窗（手機從下面滑上來，電腦在中間）----------

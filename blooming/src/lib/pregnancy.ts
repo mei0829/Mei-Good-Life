@@ -17,4 +17,6 @@ export function pregnancy(lmp: string | undefined, eddOverride: string | undefin
   };
 }
 export const weekLabel = (p: PregInfo) => `${p.weeks} 週 ${p.dayOfWeek} 天`;
+/** 孕週短寫：18 週 2 天 */
+export const weekOf = (p: PregInfo) => `${p.weeks} 週 ${p.dayOfWeek} 天`;
 export const TRI = { 1: '第一孕期', 2: '第二孕期', 3: '第三孕期' } as const;

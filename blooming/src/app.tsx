@@ -33,4 +33,3 @@ export function AppProvider({ children }: { children: ReactNode }) {
 }
 
 export const STAGE_LABEL = { preconception: '備孕中', pregnant: '懷孕中', postpartum: '產後' } as const;
-export const STAGE_EN = { preconception: 'Preconception', pregnant: 'Pregnancy', postpartum: 'Postpartum' } as const;

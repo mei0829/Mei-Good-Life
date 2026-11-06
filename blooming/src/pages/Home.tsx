@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowUpRight, Check, Circle } from 'lucide-react';
-import { useApp, STAGE_EN, STAGE_LABEL, type Route } from '../app';
+import { useApp, STAGE_LABEL, type Route } from '../app';
 import { useTable } from '../data/hooks';
 import { data } from '../data/repo';
 import { cycleStats } from '../lib/cycle';
 import { pregnancy, TRI, weekLabel } from '../lib/pregnancy';
-import { daysBetween, enDate, md, mdw, relDay, ymd } from '../lib/dates';
+import { daysBetween, fullDate, md, mdw, relDay, ymd } from '../lib/dates';
 import { quoteOf } from '../content/quotes';
 import { HeroArt, Sprig } from '../components/Botanical';
 import { Badge, Note, cx } from '../components/ui';
@@ -30,9 +30,9 @@ export default function Home() {
   const st = useMemo(() => cycleStats(periods, today), [periods, today]);
   const p = s.stage === 'pregnant' ? pregnancy(s.lmp, s.edd, today) : null;
   const h = new Date().getHours();
-  const hello = (h < 11 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening');
-  const zhHello = (h < 11 ? '早安' : h < 18 ? '午安' : '晚安') + (s.name ? '，' + s.name : '');
-  const [qEn, qZh] = quoteOf(today);
+  const hello = (h < 11 ? '早安' : h < 18 ? '午安' : '晚安') + (s.name ? '，' + s.name : '');
+  const helloSub = h < 11 ? '新的一天，從照顧自己開始。' : h < 18 ? '記得喝水，也記得休息一下。' : '今天辛苦了，好好放鬆。';
+  const quote = quoteOf(today);
 
   const tb = body.find(b => b.date === today), ts = sleep.find(x => x.date === today), tj = journal.find(j => j.date === today);
   const activeSups = sups.filter(x => activeOn(x, today));
@@ -59,19 +59,19 @@ export default function Home() {
       {/* 雜誌封面刊頭 */}
       <header className="flex items-end justify-between border-b border-ink/80 pb-3">
         <div>
-          <p className="eyebrow">{enDate()}</p>
+          <p className="eyebrow">{fullDate(today)}</p>
           <h1 className="display text-[54px] md:text-[84px] leading-[.9] text-forest mt-2 -ml-0.5">Blooming Days</h1>
         </div>
-        <p className="hidden sm:block display italic text-[15px] text-mute text-right max-w-[180px] leading-snug">A Journey of Wellness &amp; Motherhood</p>
+        <p className="hidden sm:block serif text-[13.5px] text-mute text-right max-w-[200px] leading-relaxed tracking-[.1em]">備孕與孕期<br />健康日誌</p>
       </header>
       <div className="flex justify-between items-baseline py-2.5 border-b border-line text-[12.5px] text-mute">
         <span className="serif">在成為媽媽之前，先好好照顧自己。</span>
-        <span className="num hidden sm:inline">Issue {ymd(today)}</span>
+        <span className="hidden sm:inline">今日號・{ymd(today)}</span>
       </div>
 
       <div className="mt-6 flex items-baseline gap-3 flex-wrap">
-        <span className="display italic text-[24px] md:text-[28px] text-ink">{hello}.</span>
-        <span className="serif text-[16px]">{zhHello}</span>
+        <span className="serif text-[24px] md:text-[28px] text-ink tracking-[.06em]">{hello}</span>
+        <span className="text-[14px] text-mute">{helloSub}</span>
       </div>
 
       {/* 主視覺 */}
@@ -79,9 +79,9 @@ export default function Home() {
         {photo ? <img src={photo} alt="主視覺照片" className="absolute inset-0 w-full h-full object-cover" /> : <HeroArt className="absolute inset-0 w-full h-full" />}
         <div className="absolute inset-0 bg-gradient-to-t from-[#2c372e]/75 via-[#2c372e]/15 to-transparent" />
         <figcaption className="absolute left-5 right-5 bottom-5 md:left-8 md:bottom-7 text-paper">
-          <div className="eyebrow !text-paper/80">{STAGE_EN[s.stage]} · {STAGE_LABEL[s.stage]}</div>
+          <div className="eyebrow !text-paper/85">目前階段・{STAGE_LABEL[s.stage]}</div>
           {p ? (<>
-            <div className="display text-[44px] md:text-[60px] leading-none mt-2">{p.weeks}<span className="text-[22px] md:text-[26px] mx-1.5 italic">weeks</span>{p.dayOfWeek}<span className="text-[22px] md:text-[26px] ml-1.5 italic">days</span></div>
+            <div className="leading-none mt-2"><span className="display text-[50px] md:text-[64px]">{p.weeks}</span><span className="serif text-[20px] md:text-[24px] mx-2">週</span><span className="display text-[50px] md:text-[64px]">{p.dayOfWeek}</span><span className="serif text-[20px] md:text-[24px] ml-2">天</span></div>
             <div className="serif text-[14px] mt-2 text-paper/90">{TRI[p.trimester]}・預產期 {ymd(p.edd)}・{p.left > 0 ? `還有 ${p.left} 天` : p.left === 0 ? '就是今天' : `已過 ${-p.left} 天`}</div>
             <div className="h-[3px] bg-paper/25 rounded-full mt-3 max-w-md"><div className="h-full bg-paper rounded-full" style={{ width: p.progress * 100 + '%' }} /></div>
           </>) : s.stage === 'pregnant' ? (
@@ -89,8 +89,10 @@ export default function Home() {
           ) : s.stage === 'postpartum' ? (
             <div className="serif text-[20px] mt-2">產後階段（功能預留，之後擴充）</div>
           ) : (<>
-            <div className="display text-[44px] md:text-[60px] leading-none mt-2">{st.cycleDay ? <>Day {st.cycleDay}</> : 'Begin'}</div>
-            <div className="serif text-[14px] mt-2 text-paper/90">{st.cycleDay ? '這次週期第 ' + st.cycleDay + ' 天' : '記錄第一次月經，開始了解你的週期'}</div>
+            {st.cycleDay ? (
+              <div className="leading-none mt-2"><span className="serif text-[20px] md:text-[24px] mr-2">月經週期第</span><span className="display text-[50px] md:text-[64px]">{st.cycleDay}</span><span className="serif text-[20px] md:text-[24px] ml-2">天</span></div>
+            ) : <div className="serif text-[26px] md:text-[32px] mt-2 tracking-[.08em]">從今天開始</div>}
+            <div className="serif text-[14px] mt-2 text-paper/90">{st.cycleDay ? (st.nextStart ? '下次月經預測在 ' + md(st.nextStart) : '再多記錄幾次月經，就能估算週期') : '記錄第一次月經，開始了解你的週期'}</div>
           </>)}
         </figcaption>
       </figure>
@@ -108,7 +110,7 @@ export default function Home() {
           )}
         </div>
         <aside className="mt-9 md:mt-0">
-          <Block en="To do" title="今天待完成">
+          <Block title="今天待完成">
             <ul>
               {todos.map(([t, done, r, sub]) => (
                 <li key={t}><button onClick={() => go(r, sub)} className="w-full flex items-center gap-3 py-2.5 border-b border-line text-left text-[14px]">
@@ -119,10 +121,10 @@ export default function Home() {
               ))}
             </ul>
           </Block>
-          <Block en="Upcoming" title="近期行程">
+          <Block title="近期行程">
             {events.length ? events.map((e, i) => (
               <button key={i} onClick={() => go('medical', 'visits')} className="w-full flex gap-4 py-2.5 border-b border-line text-left">
-                <span className="num text-[13px] w-[86px] shrink-0 text-forest">{mdw(e.d)}</span>
+                <span className="text-[13px] w-[128px] shrink-0 text-forest">{mdw(e.d)}</span>
                 <span className="flex-1 text-[14px]">{e.t}{e.m && <span className="text-mute text-[12.5px]">・{e.m}</span>}</span>
                 <span className="text-[12px] text-mute">{relDay(e.d, today)}</span>
               </button>
@@ -134,8 +136,8 @@ export default function Home() {
       {/* 每日一句 */}
       <blockquote className="relative mt-12 py-10 px-6 md:px-14 text-center border-y border-line">
         <Sprig className="w-10 h-10 mx-auto mb-3" />
-        <p className="display italic text-[26px] md:text-[34px] leading-snug text-forest">“{qEn}”</p>
-        <p className="serif text-[14.5px] mt-3 text-ink/80">{qZh}</p>
+        <p className="eyebrow mb-3">每日一句</p>
+        <p className="serif text-[22px] md:text-[28px] leading-relaxed text-forest tracking-[.08em]">「{quote}」</p>
       </blockquote>
 
       <ConfirmPregnancy open={confirm} onClose={() => setConfirm(false)} />
@@ -143,14 +145,14 @@ export default function Home() {
   );
 }
 
-function Block({ en, title, children }: { en: string; title: string; children: React.ReactNode }) {
-  return <section className="mb-8"><h2 className="flex items-baseline gap-2 mb-1"><span className="display italic text-[20px] text-forest">{en}</span><span className="serif text-[14px]">{title}</span></h2>{children}</section>;
+function Block({ title, children }: { title: string; children: React.ReactNode }) {
+  return <section className="mb-8"><h2 className="serif text-[18px] text-forest tracking-[.08em] mb-1.5 flex items-center gap-2"><span className="w-4 h-px bg-sage inline-block" aria-hidden="true" />{title}</h2>{children}</section>;
 }
 
 function CycleSummary({ st }: { st: ReturnType<typeof cycleStats> }) {
   const { go } = useApp();
   return (
-    <Block en="Cycle" title="月經週期摘要">
+    <Block title="月經週期摘要">
       {st.confidence === 'none' ? (
         <Note tone="oat">預測尚待累積：{st.count === 0 ? '還沒有月經紀錄' : '目前只有 1 次月經紀錄'}，需要至少兩次月經開始日才能估算週期。<button className="underline ml-1 text-forest" onClick={() => go('cycle')}>前往記錄</button></Note>
       ) : (
@@ -171,10 +173,10 @@ function CycleSummary({ st }: { st: ReturnType<typeof cycleStats> }) {
 
 function PregSummary({ p, visits }: { p: ReturnType<typeof pregnancy>; visits: { d: string; t: string }[] }) {
   const { go, today } = useApp();
-  if (!p) return <Block en="Pregnancy" title="孕期摘要"><Note>還沒有末次月經日期。<button className="underline text-forest" onClick={() => go('settings')}>到設定填寫</button></Note></Block>;
+  if (!p) return <Block title="孕期摘要"><Note>還沒有末次月經日期。<button className="underline text-forest" onClick={() => go('settings')}>到設定填寫</button></Note></Block>;
   const nv = visits[0];
   return (
-    <Block en="Pregnancy" title="孕期摘要">
+    <Block title="孕期摘要">
       <div className="grid grid-cols-3 gap-4 py-2">
         <div><div className="text-[12px] text-mute">目前孕週</div><div className="serif text-[20px] mt-1">{weekLabel(p)}</div></div>
         <div><div className="text-[12px] text-mute">預產期</div><div className="serif text-[20px] mt-1">{md(p.edd)}</div><div className="text-[11.5px] text-mute">{p.adjusted ? '醫師調整' : '依末次月經推算'}</div></div>
@@ -192,9 +194,9 @@ function Today({ tb, ts, sup, ex }: { tb?: any; ts?: any; sup: [number, number];
     </button>
   );
   return (
-    <Block en="Today" title="今日健康摘要">
+    <Block title="今日健康摘要">
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-5">
-        {cell('體重', tb?.weight != null ? <>{tb.weight}<small className="text-[12px] text-mute ml-1">kg</small></> : '—', () => go('wellness', 'body'))}
+        {cell('體重', tb?.weight != null ? <>{tb.weight}<small className="text-[12px] text-mute ml-1">公斤</small></> : '—', () => go('wellness', 'body'))}
         {cell('基礎體溫', tb?.bbt != null ? <>{tb.bbt}<small className="text-[12px] text-mute ml-1">°C</small></> : '—', () => go('cycle'))}
         {cell('睡眠', ts?.hours != null ? <>{ts.hours}<small className="text-[12px] text-mute ml-1">小時</small></> : '—', () => go('wellness', 'sleep'))}
         {cell('營養補充', sup[1] ? `${sup[0]} / ${sup[1]}` : '—', () => go('wellness', 'nutrition'))}

@@ -24,7 +24,7 @@ export default function Lifestyle() {
 
   return (
     <div>
-      <PageHeader en="Lifestyle" zh="生活管理" sub={preg ? '孕期適合的活動、伸展與飲食。' : '備孕期的運動、伸展與飲食建議。'} />
+      <PageHeader kicker="Blooming Days・運動與飲食" title="生活管理" sub={preg ? '孕期適合的活動、伸展與飲食。' : '備孕期的運動、伸展與飲食建議。'} />
       <div className="mb-7"><Note tone="oat">以下為一般性建議，{preg ? '懷孕期間運動前請先跟產檢醫師確認，' : ''}請依個人身體狀況與醫師建議調整。運動中如有出血、腹痛、頭暈、胸痛或呼吸困難，請立即停止並就醫。</Note></div>
       <Chips value={cat} onChange={setCat} items={cats} />
       {list.length ? (
@@ -33,7 +33,7 @@ export default function Lifestyle() {
             <article key={a.id} className={cx('py-5 border-b border-line', i < 2 && 'md:pt-2')}>
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <div className="eyebrow">{a.cat}{a.minutes ? ` · ${a.minutes} min` : ''}</div>
+                  <div className="eyebrow">{a.cat}{a.minutes ? `・約 ${a.minutes} 分鐘` : ''}</div>
                   <h3 className="serif text-[18px] mt-1">{a.title}</h3>
                 </div>
                 <button onClick={() => toggleFav(a.id)} aria-pressed={fav.has(a.id)} aria-label={fav.has(a.id) ? '取消收藏' : '收藏'} className="p-1"><Bookmark size={19} strokeWidth={1.4} className={fav.has(a.id) ? 'fill-forest text-forest' : 'text-mute'} /></button>
@@ -50,7 +50,7 @@ export default function Lifestyle() {
         </div>
       ) : <Empty title={cat === '收藏' ? '還沒有收藏' : '沒有項目'} hint={cat === '收藏' ? '按右上角的書籤收藏喜歡的運動。' : undefined} />}
 
-      <Section en="Done" title="運動完成紀錄" className="mt-10">
+      <Section title="運動完成紀錄" className="mt-10">
         {ex.length ? ex.slice(0, 20).map(e => <Row key={e.id} onClick={() => ed.edit(e.id)} left={<DateCell date={e.date} />} title={e.name} meta={[e.minutes && e.minutes + ' 分鐘', e.intensity, e.note].filter(Boolean).join('・')} right={<Badge tone={e.done ? 'sage' : 'line'}>{e.done ? '完成' : '計畫'}</Badge>} />)
           : <Empty title="還沒有完成紀錄" hint="按「完成一次」會記到健康管理的運動紀錄。" />}
       </Section>

@@ -5,7 +5,7 @@ import { CartesianGrid, Line, LineChart, ReferenceDot, ResponsiveContainer, Tool
 import { useApp } from '../app';
 import { useTable } from '../data/hooks';
 import { cycleStats, dayMarks } from '../lib/cycle';
-import { daysBetween, iso, md, mdw, parse, shift, ymd } from '../lib/dates';
+import { daysBetween, iso, md, mdShort, mdw, parse, shift, ym, ymd } from '../lib/dates';
 import { EntityForm, useEditor } from '../components/form';
 import { Badge, DateCell, Empty, Figure, Note, PageHeader, Row, Section, Sheet, cx } from '../components/ui';
 import { ConfirmPregnancy } from '../components/Stage';
@@ -26,7 +26,7 @@ export default function Cycle() {
 
   return (
     <div>
-      <PageHeader en="Cycle" zh="生理週期" sub="預測只根據你自己的紀錄估算，記得越多越準。預測和實際紀錄在日曆上用不同樣式標示。"
+      <PageHeader kicker="Blooming Days・日曆與預測" title="月經週期" sub="預測只根據你自己的紀錄估算，記得越多越準。預測和實際紀錄在日曆上用不同樣式標示。"
         action={<button className="btn-primary" onClick={() => pe.add({ start: today })}><Plus size={16} strokeWidth={1.6} />記錄月經</button>} />
 
       {preg && <div className="mb-6"><Note tone="rose">目前是懷孕階段，週期預測已暫停。過去的月經與備孕紀錄都完整保留在這裡。</Note></div>}
@@ -42,22 +42,22 @@ export default function Cycle() {
       {!preg && <Prediction st={st} onConfirm={() => setConfirm(true)} />}
 
       <div className="grid lg:grid-cols-[1.15fr_1fr] gap-x-10">
-        <Section en="Calendar" title="月經日曆" action={
+        <Section title="月經日曆" action={
           <div className="flex items-center gap-1">
             <button className="p-1.5 text-mute" aria-label="上個月" onClick={() => setMonth(format(addMonths(parse(month + '-01'), -1), 'yyyy-MM'))}><ChevronLeft size={18} /></button>
-            <span className="num text-[14px] w-[72px] text-center">{month.replace('-', '.')}</span>
+            <span className="text-[14px] w-[104px] text-center">{ym(month + '-01')}</span>
             <button className="p-1.5 text-mute" aria-label="下個月" onClick={() => setMonth(format(addMonths(parse(month + '-01'), 1), 'yyyy-MM'))}><ChevronRight size={18} /></button>
           </div>}>
           <Calendar month={month} today={today} periods={periods} st={preg ? { ...st, nextStart: undefined, ovulation: undefined } : st} body={body} onPick={setDay} />
           <Legend />
         </Section>
 
-        <Section en="Temperature" title="基礎體溫" action={<button className="btn-quiet" onClick={() => openBody(today)}><Plus size={15} />記錄</button>}>
+        <Section title="基礎體溫" action={<button className="btn-quiet" onClick={() => openBody(today)}><Plus size={15} />記錄</button>}>
           <BBTChart body={body} today={today} ovulation={preg ? undefined : st.ovulation} />
         </Section>
       </div>
 
-      <Section en="History" title="歷史週期">
+      <Section title="歷史週期">
         {periods.length ? (
           <>
             {st.minCycle != null && <p className="text-[13px] text-mute mb-2">最短 {st.minCycle} 天・最長 {st.maxCycle} 天{st.ignored ? `・有 ${st.ignored} 個週期太短或太長（少於 15 天或超過 60 天），沒有算進平均` : ''}</p>}
@@ -81,7 +81,7 @@ function Prediction({ st, onConfirm }: { st: ReturnType<typeof cycleStats>; onCo
   }
   return (
     <div className="mb-9 surface p-5 md:p-6">
-      <div className="flex items-center gap-2 mb-3"><span className="eyebrow">Forecast</span><Badge tone={st.confidence === 'ok' ? 'sage' : 'oat'}>{st.confidence === 'ok' ? `依最近 ${st.lengths.length} 個週期` : `資料還很少（${st.lengths.length} 個週期），僅供參考`}</Badge></div>
+      <div className="flex items-center gap-2 mb-3"><span className="eyebrow">週期預測</span><Badge tone={st.confidence === 'ok' ? 'sage' : 'oat'}>{st.confidence === 'ok' ? `依最近 ${st.lengths.length} 個週期` : `資料還很少（${st.lengths.length} 個週期），僅供參考`}</Badge></div>
       <div className="grid sm:grid-cols-3 gap-5">
         <div><div className="text-[12px] text-mute">預測下次月經</div><div className="serif text-[19px] mt-0.5">{mdw(st.nextStart)}</div></div>
         <div><div className="text-[12px] text-mute">預測排卵日</div><div className="serif text-[19px] mt-0.5">{mdw(st.ovulation)}</div></div>
@@ -108,13 +108,13 @@ function Calendar({ month, today, periods, st, body, onPick }: { month: string; 
   const days = Array.from({ length: last.getDate() }, (_, i) => shift(from, i));
   const bmap = new Map(body.map(b => [b.date, b]));
   return (
-    <div className="grid grid-cols-7 gap-y-1 text-center" role="grid" aria-label={month + ' 日曆'}>
+    <div className="grid grid-cols-7 gap-y-1 text-center" role="grid" aria-label={ym(month + '-01') + '日曆'}>
       {'一二三四五六日'.split('').map(w => <div key={w} className="text-[11px] text-mute pb-2">{w}</div>)}
       {Array.from({ length: pad }, (_, i) => <div key={'p' + i} />)}
       {days.map(d => {
         const m = marks[d] || {}, b = bmap.get(d);
         return (
-          <button key={d} onClick={() => onPick(d)} aria-label={d + (m.period ? ' 經期' : m.predicted ? ' 預測經期' : m.ovulation ? ' 預測排卵日' : m.fertile ? ' 預測易孕期' : '')}
+          <button key={d} onClick={() => onPick(d)} aria-label={md(d) + (m.period ? ' 經期' : m.predicted ? ' 預測經期' : m.ovulation ? ' 預測排卵日' : m.fertile ? ' 預測易孕期' : '')}
             className="relative h-11 flex flex-col items-center justify-center">
             {m.fertile && <span className="absolute inset-x-0 inset-y-1.5 bg-sage-soft" />}
             <span className={cx('relative w-8 h-8 rounded-full grid place-items-center num text-[13.5px]',
@@ -146,7 +146,7 @@ function Legend() {
 
 function BBTChart({ body, today, ovulation }: { body: any[]; today: string; ovulation?: string }) {
   const from = shift(today, -59);
-  const pts = body.filter(b => b.bbt != null && b.date >= from && b.date <= today).sort((a, b) => a.date.localeCompare(b.date)).map(b => ({ d: md(b.date), date: b.date, t: b.bbt, opk: b.opk }));
+  const pts = body.filter(b => b.bbt != null && b.date >= from && b.date <= today).sort((a, b) => a.date.localeCompare(b.date)).map(b => ({ d: mdShort(b.date), date: b.date, t: b.bbt, opk: b.opk }));
   if (pts.length < 2) return <Empty title="體溫資料還不夠" hint="記錄兩天以上的基礎體溫，就會顯示最近 60 天的曲線。排卵後體溫通常會上升約 0.3–0.5°C。" />;
   const ts = pts.map(p => p.t), lo = Math.floor((Math.min(...ts) - .1) * 10) / 10, hi = Math.ceil((Math.max(...ts) + .1) * 10) / 10;
   return (
@@ -156,10 +156,10 @@ function BBTChart({ body, today, ovulation }: { body: any[]; today: string; ovul
           <CartesianGrid stroke="#E6E0D5" vertical={false} />
           <XAxis dataKey="d" tick={{ fontSize: 11, fill: '#888478' }} tickLine={false} axisLine={{ stroke: '#E6E0D5' }} minTickGap={18} />
           <YAxis domain={[lo, hi]} tick={{ fontSize: 11, fill: '#888478' }} tickLine={false} axisLine={false} width={40} />
-          <Tooltip formatter={(v: any) => [v + ' °C', '體溫']} labelStyle={{ color: '#343B34' }} contentStyle={{ borderRadius: 12, border: '1px solid #E6E0D5', background: '#FFFCF7', fontSize: 12 }} />
+          <Tooltip formatter={(v: any) => [v + ' °C', '體溫']} labelFormatter={(l: any) => { const p = pts.find(x => x.d === l); return p ? md(p.date) : l; }} labelStyle={{ color: '#343B34' }} contentStyle={{ borderRadius: 12, border: '1px solid #E6E0D5', background: '#FFFCF7', fontSize: 12 }} />
           <Line type="monotone" dataKey="t" stroke="#455C4A" strokeWidth={1.6} dot={{ r: 2.5, fill: '#455C4A' }} isAnimationActive={false} />
           {pts.filter(p => p.opk?.startsWith('陽性')).map(p => <ReferenceDot key={p.date} x={p.d} y={p.t} r={5} fill="#D8B7B0" stroke="none" />)}
-          {ovulation && pts.some(p => p.date === ovulation) && <ReferenceDot x={md(ovulation)} y={pts.find(p => p.date === ovulation)!.t} r={6} fill="none" stroke="#455C4A" />}
+          {ovulation && pts.some(p => p.date === ovulation) && <ReferenceDot x={mdShort(ovulation)} y={pts.find(p => p.date === ovulation)!.t} r={6} fill="none" stroke="#455C4A" />}
         </LineChart>
       </ResponsiveContainer>
       <p className="text-[11.5px] text-mute ml-3">粉色點：排卵試紙陽性</p>
@@ -175,7 +175,7 @@ function History({ periods, onEdit }: { periods: any[]; onEdit: (id: string) => 
         const next = ps[i - 1], len = next ? daysBetween(p.start, next.start) : null, dur = p.end ? daysBetween(p.start, p.end) + 1 : null;
         return <Row key={p.id} onClick={() => onEdit(p.id)} left={<DateCell date={p.start} />}
           title={<>經期 {dur ? `${dur} 天` : '（尚未填結束日）'}{p.flow && <span className="text-mute text-[13px]">・{p.flow}</span>}</>}
-          meta={[p.end && `${ymd(p.start)} – ${ymd(p.end)}`, p.pain != null && `經痛 ${p.pain}/10`, p.symptoms?.join('、')].filter(Boolean).join('・')}
+          meta={[p.end && `${md(p.start)} 至 ${md(p.end)}`, p.pain != null && `經痛 ${p.pain}/10`, p.symptoms?.join('、')].filter(Boolean).join('・')}
           right={len != null ? <span className={cx(len < 15 || len > 60 ? 'text-alert' : 'text-forest')}>{len} 天週期</span> : <span className="text-mute text-[12.5px]">最近一次</span>} />;
       })}
     </div>

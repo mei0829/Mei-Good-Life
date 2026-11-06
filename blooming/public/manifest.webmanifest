@@ -1,12 +1,12 @@
 {
   "name": "Blooming Days",
   "short_name": "Blooming",
-  "description": "A Journey of Wellness & Motherhood",
+  "description": "備孕與孕期健康日誌：在成為媽媽之前，先好好照顧自己。",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#F5F1E9",
   "theme_color": "#F5F1E9",
-  "lang": "zh-Hant",
+  "lang": "zh-Hant-TW",
   "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
 }

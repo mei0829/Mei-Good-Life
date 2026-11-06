@@ -55,7 +55,7 @@ function FilesInput({ ids, set, images, onFile }: { ids: string[]; set: (v: stri
     if (!fl) return;
     const nids: string[] = [];
     for (const f of Array.from(fl)) {
-      if (f.size > 15 * 1024 * 1024) { toast(`「${f.name}」超過 15MB，沒有加入`); continue; }
+      if (f.size > 15 * 1024 * 1024) { toast(`「${f.name}」超過 15 百萬位元組，沒有加入`); continue; }
       nids.push(await data.putFile(f));
     }
     onFile?.(nids); set([...ids, ...nids]);
@@ -64,7 +64,7 @@ function FilesInput({ ids, set, images, onFile }: { ids: string[]; set: (v: stri
     <div>
       <FileList ids={ids} onRemove={id => set(ids.filter(x => x !== id))} />
       <input ref={inp} type="file" multiple hidden accept={images ? 'image/*' : 'image/*,application/pdf'} onChange={e => { add(e.target.files); e.target.value = ''; }} />
-      <button type="button" className="btn-ghost mt-2" onClick={() => inp.current?.click()}><Paperclip size={15} strokeWidth={1.5} />{images ? '加入照片' : '加入附件（照片或 PDF）'}</button>
+      <button type="button" className="btn-ghost mt-2" onClick={() => inp.current?.click()}><Paperclip size={15} strokeWidth={1.5} />{images ? '加入照片' : '加入附件（照片或文件檔）'}</button>
     </div>
   );
 }

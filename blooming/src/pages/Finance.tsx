@@ -5,7 +5,7 @@ import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis
 import { useApp } from '../app';
 import { useTable } from '../data/hooks';
 import { data } from '../data/repo';
-import { money, parse, ymd } from '../lib/dates';
+import { money, parse, ym, ymd } from '../lib/dates';
 import { EXPENSE_CAT, INS_STATUS, INS_TYPE, PAY_FREQ } from '../content/options';
 import { EntityForm, useEditor, type Field } from '../components/form';
 import { Badge, DateCell, Empty, Figure, Note, PageHeader, Row, Section, Sheet, Tabs, cx, useToast } from '../components/ui';
@@ -19,7 +19,7 @@ export default function Finance() {
   const tab = sub === 'insurance' ? 'insurance' : 'expenses';
   return (
     <div>
-      <PageHeader en="Finance" zh="財務與保險" sub="孕期花費、預算與保單資料。" />
+      <PageHeader kicker="Blooming Days・花費與保單" title="財務與保險" sub="孕期花費、預算與保單資料。" />
       <Tabs value={tab} onChange={t => go('finance', t)} items={[['expenses', '孕期花費'], ['insurance', '保險管理']]} />
       {tab === 'expenses' ? <Expenses /> : <Insurance />}
     </div>
@@ -28,9 +28,9 @@ export default function Finance() {
 
 const EXP_FIELDS: Field[] = [
   { key: 'date', label: '日期', type: 'date', required: true, half: true },
-  { key: 'amount', label: '金額', type: 'number', unit: 'NT$', required: true, half: true, min: 0 },
+  { key: 'amount', label: '金額', type: 'number', unit: '元', required: true, half: true, min: 0 },
   { key: 'category', label: '類別', type: 'select', options: EXPENSE_CAT, required: true },
-  { key: 'item', label: '項目', type: 'text', hint: '例如：NIPT、計程車、葉酸' },
+  { key: 'item', label: '項目', type: 'text', hint: '例如：非侵入性染色體檢測、計程車、葉酸' },
   { key: 'note', label: '備註', type: 'textarea' },
 ];
 
@@ -54,7 +54,7 @@ function Expenses() {
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div className="flex items-center gap-1">
           <button className="p-1.5 text-mute" onClick={() => shiftM(-1)} aria-label="上個月"><ChevronLeft size={18} /></button>
-          <span className="display text-[26px] w-[118px] text-center">{format(parse(month + '-01'), 'MMM yyyy')}</span>
+          <span className="serif text-[22px] w-[150px] text-center">{ym(month + '-01')}</span>
           <button className="p-1.5 text-mute" onClick={() => shiftM(1)} aria-label="下個月"><ChevronRight size={18} /></button>
         </div>
         <div className="flex gap-2"><button className="btn-ghost" onClick={() => setBudgetOpen(true)}>設定預算</button><button className="btn-primary" onClick={() => ed.add({ date: month === today.slice(0, 7) ? today : month + '-01' })}><Plus size={16} />記一筆</button></div>
@@ -67,7 +67,7 @@ function Expenses() {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-x-10">
-        <Section en="By category" title="本月類別統計">
+        <Section title="本月類別統計">
           {byCat.length ? (<>
             <div className="h-48 -ml-3"><ResponsiveContainer><BarChart data={byCat} layout="vertical" margin={{ left: 8, right: 16 }}>
               <XAxis type="number" hide /><YAxis type="category" dataKey="c" width={78} tick={{ fontSize: 12, fill: '#343B34' }} tickLine={false} axisLine={false} />
@@ -80,10 +80,10 @@ function Expenses() {
             </table>
           </>) : <Empty title="這個月還沒有花費" />}
         </Section>
-        <Section en="Monthly" title="每月支出">
+        <Section title="每月支出">
           <div className="h-56 -ml-3"><ResponsiveContainer><BarChart data={trend}>
             <CartesianGrid stroke="#E6E0D5" vertical={false} /><XAxis dataKey="m" tick={{ fontSize: 11, fill: '#888478' }} tickLine={false} axisLine={{ stroke: '#E6E0D5' }} />
-            <YAxis tick={{ fontSize: 11, fill: '#888478' }} tickLine={false} axisLine={false} width={48} tickFormatter={v => v >= 1000 ? +(v / 1000).toFixed(1) + 'k' : v} />
+            <YAxis tick={{ fontSize: 11, fill: '#888478' }} tickLine={false} axisLine={false} width={52} tickFormatter={v => v >= 10000 ? +(v / 10000).toFixed(1) + ' 萬' : v >= 1000 ? +(v / 1000).toFixed(1) + ' 千' : v} />
             <Tooltip {...TT} formatter={(v: any) => [money(v), '支出']} />
             <Bar dataKey="v" radius={[6, 6, 0, 0]} isAnimationActive={false}>{trend.map(t => <Cell key={t.key} fill={t.key === month ? '#455C4A' : '#A8B5A0'} />)}</Bar>
           </BarChart></ResponsiveContainer></div>
@@ -91,7 +91,7 @@ function Expenses() {
         </Section>
       </div>
 
-      <Section en="Ledger" title="本月明細">
+      <Section title="本月明細">
         {mrows.length ? mrows.map(r => <Row key={r.id} onClick={() => ed.edit(r.id)} left={<DateCell date={r.date} />} title={r.item || r.category} meta={[r.item && r.category, r.note].filter(Boolean).join('・')} right={money(r.amount)} />)
           : <Empty title="這個月還沒有花費" hint="產檢費、掛號費、檢查費、營養補充品、交通費都可以記。" />}
       </Section>
@@ -116,9 +116,9 @@ function BudgetSheet({ open, onClose }: { open: boolean; onClose: () => void }) 
   };
   return (
     <Sheet open={open} onClose={onClose} title="每月預算">
-      <label className="block text-[12.5px] text-mute mb-1.5" htmlFor="b-m">每月總預算（NT$）</label>
+      <label className="block text-[12.5px] text-mute mb-1.5" htmlFor="b-m">每月總預算（元）</label>
       <input id="b-m" className="field num" type="number" inputMode="numeric" value={m} onChange={e => setM(e.target.value)} />
-      <p className="eyebrow mt-6 mb-2">By category</p>
+      <p className="eyebrow mt-6 mb-2">各類別預算（元）</p>
       <div className="grid grid-cols-2 gap-3">
         {EXPENSE_CAT.map(k => <label key={k} className="block"><span className="block text-[12px] text-mute mb-1">{k}</span><input className="field num" type="number" inputMode="numeric" value={c[k] || ''} onChange={e => setC(o => ({ ...o, [k]: e.target.value }))} /></label>)}
       </div>
@@ -133,8 +133,8 @@ const INS_FIELDS: Field[] = [
   { key: 'type', label: '保單類型', type: 'select', options: INS_TYPE, half: true },
   { key: 'insured', label: '被保險人', type: 'text', half: true, hint: '例如：本人、寶寶' },
   { key: 'status', label: '狀態', type: 'select', options: INS_STATUS, half: true },
-  { key: 'sum', label: '保額', type: 'number', unit: 'NT$', half: true },
-  { key: 'premium', label: '保費', type: 'number', unit: 'NT$', half: true },
+  { key: 'sum', label: '保額', type: 'number', unit: '元', half: true },
+  { key: 'premium', label: '保費', type: 'number', unit: '元', half: true },
   { key: 'freq', label: '繳費方式', type: 'select', options: PAY_FREQ, half: true },
   { key: 'effective', label: '生效日期', type: 'date', half: true },
   { key: 'waiting', label: '等待期', type: 'text', hint: '依保單條款填寫，例如：生效後 30 天' },
@@ -161,7 +161,7 @@ function Insurance() {
         <article key={r.id} className="border-b border-line">
           <button className="w-full text-left py-5 grid md:grid-cols-[1fr_auto] gap-3" onClick={() => ed.edit(r.id)}>
             <div>
-              <div className="eyebrow">{[r.company, r.type].filter(Boolean).join(' · ') || 'Policy'}</div>
+              <div className="eyebrow">{[r.company, r.type].filter(Boolean).join('・') || '保單'}</div>
               <h3 className="serif text-[18px] mt-1">{r.name}</h3>
               <div className="flex flex-wrap gap-1.5 mt-2">{r.status && <Badge tone={r.status === '有效' ? 'sage' : r.status === '考慮中' ? 'oat' : 'line'}>{r.status}</Badge>}{r.insured && <Badge tone="line">被保險人：{r.insured}</Badge>}{r.files?.length ? <Badge tone="line">附件 {r.files.length}</Badge> : null}</div>
               {r.maternity && <p className="text-[13px] mt-3 leading-relaxed"><span className="text-mute">生育相關保障：</span>{r.maternity}</p>}
@@ -175,7 +175,7 @@ function Insurance() {
           </button>
         </article>
       )) : <Empty title="還沒有保單" hint="記下保單類型、保額、等待期、除外責任和生育相關保障，方便比較和日後申請。" />}
-      <EntityForm table="insurance" title="保單" fields={INS_FIELDS} {...ed} onClose={ed.close} footnote="請依保單條款原文填寫。App 不會判斷保單是否可以理賠。" />
+      <EntityForm table="insurance" title="保單" fields={INS_FIELDS} {...ed} onClose={ed.close} footnote="請依保單條款原文填寫。本工具不會判斷保單是否可以理賠。" />
     </>
   );
 }

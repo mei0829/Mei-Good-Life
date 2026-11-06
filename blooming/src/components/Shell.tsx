@@ -4,13 +4,13 @@ import { useApp, STAGE_LABEL, type Route } from '../app';
 import { cx } from './ui';
 
 const NAV: [Route, string, string, LucideIcon][] = [
-  ['home', 'Home', '首頁', Home],
-  ['cycle', 'Cycle', '生理週期', Flower2],
-  ['wellness', 'Wellness', '健康管理', Leaf],
-  ['medical', 'Medical', '醫療管理', HeartPulse],
-  ['lifestyle', 'Lifestyle', '生活管理', Sprout],
-  ['finance', 'Finance', '財務與保險', Wallet],
-  ['journal', 'Journal', '每日日記', BookOpen],
+  ['home', '首頁', '今日總覽', Home],
+  ['cycle', '月經週期', '日曆與預測', Flower2],
+  ['wellness', '健康管理', '身體・營養・睡眠', Leaf],
+  ['medical', '醫療管理', '檢查與產檢', HeartPulse],
+  ['lifestyle', '生活管理', '運動與飲食', Sprout],
+  ['finance', '財務與保險', '花費與保單', Wallet],
+  ['journal', '每日日記', '心情與身體', BookOpen],
 ];
 // 手機底部五個：Wellness、Medical、Lifestyle 合併成 Care
 const CARE: Route[] = ['wellness', 'medical', 'lifestyle'];
@@ -24,19 +24,19 @@ export function Shell({ children }: { children: ReactNode }) {
       <aside className="hidden md:flex md:flex-col w-[240px] lg:w-[260px] shrink-0 sticky top-0 h-screen border-r border-line px-6 py-8">
         <button onClick={() => go('home')} className="text-left">
           <div className="display text-[28px] leading-none text-forest">Blooming<br />Days</div>
-          <div className="display italic text-[13px] text-mute mt-2">A Journey of Wellness &amp; Motherhood</div>
+          <div className="serif text-[12.5px] text-mute mt-2.5 leading-relaxed">在成為媽媽之前，<br />先好好照顧自己。</div>
         </button>
         <nav className="mt-10 flex-1 space-y-0.5" aria-label="主要功能">
-          {NAV.map(([r, en, zh, I]) => (
+          {NAV.map(([r, name, hint, I]) => (
             <button key={r} onClick={() => go(r)} aria-current={route === r ? 'page' : undefined}
               className={cx('w-full flex items-center gap-3 px-3 py-2.5 rounded-[12px] text-left transition', route === r ? 'bg-paper text-forest border border-line' : 'text-ink/80 hover:bg-paper/60 border border-transparent')}>
-              <I size={18} strokeWidth={1.4} />
-              <span className="display text-[17px] w-[72px]">{en}</span><span className="text-[12px] text-mute">{zh}</span>
+              <I size={18} strokeWidth={1.4} className="shrink-0" />
+              <span className="flex flex-col leading-tight"><span className="serif text-[15px]">{name}</span><span className="text-[11px] text-mute mt-0.5">{hint}</span></span>
             </button>
           ))}
         </nav>
         <div className="border-t border-line pt-4">
-          <div className="eyebrow mb-2">Stage</div>
+          <div className="eyebrow mb-2">目前階段</div>
           <div className="serif text-[14px] text-forest">{STAGE_LABEL[s.stage]}</div>
           <button onClick={() => go('settings')} className={cx('mt-4 flex items-center gap-2 text-[13px]', route === 'settings' ? 'text-forest' : 'text-mute')}><Gear size={15} strokeWidth={1.4} />設定與備份</button>
         </div>
@@ -51,9 +51,9 @@ export function Shell({ children }: { children: ReactNode }) {
           </div>
           {CARE.includes(route) && (
             <div className="flex gap-1 px-5 py-2 border-b border-line/70" role="tablist" aria-label="照護">
-              {NAV.filter(n => CARE.includes(n[0])).map(([r, en, zh]) => (
+              {NAV.filter(n => CARE.includes(n[0])).map(([r, name]) => (
                 <button key={r} role="tab" aria-selected={route === r} onClick={() => go(r)} className={cx('flex-1 rounded-full py-1.5 text-[13px]', route === r ? 'bg-forest text-paper' : 'text-mute')}>
-                  <span className="display text-[15px] mr-1">{en}</span>{zh.slice(0, 2)}
+                  {name.slice(0, 2)}
                 </button>
               ))}
             </div>

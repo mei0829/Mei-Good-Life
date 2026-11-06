@@ -4,7 +4,7 @@ import { useApp } from '../app';
 import { useTable } from '../data/hooks';
 import { data } from '../data/repo';
 import { daysBetween, md, mdw, relDay, ymd } from '../lib/dates';
-import { pregnancy, TRI, weekLabel } from '../lib/pregnancy';
+import { pregnancy, TRI, weekLabel, weekOf } from '../lib/pregnancy';
 import { PRECONCEPTION_CHECKS, PRENATAL_CHECKS, PRENATAL_VISITS, type CheckItem } from '../content/medical';
 import { VISIT_KIND } from '../content/options';
 import { EntityForm, useEditor, type Field } from '../components/form';
@@ -19,7 +19,7 @@ export default function Medical() {
   const p = preg ? pregnancy(s.lmp, s.edd, today) : null;
   return (
     <div>
-      <PageHeader en="Medical" zh="醫療管理" sub={preg ? '孕週、預產期、產檢行事曆與每次看診的紀錄。' : '備孕檢查建議、看診紀錄、醫院與醫師資料。'} />
+      <PageHeader kicker="Blooming Days・檢查與產檢" title="醫療管理" sub={preg ? '孕週、預產期、產檢行事曆與每次看診的紀錄。' : '備孕檢查建議、看診紀錄、醫院與醫師資料。'} />
       {preg && <PregBanner p={p} />}
       <Tabs value={tab} onChange={t => go('medical', t)} items={[['guide', preg ? '產檢行事曆' : '備孕檢查建議'], ['visits', preg ? '產檢與看診紀錄' : '看診紀錄'], ['care', '醫院與醫師']]} />
       {tab === 'guide' && (preg ? <PrenatalGuide week={p ? p.weeks : null} /> : <CheckList items={PRECONCEPTION_CHECKS} />)}
@@ -38,8 +38,8 @@ function PregBanner({ p }: { p: ReturnType<typeof pregnancy> }) {
   return (
     <div className="surface p-5 md:p-6 mb-8 grid sm:grid-cols-4 gap-5 items-end">
       <div className="sm:col-span-2">
-        <div className="eyebrow">Pregnancy</div>
-        <div className="display text-[38px] leading-none text-forest mt-1">{p ? weekLabel(p) : '—'}</div>
+        <div className="eyebrow">目前孕週</div>
+        <div className="serif text-[34px] leading-tight text-forest mt-1">{p ? weekLabel(p) : '—'}</div>
         <div className="text-[12.5px] text-mute mt-1">{p ? TRI[p.trimester] + (p.adjusted ? '・依醫師調整的預產期計算' : '・依末次月經推算') : '尚未設定末次月經'}</div>
       </div>
       <div><div className="text-[12px] text-mute">預產期</div><div className="serif text-[18px]">{p ? ymd(p.edd) : '—'}</div></div>
@@ -61,7 +61,7 @@ const COST_TONE = { 公費: 'sage', 健保: 'sage', 部分補助: 'oat', 自費:
 function CheckCard({ c, state }: { c: CheckItem; state?: 'now' | 'past' | 'next' }) {
   return (
     <div className={cx('py-4 border-b border-line grid grid-cols-[76px_1fr] gap-4', state === 'past' && 'opacity-55')}>
-      <div>{c.weeks ? <><div className="display text-[26px] leading-none text-forest">{c.weeks[0] === c.weeks[1] ? c.weeks[0] : `${c.weeks[0]}–${c.weeks[1]}`}</div><div className="text-[11px] text-mute mt-1">週</div></> : <div className="display italic text-[18px] text-forest">Before</div>}</div>
+      <div>{c.weeks ? <><div className="display text-[26px] leading-none text-forest">{c.weeks[0] === c.weeks[1] ? c.weeks[0] : `${c.weeks[0]}–${c.weeks[1]}`}</div><div className="text-[11px] text-mute mt-1">孕週</div></> : <div className="serif text-[16px] text-forest">懷孕前</div>}</div>
       <div>
         <div className="flex flex-wrap items-center gap-2"><span className="serif text-[15.5px]">{c.title}</span>{state === 'now' && <Badge tone="forest">現在</Badge>}</div>
         <p className="text-[13px] text-ink/80 mt-1 leading-relaxed">{c.purpose}</p>
@@ -112,7 +112,7 @@ function Visits() {
     { key: 'hospitalId', label: '醫院', type: 'select', half: true, options: [...hospitals].sort((a, b) => +!!b.favorite - +!!a.favorite).map(h => [h.id, (h.favorite ? '★ ' : '') + h.name] as [string, string]), hint: hospitals.length ? undefined : '先到「醫院與醫師」新增' },
     { key: 'doctorId', label: '醫師', type: 'select', half: true, options: doctors.map(d => [d.id, d.name + (d.dept ? '（' + d.dept + '）' : '')] as [string, string]) },
     { key: 'week', label: '當時孕週', type: 'text', half: true, show: isPregKind, hint: '空著會依日期自動計算' },
-    { key: 'efw', label: '胎兒估計體重', type: 'number', unit: 'g', half: true, show: v => isPregKind(v) },
+    { key: 'efw', label: '胎兒估計體重', type: 'number', unit: '公克', half: true, show: v => isPregKind(v) },
     { key: 'ultrasound', label: '超音波紀錄', type: 'textarea', show: isPregKind, hint: '胎心、頭圍、股骨長、羊水、胎位等' },
     { key: 'items', label: '檢查項目', type: 'textarea' },
     { key: 'results', label: '檢查結果', type: 'textarea' },
@@ -121,7 +121,7 @@ function Visits() {
     { key: 'files', label: '報告附件', type: 'files' },
   ];
   const derive = (v: Record<string, any>) => {
-    if (isPregKind(v) && !v.week && v.date) { const p = pregnancy(s.lmp, s.edd, v.date); if (p) return { ...v, week: `${p.weeks}w${p.dayOfWeek}d` }; }
+    if (isPregKind(v) && !v.week && v.date) { const p = pregnancy(s.lmp, s.edd, v.date); if (p) return { ...v, week: weekOf(p) }; }
     return v;
   };
   const next = rows.map(r => r.nextDate).filter((d): d is string => !!d && d >= today).sort()[0];
@@ -161,7 +161,7 @@ function Care() {
   ];
   return (
     <div className="grid md:grid-cols-2 gap-x-10">
-      <Section en="Hospitals" title="醫院收藏" action={<button className="btn-quiet" onClick={() => he.add()}><Plus size={15} />新增</button>}>
+      <Section title="醫院收藏" action={<button className="btn-quiet" onClick={() => he.add()}><Plus size={15} />新增</button>}>
         {hospitals.length ? hospitals.map(h => (
           <div key={h.id} className="flex items-start gap-2">
             <button onClick={() => data.table('hospitals').update(h.id, { favorite: !h.favorite })} className="pt-4" aria-label={h.favorite ? '取消收藏' : '收藏'}><Star size={16} strokeWidth={1.4} className={h.favorite ? 'fill-oat text-oat' : 'text-line'} /></button>
@@ -169,7 +169,7 @@ function Care() {
           </div>
         )) : <Empty title="還沒有醫院" />}
       </Section>
-      <Section en="Doctors" title="醫師資料" action={<button className="btn-quiet" onClick={() => de.add()}><Plus size={15} />新增</button>}>
+      <Section title="醫師資料" action={<button className="btn-quiet" onClick={() => de.add()}><Plus size={15} />新增</button>}>
         {doctors.length ? doctors.map(d => <Row key={d.id} onClick={() => de.edit(d.id)} title={d.name} meta={[hospitals.find(h => h.id === d.hospitalId)?.name, d.dept, d.phone].filter(Boolean).join('・')} />) : <Empty title="還沒有醫師資料" />}
       </Section>
       <EntityForm table="hospitals" title="醫院" fields={hf} {...he} onClose={he.close} />

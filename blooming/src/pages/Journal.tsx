@@ -43,7 +43,7 @@ export default function Journal() {
   const list = rows.filter(r => !from || r.date >= from);
   return (
     <div>
-      <PageHeader en="Journal" zh="每日日記" sub="今天的心情、身體與一點點小事。" action={<button className="btn-primary" onClick={open}><Plus size={16} />今天</button>} />
+      <PageHeader kicker="Blooming Days・心情與身體" title="每日日記" sub="今天的心情、身體與一點點小事。" action={<button className="btn-primary" onClick={open}><Plus size={16} />今天</button>} />
       <Chips value={range} onChange={setRange} items={['全部', '最近 7 天', '最近 30 天']} />
       {list.length ? list.map(j => {
         const p = preg ? pregnancy(s.lmp, s.edd, j.date) : null;
@@ -52,14 +52,14 @@ export default function Journal() {
           <article key={j.id} className="grid grid-cols-[64px_1fr] md:grid-cols-[120px_1fr] gap-4 md:gap-8 py-6 border-b border-line">
             <button onClick={() => ed.edit(j.id)} className="text-left self-start">
               <div className="display text-[40px] md:text-[52px] leading-none text-forest">{+j.date.slice(8)}</div>
-              <div className="num text-[11px] text-mute mt-1 tracking-wider">{j.date.slice(0, 7).replace('-', '.')}</div>
-              {p && <div className="text-[11px] text-mute mt-1">{p.weeks}w{p.dayOfWeek}d</div>}
+              <div className="text-[11px] text-mute mt-1">{+j.date.slice(0, 4)} 年 {+j.date.slice(5, 7)} 月</div>
+              {p && <div className="text-[11px] text-mute mt-1">孕 {p.weeks} 週 {p.dayOfWeek} 天</div>}
             </button>
             <div className="min-w-0">
               <button onClick={() => ed.edit(j.id)} className="text-left w-full">
                 <div className="flex flex-wrap items-center gap-2"><span className="serif text-[16px]">{mdw(j.date)}</span>{j.mood && <Badge tone="rose">{j.mood}</Badge>}</div>
                 {j.text && <p className="text-[14.5px] leading-[1.85] mt-2 whitespace-pre-wrap line-clamp-6">{j.text}</p>}
-                <p className="text-[12.5px] text-mute mt-2">{[j.body, j.sleep && '睡眠：' + j.sleep, j.appetite && '食慾' + j.appetite, j.vomit != null && '孕吐 ' + j.vomit + ' 次', j.nausea != null && '噁心 ' + j.nausea + '/5', j.appetiteChange, j.fetal && '胎動：' + j.fetal].filter(Boolean).join('・')}</p>
+                <p className="text-[12.5px] text-mute mt-2">{[j.body, j.sleep && '睡眠：' + j.sleep, j.appetite && '食慾' + j.appetite, j.vomit != null && '孕吐 ' + j.vomit + ' 次', j.nausea != null && '噁心程度 ' + j.nausea + ' 分', j.appetiteChange, j.fetal && '胎動：' + j.fetal].filter(Boolean).join('・')}</p>
                 {tags.length > 0 && <div className="flex flex-wrap gap-1.5 mt-2">{tags.map(t => <Badge key={t} tone="line">{t}</Badge>)}</div>}
               </button>
               {j.photos?.length ? <div className="mt-3"><FileList ids={j.photos} /></div> : null}

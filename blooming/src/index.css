@@ -17,6 +17,7 @@
   --color-line: #E6E0D5;       /* border */
   --color-alert: #A65B4F;
 
+  /* 品牌名稱與大數字用 Cormorant；中文會自動用 Noto Serif TC */
   --font-display: "Cormorant Garamond", "Noto Serif TC", serif;
   --font-serif: "Noto Serif TC", "Cormorant Garamond", serif;
   --font-sans: "Noto Sans TC", -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
@@ -43,7 +44,7 @@ button { cursor: pointer; touch-action: manipulation; }
 input, select, textarea, button { font: inherit; color: inherit; }
 }
 
-@utility eyebrow { font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color: var(--color-mute); font-family: var(--font-num); }
+@utility eyebrow { font-size: 12px; letter-spacing: .24em; color: var(--color-mute); font-family: var(--font-serif); }
 @utility display { font-family: var(--font-display); font-weight: 500; letter-spacing: .01em; }
 @utility serif { font-family: var(--font-serif); }
 @utility num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
