@@ -61,14 +61,9 @@ footer{text-align:center;font-size:11px;color:var(--sub);margin-top:36px;opacity
   <div><b>新人名單</b><p>新人資訊、跟進、課表、組織</p></div>
   <span class="tag">私人</span>
  </a>
- <a class="tile k3" id="baby" href="baby.html" hidden>
-  <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="10" r="5.5"/><path d="M10 9.5h.01M14 9.5h.01M10.5 12q1.5 1.2 3 0"/><path d="M12 4.5q-1.3-1.5.2-2.5"/><path d="M7 21c1.2-2.4 3-3.6 5-3.6s3.8 1.2 5 3.6"/></svg></div>
-  <div><b>備孕懷孕</b><p>紀錄、費用、保險、用品、福利</p></div>
-  <span class="tag">私人</span>
- </a>
- <a class="tile k2" id="bloom" href="blooming/" hidden>
-  <img class="ic" src="blooming/logo.webp" alt="" style="object-fit:cover;border-radius:50%">
-  <div><b>幸孕女子</b><p>備孕與孕期健康日誌</p></div>
+ <a class="tile k3" id="bloom" href="blooming/" hidden>
+  <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 21V10"/><path d="M12 15c-2.5-.4-4.4-2.2-4.8-5 2.8.2 4.5 2 4.8 5zM12 13c2.5-.4 4.4-2.2 4.8-5-2.8.2-4.5 2-4.8 5z"/><circle cx="12" cy="7" r="2.3"/></svg></div>
+  <div><b>幸孕女子</b><p>備孕、孕期紀錄、產檢、花費與保險</p></div>
   <span class="tag">只存在這支手機</span>
  </a>
  <a class="tile k2" href="cabinet.html">
@@ -101,7 +96,7 @@ footer{text-align:center;font-size:11px;color:var(--sub);margin-top:36px;opacity
 </main>
 <script>
 // 記帳只在管理員登入過的手機上顯示
-try{if(localStorage.getItem('mgl-role')==='admin'){document.getElementById('money').hidden=false;document.getElementById('cal').hidden=false;document.getElementById('roster').hidden=false;document.getElementById('baby').hidden=false;document.getElementById('bloom').hidden=false}}catch(e){}
+try{if(localStorage.getItem('mgl-role')==='admin'){document.getElementById('money').hidden=false;document.getElementById('cal').hidden=false;document.getElementById('roster').hidden=false;document.getElementById('bloom').hidden=false}}catch(e){}
 // 創業頁只給管理員和被邀請的夥伴看到
 try{if(localStorage.getItem('mgl-role')==='admin'||localStorage.getItem('mgl-biz')==='1')document.getElementById('biz').hidden=false}catch(e){}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});

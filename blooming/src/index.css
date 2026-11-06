@@ -19,7 +19,7 @@
   --color-rose-ink: #8A5B53;   /* 淡玫瑰底上的文字 */
   --color-oat-ink: #7A6648;    /* 燕麥底上的文字 */
 
-  /* 標題與大數字用圓體（jf 粉圓），看起來柔和、不嚴肅；品牌名稱「幸孕女子」用霞鶩文楷，跟毛筆字標誌搭配 */
+  /* 標題與大數字用圓體（jf 粉圓），看起來柔和、不嚴肅；品牌名稱「幸孕女子」用霞鶩文楷，有手寫的筆觸 */
   --font-display: "Huninn", "Noto Sans TC", sans-serif;
   --font-serif: "Huninn", "Noto Sans TC", sans-serif;
   --font-brand: "LXGW WenKai TC", "Huninn", serif;

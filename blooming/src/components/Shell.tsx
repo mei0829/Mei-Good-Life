@@ -23,7 +23,6 @@ export function Shell({ children }: { children: ReactNode }) {
       {/* 電腦版：左側 Sidebar */}
       <aside className="hidden md:flex md:flex-col w-[240px] lg:w-[260px] shrink-0 sticky top-0 h-screen border-r border-line px-6 py-8">
         <button onClick={() => go('home')} className="text-left">
-          <img src="logo.webp" alt="" className="w-16 h-16 rounded-full mb-3" />
           <div className="brand text-[28px] leading-none text-forest">幸孕女子</div>
           <div className="serif text-[12.5px] text-mute mt-2.5 leading-relaxed">在成為媽媽之前，<br />先好好照顧自己。</div>
         </button>
@@ -47,7 +46,7 @@ export function Shell({ children }: { children: ReactNode }) {
         {/* 手機版：頂部小標 */}
         <div className="md:hidden sticky top-0 z-30 bg-ivory/90 backdrop-blur pt-safe">
           <div className="flex items-center justify-between px-5 h-12 border-b border-line/70">
-            <button onClick={() => go('home')} className="flex items-center gap-2"><img src="logo.webp" alt="" className="w-8 h-8 rounded-full" /><span className="brand text-[20px] text-forest">幸孕女子</span></button>
+            <button onClick={() => go('home')} className="brand text-[20px] text-forest">幸孕女子</button>
             <button onClick={() => go('settings')} aria-label="設定與備份" className={cx('p-2 -mr-2', route === 'settings' ? 'text-forest' : 'text-mute')}><Gear size={19} strokeWidth={1.4} /></button>
           </div>
           {CARE.includes(route) && (

@@ -61,7 +61,7 @@ export default function Home() {
       <header className="flex items-end justify-between border-b border-ink/80 pb-3">
         <div>
           <p className="eyebrow">{fullDate(today)}</p>
-          <h1 className="flex items-center gap-3 md:gap-5 mt-2"><img src="logo.webp" alt="" className="w-16 h-16 md:w-24 md:h-24 rounded-full" /><span className="brand text-[50px] md:text-[80px] leading-none text-forest">幸孕女子</span></h1>
+          <h1 className="brand text-[52px] md:text-[84px] leading-none text-forest mt-2">幸孕女子</h1>
         </div>
         <p className="hidden sm:block serif text-[13.5px] text-mute text-right max-w-[200px] leading-relaxed tracking-[.02em]">備孕與孕期<br />健康日誌</p>
       </header>
