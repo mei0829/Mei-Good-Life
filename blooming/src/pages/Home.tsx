@@ -1,13 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ArrowUpRight, Check, Circle } from 'lucide-react';
 import { useApp, STAGE_LABEL, type Route } from '../app';
 import { useTable } from '../data/hooks';
-import { data } from '../data/repo';
 import { cycleStats } from '../lib/cycle';
 import { pregnancy, TRI, weekLabel } from '../lib/pregnancy';
 import { daysBetween, fullDate, md, mdw, relDay, ymd } from '../lib/dates';
 import { quoteOf } from '../content/quotes';
-import { DuckPair } from '../components/Duck';
+import { Duck, DuckPair, type DuckSpec } from '../components/Duck';
 import { Badge, Note, cx } from '../components/ui';
 import { ConfirmPregnancy } from '../components/Stage';
 
@@ -25,7 +24,6 @@ export default function Home() {
   const exercise = useTable('exercise') || [];
   const hospitals = useTable('hospitals') || [];
   const [confirm, setConfirm] = useState(false);
-  const photo = usePhoto(s.heroPhoto);
 
   const st = useMemo(() => cycleStats(periods, today), [periods, today]);
   const p = s.stage === 'pregnant' ? pregnancy(s.lmp, s.edd, today) : null;
@@ -33,6 +31,9 @@ export default function Home() {
   const hello = (h < 11 ? '早安' : h < 18 ? '午安' : '晚安') + (s.name ? '，' + s.name : '');
   const helloSub = h < 11 ? '新的一天，從照顧自己開始。' : h < 18 ? '記得喝水，也記得休息一下。' : '今天辛苦了，好好放鬆。';
   const quote = quoteOf(today);
+  // 首頁的鴨子跟著階段改變：備孕張開翅膀、懷孕抱著蛋、產後帶著小鴨
+  const stageDuck: DuckSpec = s.stage === 'pregnant' ? { pose: 'sit', prop: 'egg' } : s.stage === 'postpartum' ? { pose: 'stand', prop: 'heart' } : { pose: 'spread', prop: 'flower' };
+  const stageDuckTitle = s.stage === 'pregnant' ? '抱著蛋的柯爾鴨' : s.stage === 'postpartum' ? '柯爾鴨' : '張開翅膀的柯爾鴨';
 
   const tb = body.find(b => b.date === today), ts = sleep.find(x => x.date === today), tj = journal.find(j => j.date === today);
   const activeSups = sups.filter(x => activeOn(x, today));
@@ -74,14 +75,9 @@ export default function Home() {
         <span className="text-[14px] text-mute">{helloSub}</span>
       </div>
 
-      {/* 主視覺：柯爾鴨插畫（或自己的照片），文字放在旁邊的紙張面板，不蓋住鴨子 */}
-      <figure className="relative mt-5 md:grid md:grid-cols-[1.75fr_1fr] md:gap-6">
-        <div className="relative rounded-[22px] overflow-hidden aspect-[3/2] bg-oat-soft">
-          {photo ? <img src={photo} alt="主視覺照片" className="absolute inset-0 w-full h-full object-cover" />
-            : <img src="ducks.webp" srcSet="ducks-small.webp 1024w, ducks.webp 1536w" sizes="(min-width: 768px) 70vw, 100vw" alt="草地上的柯爾鴨" className="absolute inset-0 w-full h-full object-cover object-[50%_45%]" />}
-        </div>
-        <figcaption className="relative -mt-8 mx-3 md:m-0 rounded-[18px] bg-paper/95 backdrop-blur border border-line px-5 py-4 md:px-7 md:py-7 text-forest md:flex md:flex-col md:justify-end">
-          <DuckPair className="hidden md:block w-32 h-20 mb-auto" />
+      {/* 目前階段：紙張面板＋一隻依階段變化的鴨子 */}
+      <section className="relative mt-5 surface px-5 py-5 md:px-8 md:py-7 flex items-end justify-between gap-3 overflow-hidden text-forest">
+        <div className="min-w-0 flex-1">
           <div className="eyebrow">目前階段・{STAGE_LABEL[s.stage]}</div>
           {p ? (<>
             <div className="leading-none mt-2"><span className="display text-[50px] md:text-[64px]">{p.weeks}</span><span className="serif text-[20px] md:text-[24px] mx-2">週</span><span className="display text-[50px] md:text-[64px]">{p.dayOfWeek}</span><span className="serif text-[20px] md:text-[24px] ml-2">天</span></div>
@@ -97,8 +93,9 @@ export default function Home() {
             ) : <div className="serif text-[26px] md:text-[32px] mt-2 tracking-[.08em]">從今天開始</div>}
             <div className="serif text-[14px] mt-2 text-mute">{st.cycleDay ? (st.nextStart ? '下次月經預測在 ' + md(st.nextStart) : '再多記錄幾次月經，就能估算週期') : '記錄第一次月經，開始了解你的週期'}</div>
           </>)}
-        </figcaption>
-      </figure>
+        </div>
+        <Duck {...stageDuck} className="w-28 h-28 md:w-44 md:h-44 shrink-0 -mr-2 -mb-2" title={stageDuckTitle} />
+      </section>
 
       {/* 階段摘要 */}
       <div className="grid md:grid-cols-[1.25fr_1fr] gap-x-10 mt-9">
@@ -138,7 +135,7 @@ export default function Home() {
 
       {/* 每日一句 */}
       <blockquote className="relative mt-12 py-10 px-6 md:px-14 text-center border-y border-line">
-        <DuckPair className="w-28 h-16 mx-auto mb-4" />
+        <DuckPair className="w-36 h-20 mx-auto mb-4" big={{ pose: 'walk' }} small={{ pose: 'walk', kind: 'duckling', flip: true }} />
         <p className="eyebrow mb-3">每日一句</p>
         <p className="serif text-[22px] md:text-[28px] leading-relaxed text-forest tracking-[.08em]">「{quote}」</p>
       </blockquote>
@@ -208,14 +205,4 @@ function Today({ tb, ts, sup, ex }: { tb?: any; ts?: any; sup: [number, number];
       </div>
     </Block>
   );
-}
-
-function usePhoto(id?: string) {
-  const [url, setUrl] = useState<string>();
-  useEffect(() => {
-    if (!id) { setUrl(undefined); return; }
-    let u = ''; data.getFile(id).then(f => { if (f) { u = URL.createObjectURL(f.blob); setUrl(u); } });
-    return () => { if (u) URL.revokeObjectURL(u); };
-  }, [id]);
-  return url;
 }

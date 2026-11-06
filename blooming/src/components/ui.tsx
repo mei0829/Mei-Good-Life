@@ -1,23 +1,28 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
-import { Duck, DuckPair } from './Duck';
+import { Duck, PAGE_DUCK } from './Duck';
+import { useApp } from '../app';
 
 export const cx = (...a: (string | false | null | undefined)[]) => a.filter(Boolean).join(' ');
 
 /** 頁面大標題：英文雜誌風標題＋中文副標 */
 export function PageHeader({ title, kicker, sub, action }: { title: string; kicker: string; sub?: ReactNode; action?: ReactNode }) {
+  const { route } = useApp();
   return (
     <header className="relative mb-6 md:mb-9 pt-2">
+      {/* 每一頁有自己的一隻鴨子 */}
+      <div className="flex items-end justify-between gap-4">
+        <p className="eyebrow pb-1">{kicker}</p>
+        <Duck {...PAGE_DUCK[route]} className="w-16 h-16 md:w-24 md:h-24 shrink-0 -mb-1" />
+      </div>
       <div className="flex items-end justify-between gap-4">
         <div>
-          <p className="eyebrow">{kicker}</p>
           <h1 className="serif font-medium text-[34px] md:text-[44px] leading-tight mt-1.5 text-forest tracking-[.08em]">{title}</h1>
         </div>
         {action}
       </div>
       {sub && <p className="text-[13.5px] text-mute mt-3 max-w-xl leading-relaxed">{sub}</p>}
-      <Duck className="absolute right-0 -top-3 w-20 h-20 hidden md:block" />
     </header>
   );
 }
@@ -54,10 +59,15 @@ export function Chips<T extends string>({ value, onChange, items }: { value: T; 
   );
 }
 
+function EmptyDuck() {
+  const { route } = useApp();
+  return <Duck {...PAGE_DUCK[route]} className="w-24 h-24 mx-auto mb-2" />;
+}
+
 export function Empty({ title, hint, action }: { title: string; hint?: string; action?: ReactNode }) {
   return (
     <div className="text-center py-10 px-4">
-      <DuckPair className="w-32 h-20 mx-auto mb-3" />
+      <EmptyDuck />
       <p className="serif text-[15px]">{title}</p>
       {hint && <p className="text-[13px] text-mute mt-1 max-w-sm mx-auto leading-relaxed">{hint}</p>}
       {action && <div className="mt-4">{action}</div>}

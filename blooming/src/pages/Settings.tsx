@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { Download, Upload, ImagePlus, Trash2, ShieldCheck } from 'lucide-react';
+import { Download, Upload, Trash2, ShieldCheck } from 'lucide-react';
 import { useApp, STAGE_LABEL } from '../app';
 import { data } from '../data/repo';
 import { TABLES, TABLE_LABEL, type Stage, type TableName } from '../data/types';
 import { ConfirmPregnancy } from '../components/Stage';
-import { FileList } from '../components/form';
 import { Note, PageHeader, Section, cx, useToast } from '../components/ui';
 import { today as todayStr } from '../lib/dates';
 
@@ -22,7 +21,7 @@ export default function SettingsPage() {
   const [csv, setCsv] = useState<TableName>('expenses');
   const [usage, setUsage] = useState<string>('');
   const [persisted, setPersisted] = useState<boolean | null>(null);
-  const restoreInp = useRef<HTMLInputElement>(null), photoInp = useRef<HTMLInputElement>(null);
+  const restoreInp = useRef<HTMLInputElement>(null);
   useEffect(() => {
     navigator.storage?.estimate?.().then(e => setUsage(e.usage != null ? (e.usage / 1024 / 1024).toFixed(1) + ' 百萬位元組' : ''));
     navigator.storage?.persisted?.().then(setPersisted);
@@ -47,13 +46,6 @@ export default function SettingsPage() {
       const r = await data.importBackup(obj);
       toast(`已還原 ${r.imported} 筆${r.skipped ? `，${r.skipped} 筆格式不正確已略過` : ''}`);
     } catch (e) { alert('無法還原：' + ((e as Error).message || '檔案格式不正確')); }
-  };
-  const photo = async (f?: File) => {
-    if (!f) return;
-    if (!f.type.startsWith('image/')) return toast('請選擇圖片');
-    const id = await data.putFile(f);
-    if (s.heroPhoto) await data.removeFile(s.heroPhoto);
-    await data.saveSettings({ heroPhoto: id }); toast('主視覺照片已更新');
   };
   const persist = async () => { const ok = await navigator.storage?.persist?.(); setPersisted(!!ok); toast(ok ? '瀏覽器已同意保留資料' : '瀏覽器沒有同意，請定期備份'); };
   const wipe = async () => {
@@ -83,17 +75,6 @@ export default function SettingsPage() {
               ))}
             </div>
             <p className="text-[12.5px] text-mute mt-3 leading-relaxed">切換成懷孕需要你自己確認並輸入末次月經日期；月經延遲不會自動切換。切換階段不會刪除任何資料。</p>
-          </Section>
-
-          <Section title="首頁主視覺照片">
-            <div className="flex items-start gap-4">
-              {s.heroPhoto ? <FileList ids={[s.heroPhoto]} /> : <p className="text-[13px] text-mute flex-1">目前使用柯爾鴨插畫。可以換成自己的照片（只存在這個瀏覽器）。</p>}
-              <div className="flex flex-col gap-2 shrink-0">
-                <button className="btn-ghost" onClick={() => photoInp.current?.click()}><ImagePlus size={15} strokeWidth={1.5} />選擇照片</button>
-                {s.heroPhoto && <button className="btn-quiet text-alert" onClick={async () => { await data.removeFile(s.heroPhoto!); await data.saveSettings({ heroPhoto: undefined }); }}>改回柯爾鴨插畫</button>}
-              </div>
-            </div>
-            <input ref={photoInp} type="file" accept="image/*" hidden onChange={e => { photo(e.target.files?.[0]); e.target.value = ''; }} />
           </Section>
         </div>
 
