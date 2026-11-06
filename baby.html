@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#F6EFEE">
+<meta name="theme-color" content="#FFF8F2">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="好孕">
@@ -11,82 +11,107 @@
 <link rel="icon" href="baby.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="baby.svg">
 <title>備孕懷孕</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#F6EFEE;--card:#fff;--ink:#2B2A27;--sub:#7A766E;--line:#E7DCDA;--acc:#B5677A;--on:#fff;--ok:#3F8A5F;--bad:#C94A4A;--soft:#F5E1E4}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171614;--card:#22211E;--ink:#EDEAE4;--sub:#A29D94;--line:#34322E;--acc:#E59AAE;--on:#171614;--ok:#7CC49A;--bad:#F07070;--soft:#3A2A2E}}
-:root[data-theme="dark"]{--bg:#171614;--card:#22211E;--ink:#EDEAE4;--sub:#A29D94;--line:#34322E;--acc:#E59AAE;--on:#171614;--ok:#7CC49A;--bad:#F07070;--soft:#3A2A2E}
+/* 嬰兒風：奶油底、粉紅、粉藍、薄荷、奶黃，圓體字（jf 粉圓） */
+:root{--bg:#FFF8F2;--dot:#F9E3E3;--card:#fff;--ink:#5A4A4E;--sub:#A18F93;--line:#F3E1E1;--acc:#EE8FA8;--acc2:#F7B6C5;--on:#fff;--ok:#5FB69A;--bad:#E26D6D;--soft:#FFE8EE;
+ --blue:#DCEFFC;--blueI:#5E9CC8;--mint:#DDF4EA;--mintI:#4FA585;--yel:#FFF1C9;--yelI:#C79A2E;--lil:#EFE6FA;--lilI:#9479C2;--sh:0 4px 14px rgba(238,143,168,.13)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1D1A1C;--dot:#2A2427;--card:#272225;--ink:#F3E9EC;--sub:#B7A6AB;--line:#3A3135;--acc:#F2A3B8;--acc2:#8C5463;--on:#1D1A1C;--ok:#86CFB4;--bad:#F08080;--soft:#3A2A30;
+ --blue:#24313B;--blueI:#9CC9EA;--mint:#22332C;--mintI:#8ED3B9;--yel:#3A3322;--yelI:#E9C873;--lil:#2F2838;--lilI:#C3AEE6;--sh:none}}
+:root[data-theme="dark"]{--bg:#1D1A1C;--dot:#2A2427;--card:#272225;--ink:#F3E9EC;--sub:#B7A6AB;--line:#3A3135;--acc:#F2A3B8;--acc2:#8C5463;--on:#1D1A1C;--ok:#86CFB4;--bad:#F08080;--soft:#3A2A30;
+ --blue:#24313B;--blueI:#9CC9EA;--mint:#22332C;--mintI:#8ED3B9;--yel:#3A3322;--yelI:#E9C873;--lil:#2F2838;--lilI:#C3AEE6;--sh:none}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Noto Sans TC","PingFang TC",-apple-system,"Microsoft JhengHei",sans-serif}
+body{margin:0;background:var(--bg) radial-gradient(var(--dot) 2.2px,transparent 2.6px) 0 0/26px 26px;color:var(--ink);font:15px/1.55 "Huninn","Noto Sans TC","PingFang TC",-apple-system,"Microsoft JhengHei",sans-serif}
 #app{max-width:760px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top)) 16px 90px}
 #app::after{content:"© 2026 mei0829 版權所有";display:block;text-align:center;font-size:11px;color:var(--sub);margin-top:28px;opacity:.8}
-h1{font-size:24px;margin:4px 0 0;font-weight:700}
-h2{font-size:14px;margin:18px 2px 8px;color:var(--sub);font-weight:500}
+h1{font-size:25px;margin:4px 0 0;font-weight:400;letter-spacing:1px}
+h1::after{content:" 🍼";font-size:21px}
 a{color:var(--acc)}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer;touch-action:manipulation}
-input,select,textarea{font-size:16px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 10px;width:100%;min-width:0}
+input,select,textarea{font-size:16px;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:9px 12px;width:100%;min-width:0;font-family:"Noto Sans TC","PingFang TC",-apple-system,sans-serif}
+input:focus,select:focus,textarea:focus{outline:0;border-color:var(--acc2);box-shadow:0 0 0 3px var(--soft)}
 textarea{min-height:72px;resize:vertical}
-.card{background:var(--card);border-radius:16px;padding:12px 14px;margin-bottom:10px;border:1px solid var(--line)}
+.card{background:var(--card);border-radius:22px;padding:14px 16px;margin-bottom:12px;border:1.5px solid var(--line);box-shadow:var(--sh)}
 .sub{font-size:13px;color:var(--sub)}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.go{background:var(--acc);color:var(--on);border:0;border-radius:12px;padding:10px 16px;font-weight:700}
-.bt{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 12px}
+.go{background:var(--acc);color:var(--on);border:0;border-radius:999px;padding:10px 18px;box-shadow:0 3px 0 var(--acc2)}
+.go:active{transform:translateY(2px);box-shadow:0 1px 0 var(--acc2)}
+.bt{background:var(--card);border:1.5px solid var(--line);border-radius:999px;padding:8px 14px}
 .bad{color:var(--bad)}.ok{color:var(--ok)}
+b{font-weight:400}
 #authwrap{max-width:420px;margin:0 auto;padding:40px 16px}#authwrap a{color:var(--acc)}
 .afl{display:block;margin-bottom:10px}.afl span{display:block;font-size:13px;color:var(--sub);margin-bottom:4px}
 
 .top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.top .bt{width:40px;height:40px;padding:0}
 .home{font-size:14px;text-decoration:none}
 #st{font-size:12px;color:var(--sub);margin:2px 0 10px}
-.hero{background:var(--soft);border:0;width:100%;text-align:left;display:block}
-.hero .big{font-size:26px;font-weight:700;color:var(--acc);line-height:1.25}
-.hero .ln{font-size:13.5px;margin-top:4px}
-.pg{height:8px;border-radius:4px;background:var(--card);margin-top:10px;overflow:hidden}.pg i{display:block;height:100%;background:var(--acc);border-radius:4px}
-.tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px;margin-bottom:10px}
-.tabs button{border:0;background:none;border-radius:10px;padding:7px 2px;font-weight:500;color:var(--sub);font-size:14px}
-.tabs button.on{background:var(--acc);color:var(--on)}
+.hero{position:relative;overflow:hidden;border:0;width:100%;text-align:left;display:block;padding:18px 18px 16px;
+ background:linear-gradient(135deg,#FFE3EA 0%,#FDEFF3 45%,#E2F1FC 100%);color:#5A4A4E}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .hero{background:linear-gradient(135deg,#3B2A31,#2A2C36);color:var(--ink)}}
+:root[data-theme="dark"] .hero{background:linear-gradient(135deg,#3B2A31,#2A2C36);color:var(--ink)}
+.hero::before{content:"";position:absolute;right:-24px;top:-18px;width:150px;height:70px;background:radial-gradient(circle at 30% 70%,#fff 26px,transparent 27px),radial-gradient(circle at 58% 48%,#fff 34px,transparent 35px),radial-gradient(circle at 84% 72%,#fff 24px,transparent 25px);opacity:.75}
+.hero .em{position:absolute;right:14px;bottom:10px;font-size:52px;line-height:1;filter:drop-shadow(0 3px 4px rgba(0,0,0,.08))}
+.hero .big{position:relative;font-size:27px;color:var(--acc);line-height:1.3;padding-right:56px}
+.hero .ln{position:relative;font-size:13.5px;margin-top:4px;padding-right:60px}
+.hero .sub{color:#A18F93}
+.hero .fr{display:inline-block;margin-top:8px;background:rgba(255,255,255,.75);border-radius:999px;padding:3px 12px;font-size:13.5px;color:#5A4A4E}
+.pg{position:relative;height:12px;border-radius:999px;background:rgba(255,255,255,.85);margin:12px 60px 2px 0;overflow:visible}
+.pg i{position:relative;display:block;height:100%;border-radius:999px;background:repeating-linear-gradient(-45deg,#F4A3B8 0 8px,#F7B9C9 8px 16px)}
+.pg i::after{content:"👣";position:absolute;right:-12px;top:-6px;font-size:15px}
+.tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;background:var(--card);border:1.5px solid var(--line);border-radius:22px;padding:5px;margin-bottom:12px;box-shadow:var(--sh)}
+.tabs button{border:0;background:none;border-radius:16px;padding:6px 2px 5px;color:var(--sub);font-size:13.5px;line-height:1.25}
+.tabs button span{display:block;font-size:20px;margin-bottom:1px;transition:transform .15s}
+.tabs button.on{background:var(--soft);color:var(--acc)}
+.tabs button.on span{transform:scale(1.15) rotate(-6deg)}
 .chips{display:flex;gap:6px;overflow-x:auto;padding:0 0 4px;scrollbar-width:none;flex:1;min-width:0}
 .chips::-webkit-scrollbar{display:none}
-.chips button{flex:none;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:4px 12px;font-size:13px}
+.chips button{flex:none;border:1.5px solid var(--line);background:var(--card);border-radius:999px;padding:4px 13px;font-size:13px}
 .chips button.on{background:var(--acc);border-color:var(--acc);color:var(--on)}
-.bar{display:flex;gap:8px;align-items:center;margin-bottom:8px}.bar .go{flex:none;padding:7px 14px}
-.it{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:8px}
+.bar{display:flex;gap:8px;align-items:center;margin-bottom:10px}.bar .go{flex:none;padding:7px 16px}
+.it{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;background:var(--card);border:1.5px solid var(--line);border-radius:20px;padding:11px 14px;margin-bottom:9px;box-shadow:var(--sh)}
 .it .tx{flex:1;min-width:0}
 .it .hd{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
-.it b{font-size:16px;overflow-wrap:anywhere;font-weight:500}
-.it .r{text-align:right;white-space:nowrap;font-weight:700}
-.it .ln{font-size:13px;color:var(--sub);margin-top:2px;overflow-wrap:anywhere}
+.it b{font-size:16px;overflow-wrap:anywhere}
+.it .r{text-align:right;white-space:nowrap;color:var(--acc)}
+.it .r.ok{color:var(--ok)}
+.it .ln{font-size:13px;color:var(--sub);margin-top:3px;overflow-wrap:anywhere}
 .it .ex{font-size:13.5px;margin-top:4px;white-space:pre-wrap;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.it.done b{color:var(--sub);text-decoration:line-through}
-.ck{flex:none;width:26px;height:26px;border-radius:8px;border:1.5px solid var(--line);background:var(--card);display:grid;place-items:center;font-size:15px;color:var(--on);padding:0;margin-top:1px}
-.ck.on{background:var(--acc);border-color:var(--acc)}
-.tag{display:inline-block;font-size:12px;border-radius:999px;padding:1px 8px;background:var(--soft);color:var(--acc);margin-right:4px;font-weight:500;white-space:nowrap}
-.tag.g{background:none;border:1px solid var(--line);color:var(--sub)}
-.tag.k{background:none;border:1px solid var(--ok);color:var(--ok)}
-.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center}
-.sum b{display:block;font-size:17px}.sum span{font-size:12px;color:var(--sub)}
-.bars .b{display:grid;grid-template-columns:76px 1fr 78px;gap:8px;align-items:center;font-size:13px;margin-top:6px}
+.it.done{opacity:.7;box-shadow:none}
+.it.done b{color:var(--sub);text-decoration:line-through;text-decoration-color:var(--acc2)}
+.ck{flex:none;width:28px;height:28px;border-radius:50%;border:2px dashed var(--acc2);background:var(--card);display:grid;place-items:center;font-size:15px;color:#fff;padding:0;margin-top:0}
+.ck.on{background:var(--acc);border:2px solid var(--acc)}
+.tag{display:inline-block;font-size:12px;border-radius:999px;padding:1px 9px;background:var(--soft);color:var(--acc);margin-right:4px;white-space:nowrap}
+.tag.g{background:var(--blue);color:var(--blueI)}
+.tag.k{background:var(--mint);color:var(--mintI)}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.sum>div{border-radius:16px;padding:8px 2px 6px;background:var(--soft)}
+.sum>div:nth-child(2){background:var(--mint)}.sum>div:nth-child(3){background:var(--blue)}
+.sum b{display:block;font-size:18px}.sum span{font-size:12px;color:var(--sub)}
+.bars .b{display:grid;grid-template-columns:76px 1fr 78px;gap:8px;align-items:center;font-size:13px;margin-top:8px}
 .bars .b span:last-child{text-align:right}
-.bars .b i{display:block;height:8px;border-radius:4px;background:var(--acc);min-width:2px}
-.empty{text-align:center;padding:28px 12px;color:var(--sub)}
-.dh{font-size:13px;color:var(--sub);margin:14px 2px 6px;font-weight:700}
+.bars .b i{display:block;height:10px;border-radius:999px;background:var(--acc2);min-width:4px}
+.bars .b:nth-child(4n+2) i{background:#A9D3F0}.bars .b:nth-child(4n+3) i{background:#A6DEC8}.bars .b:nth-child(4n) i{background:#FFD98A}
+.empty{text-align:center;padding:30px 12px;color:var(--sub)}
+.empty::before{content:"🧸";display:block;font-size:40px;margin-bottom:6px}
+.dh{font-size:14px;color:var(--acc);margin:16px 4px 7px}
 
 #sheet{position:fixed;inset:0;z-index:50;display:none}
 #sheet.on{display:block}
-#sheet .bk{position:absolute;inset:0;background:rgba(0,0,0,.35)}
-#sheet .pn{position:absolute;left:0;right:0;bottom:0;margin:0 auto;max-width:560px;max-height:90vh;overflow:auto;background:var(--bg);border-radius:20px 20px 0 0;padding:16px 16px calc(18px + env(safe-area-inset-bottom))}
-#sheet h3{margin:0 0 12px;font-size:18px}
+#sheet .bk{position:absolute;inset:0;background:rgba(90,60,70,.3)}
+#sheet .pn{position:absolute;left:0;right:0;bottom:0;margin:0 auto;max-width:560px;max-height:90vh;overflow:auto;background:var(--bg);border-radius:28px 28px 0 0;padding:16px 16px calc(18px + env(safe-area-inset-bottom))}
+#sheet h3{margin:0 0 12px;font-size:19px;font-weight:400;color:var(--acc)}
 #sheet .back{position:sticky;top:-16px;z-index:2;margin:-16px -16px 6px;padding:12px 16px 6px;background:var(--bg)}
-#sheet .back button{border:0;background:none;color:var(--acc);font-size:16px;font-weight:500;padding:4px 0}
+#sheet .back button{border:0;background:none;color:var(--acc);font-size:16px;padding:4px 0}
 .fs{display:grid;grid-template-columns:1fr 1fr;gap:0 8px}
-.f{display:block;margin-bottom:12px;grid-column:span 2}.f.h{grid-column:span 1}.f>span{display:block;font-size:13px;color:var(--sub);margin-bottom:4px}
-.f.c{display:flex;align-items:center;gap:8px}.f.c input{width:22px;height:22px;flex:none}.f.c span{margin:0;font-size:15px;color:var(--ink)}
+.f{display:block;margin-bottom:12px;grid-column:span 2}.f.h{grid-column:span 1}.f>span{display:block;font-size:13px;color:var(--sub);margin-bottom:4px;padding-left:4px}
+.f.c{display:flex;align-items:center;gap:8px}.f.c input{width:22px;height:22px;flex:none;accent-color:var(--acc)}.f.c span{margin:0;font-size:15px;color:var(--ink)}
 .foot{display:flex;gap:8px;justify-content:space-between;margin-top:14px}
 .del{color:var(--bad)}
-#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:60;background:var(--ink);color:var(--bg);border-radius:12px;padding:9px 14px;font-size:14px;display:none;align-items:center;gap:12px;max-width:calc(100% - 32px);box-shadow:0 6px 20px rgba(0,0,0,.25)}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:60;background:var(--ink);color:var(--bg);border-radius:999px;padding:9px 18px;font-size:14px;display:none;align-items:center;gap:12px;max-width:calc(100% - 32px);box-shadow:0 6px 20px rgba(0,0,0,.2)}
 #toast.on{display:flex}
-#toast button{border:0;background:none;color:var(--acc);font-weight:700;padding:0;white-space:nowrap}
+#toast button{border:0;background:none;color:var(--acc2);padding:0;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -129,6 +154,8 @@ const FORMS={
  item:{name:'嬰兒用品',f:[['n','品項','text'],['cat','分類','sel',ITEM_C,1],['q','數量','text',0,1],['price','花費（買了填實際金額）','num',0,1],['budget','預算','num',0,1],['done','已經準備好','chk'],['src','哪裡買／誰送的','text'],['note','備註','area']]},
  ben:{name:'福利',f:[['n','福利名稱','text'],['cat','階段','sel',BEN_C,1],['st','狀態','sel',BEN_ST,1],['amt','領到的金額','num',0,1],['d','申請／領取日期','date',0,1],['note','怎麼申請、要準備什麼','area']]}
 };
+const IC={哺餵:'🍼',衣物:'👕',清潔:'🛁',睡眠:'🌙',外出:'🚼',媽媽:'🤱',其他:'🧸',備孕:'🌱',孕期:'🤰',生產:'👶',產後育兒:'🧸',工作請假:'💼'};
+const ic=c=>IC[c]?IC[c]+' ':'';
 const LIST={log:'logs',cost:'costs',ins:'ins',item:'items',ben:'bens'};
 
 // 第一次打開：先放好常見的嬰兒用品和準媽媽福利（台灣），內容自己再改
@@ -197,7 +224,14 @@ const lmpOf=()=>okD(S.lmp)?S.lmp:okD(S.edd)?shift(S.edd,-280):'';
 function nextVisit(){
  let n='';S.logs.forEach(x=>{if(okD(x.nx)&&x.nx>=TODAY&&(!n||x.nx<n))n=x.nx});return n;
 }
+// 寶寶現在大概多大（常見的水果比喻，只是好玩參考）
+const SIZE={4:['罌粟籽','·'],5:['芝麻','·'],6:['扁豆','🫘'],7:['藍莓','🫐'],8:['覆盆子','🍓'],9:['葡萄','🍇'],10:['金桔','🍊'],11:['無花果','🟣'],12:['萊姆','🍋'],13:['檸檬','🍋'],14:['桃子','🍑'],15:['蘋果','🍎'],16:['酪梨','🥑'],17:['洋蔥','🧅'],18:['地瓜','🍠'],19:['芒果','🥭'],20:['香蕉','🍌'],21:['紅蘿蔔','🥕'],22:['木瓜','🥭'],23:['葡萄柚','🍊'],24:['玉米','🌽'],25:['花椰菜','🥦'],26:['萵苣','🥬'],27:['高麗菜','🥬'],28:['茄子','🍆'],29:['小南瓜','🎃'],30:['大白菜','🥬'],31:['椰子','🥥'],32:['大芒果','🥭'],33:['鳳梨','🍍'],34:['香瓜','🍈'],35:['哈密瓜','🍈'],36:['蘿蔓生菜','🥬'],37:['冬瓜','🍈'],38:['南瓜','🎃'],39:['小西瓜','🍉'],40:['西瓜','🍉']};
+const sizeOf=w=>SIZE[Math.min(40,w)]||null;
 function hero(){
+ const h0=hero0(),em=S.mode==='preg'?'🤰':S.mode==='born'?'👶':'🌱';
+ return h0+`<span class="em">${em}</span>`;
+}
+function hero0(){
  const nv=nextVisit(),nvL=nv?`<div class="ln">📅 下次產檢 ${mdw(nv)}${diff(TODAY,nv)===0?' 今天':diff(TODAY,nv)===1?' 明天':'，還有 '+diff(TODAY,nv)+' 天'}</div>`:'';
  if(S.mode==='preg'){
   const l=lmpOf(),e=eddOf();
@@ -205,7 +239,7 @@ function hero(){
   const n=diff(l,TODAY),w=Math.floor(n/7),d=n%7,left=diff(TODAY,e);
   const tri=w<14?'第一孕期':w<28?'第二孕期':'第三孕期';
   return `<div class="big">懷孕 ${w} 週 ${d} 天</div><div class="ln">${tri} · 預產期 ${e.slice(0,4)}/${md(e)}（${WD[pdD(e).getDay()]}）· ${left>0?'還有 '+left+' 天':left===0?'就是今天！':'已過 '+(-left)+' 天'}</div>
-   <div class="pg"><i style="width:${Math.max(1,Math.min(100,n/280*100))}%"></i></div>${nvL}`;
+   <div class="pg"><i style="width:${Math.max(3,Math.min(100,n/280*100))}%"></i></div>${sizeOf(w)?`<span class="fr">寶寶現在大約像${sizeOf(w)[1].length>1?' '+sizeOf(w)[1]+' ':''}${sizeOf(w)[0]}那麼大</span>`:''}${nvL}`;
  }
  if(S.mode==='born'){
   if(!okD(S.born))return `<div class="big">寶寶出生了</div><div class="ln">填上出生日期，就會算寶寶幾個月 ›</div>`;
@@ -261,7 +295,7 @@ function toast(msg,undo){
 }
 
 // ---------- 畫面 ----------
-const TABS=[['log','紀錄'],['cost','費用'],['ins','保險'],['item','用品'],['ben','福利']];
+const TABS=[['log','紀錄','📒'],['cost','費用','🐷'],['ins','保險','🛡️'],['item','用品','🍼'],['ben','福利','🎁']];
 function shell(){
  $('app').innerHTML=`<div class="top"><div><a class="home" href="./">‹ 首頁</a><h1>備孕懷孕</h1></div><button class="bt" data-a="set" aria-label="設定">⋯</button></div>
  <div id="st"></div>
@@ -273,7 +307,7 @@ function shell(){
 function render(){
  if(!$('list'))return;
  $('hero').innerHTML=hero();
- $('tabs').innerHTML=TABS.map(([k,n])=>`<button data-a="tab" data-k="${k}" class="${TAB===k?'on':''}">${n}</button>`).join('');
+ $('tabs').innerHTML=TABS.map(([k,n,ic])=>`<button data-a="tab" data-k="${k}" class="${TAB===k?'on':''}"><span>${ic}</span>${n}</button>`).join('');
  const cats=TAB==='log'?LOG_K:TAB==='cost'?['支出','補助理賠',...COST_C]:TAB==='ins'?[...INS_W,...INS_ST]:TAB==='item'?['還沒準備','已準備',...ITEM_C]:[...BEN_C,...BEN_ST];
  const ch=['全部',...cats.filter(c=>has(c))];
  if(!ch.includes(FIL[TAB]))FIL[TAB]='全部';
@@ -339,9 +373,9 @@ function itemList(){
  const f=FIL.item,ls=L.filter(x=>f==='全部'||(f==='已準備'&&x.done)||(f==='還沒準備'&&!x.done)||x.cat===f);
  if(!ls.length)return h+empty('沒有東西');
  const cats=ITEM_C.filter(c=>ls.some(x=>x.cat===c)).concat([...new Set(ls.map(x=>x.cat))].filter(c=>!ITEM_C.includes(c)));
- return h+cats.map(c=>{const g=ls.filter(x=>x.cat===c);return `<div class="dh">${E(c)}（${g.filter(x=>x.done).length}/${g.length}）</div>`+g.map(x=>{
+ return h+cats.map(c=>{const g=ls.filter(x=>x.cat===c);return `<div class="dh">${ic(c)}${E(c)}（${g.filter(x=>x.done).length}/${g.length}）</div>`+g.map(x=>{
   const meta=[x.q?'×'+x.q:'',x.price!==''?money(+x.price):x.budget!==''?'預算 '+money(+x.budget):'',x.src].filter(Boolean).join(' · ');
-  return `<div class="it${x.done?' done':''}"><button class="ck${x.done?' on':''}" data-a="tick" data-id="${x.id}" aria-label="已準備">${x.done?'✓':''}</button><button class="tx" data-a="ed" data-id="${x.id}" style="border:0;background:none;padding:0;text-align:left"><b>${E(x.n)}</b>${meta||x.note?`<span class="ln" style="display:block">${E([meta,x.note].filter(Boolean).join(' · '))}</span>`:''}</button></div>`}).join('')}).join('');
+  return `<div class="it${x.done?' done':''}"><button class="ck${x.done?' on':''}" data-a="tick" data-id="${x.id}" aria-label="已準備">${x.done?'♥':''}</button><button class="tx" data-a="ed" data-id="${x.id}" style="border:0;background:none;padding:0;text-align:left"><b>${E(x.n)}</b>${meta||x.note?`<span class="ln" style="display:block">${E([meta,x.note].filter(Boolean).join(' · '))}</span>`:''}</button></div>`}).join('')}).join('');
 }
 function benList(){
  const L=S.bens,got=L.filter(x=>x.st==='已領取'),sum=L.reduce((s,x)=>s+(+x.amt||0),0);
@@ -350,7 +384,7 @@ function benList(){
  const f=FIL.ben,ls=L.filter(x=>pass(x,f));
  if(!ls.length)return h+empty('沒有福利');
  const cats=BEN_C.filter(c=>ls.some(x=>x.cat===c)).concat([...new Set(ls.map(x=>x.cat))].filter(c=>!BEN_C.includes(c)));
- return h+cats.map(c=>`<div class="dh">${E(c)}</div>`+ls.filter(x=>x.cat===c).map(x=>{const dn=x.st==='已領取'||x.st==='不適用';
+ return h+cats.map(c=>`<div class="dh">${ic(c)}${E(c)}</div>`+ls.filter(x=>x.cat===c).map(x=>{const dn=x.st==='已領取'||x.st==='不適用';
   return `<button class="it${x.st==='不適用'?' done':''}" data-a="ed" data-id="${x.id}"><span class="tx"><span class="hd"><b>${E(x.n)}</b><span class="tag${x.st==='已領取'?' k':x.st==='已申請'?'':' g'}">${E(x.st)}</span></span>
    ${x.amt!==''||okD(x.d)?`<span class="ln" style="display:block">${[okD(x.d)?mdw(x.d):'',x.amt!==''?money(+x.amt):''].filter(Boolean).join(' · ')}</span>`:''}${x.note&&!dn?`<span class="ex" style="display:block">${E(x.note)}</span>`:''}</span></button>`}).join('')).join('');
 }
