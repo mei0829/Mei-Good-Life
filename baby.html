@@ -21,7 +21,7 @@
 :root[data-theme="dark"]{--bg:#1D1A1C;--dot:#2A2427;--card:#272225;--ink:#F3E9EC;--sub:#B7A6AB;--line:#3A3135;--acc:#F2A3B8;--acc2:#8C5463;--on:#1D1A1C;--ok:#86CFB4;--bad:#F08080;--soft:#3A2A30;
  --blue:#24313B;--blueI:#9CC9EA;--mint:#22332C;--mintI:#8ED3B9;--yel:#3A3322;--yelI:#E9C873;--lil:#2F2838;--lilI:#C3AEE6;--sh:none}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg) radial-gradient(var(--dot) 2.2px,transparent 2.6px) 0 0/26px 26px;color:var(--ink);font:15px/1.55 "Huninn","Noto Sans TC","PingFang TC",-apple-system,"Microsoft JhengHei",sans-serif}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 "Huninn","Noto Sans TC","PingFang TC",-apple-system,"Microsoft JhengHei",sans-serif}
 #app{max-width:760px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top)) 16px 90px}
 #app::after{content:"© 2026 mei0829 版權所有";display:block;text-align:center;font-size:11px;color:var(--sub);margin-top:28px;opacity:.8}
 h1{font-size:25px;margin:4px 0 0;font-weight:400;letter-spacing:1px}
@@ -52,12 +52,12 @@ b{font-weight:400}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .hero{background:linear-gradient(135deg,#3B2A31,#2A2C36);color:var(--ink)}}
 :root[data-theme="dark"] .hero{background:linear-gradient(135deg,#3B2A31,#2A2C36);color:var(--ink)}
 .hero::before{content:"";position:absolute;right:-24px;top:-18px;width:150px;height:70px;background:radial-gradient(circle at 30% 70%,#fff 26px,transparent 27px),radial-gradient(circle at 58% 48%,#fff 34px,transparent 35px),radial-gradient(circle at 84% 72%,#fff 24px,transparent 25px);opacity:.75}
-.hero .em{position:absolute;right:14px;bottom:10px;font-size:52px;line-height:1;filter:drop-shadow(0 3px 4px rgba(0,0,0,.08))}
+.hero .em{position:absolute;right:6px;bottom:4px;width:96px;height:88px}
 .hero .big{position:relative;font-size:27px;color:var(--acc);line-height:1.3;padding-right:56px}
-.hero .ln{position:relative;font-size:13.5px;margin-top:4px;padding-right:60px}
+.hero .ln{position:relative;font-size:13.5px;margin-top:4px;padding-right:88px}
 .hero .sub{color:#A18F93}
 .hero .fr{display:inline-block;margin-top:8px;background:rgba(255,255,255,.75);border-radius:999px;padding:3px 12px;font-size:13.5px;color:#5A4A4E}
-.pg{position:relative;height:12px;border-radius:999px;background:rgba(255,255,255,.85);margin:12px 60px 2px 0;overflow:visible}
+.pg{position:relative;height:12px;border-radius:999px;background:rgba(255,255,255,.85);margin:12px 92px 2px 0;overflow:visible}
 .pg i{position:relative;display:block;height:100%;border-radius:999px;background:repeating-linear-gradient(-45deg,#F4A3B8 0 8px,#F7B9C9 8px 16px)}
 .pg i::after{content:"👣";position:absolute;right:-12px;top:-6px;font-size:15px}
 .tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;background:var(--card);border:1.5px solid var(--line);border-radius:22px;padding:5px;margin-bottom:12px;box-shadow:var(--sh)}
@@ -94,7 +94,13 @@ b{font-weight:400}
 .bars .b i{display:block;height:10px;border-radius:999px;background:var(--acc2);min-width:4px}
 .bars .b:nth-child(4n+2) i{background:#A9D3F0}.bars .b:nth-child(4n+3) i{background:#A6DEC8}.bars .b:nth-child(4n) i{background:#FFD98A}
 .empty{text-align:center;padding:30px 12px;color:var(--sub)}
-.empty::before{content:"🧸";display:block;font-size:40px;margin-bottom:6px}
+.empty .dk{width:96px;height:88px;margin:0 auto 4px}
+.duckbar{display:flex;align-items:flex-end;gap:4px;margin:-4px 0 6px}
+.duckbar .dk{width:70px;height:64px;flex:none}
+.bub{position:relative;background:var(--card);border:1.5px solid var(--line);border-radius:18px 18px 18px 6px;padding:7px 13px;font-size:13.5px;margin-bottom:16px;box-shadow:var(--sh)}
+.dk svg{width:100%;height:100%;display:block;overflow:visible}
+@media (prefers-reduced-motion:no-preference){.dk svg{animation:bob 2.6s ease-in-out infinite;transform-origin:50% 100%}}
+@keyframes bob{0%,100%{transform:rotate(0)}50%{transform:rotate(-3deg) translateY(-1px)}}
 .dh{font-size:14px;color:var(--acc);margin:16px 4px 7px}
 
 #sheet{position:fixed;inset:0;z-index:50;display:none}
@@ -228,8 +234,7 @@ function nextVisit(){
 const SIZE={4:['罌粟籽','·'],5:['芝麻','·'],6:['扁豆','🫘'],7:['藍莓','🫐'],8:['覆盆子','🍓'],9:['葡萄','🍇'],10:['金桔','🍊'],11:['無花果','🟣'],12:['萊姆','🍋'],13:['檸檬','🍋'],14:['桃子','🍑'],15:['蘋果','🍎'],16:['酪梨','🥑'],17:['洋蔥','🧅'],18:['地瓜','🍠'],19:['芒果','🥭'],20:['香蕉','🍌'],21:['紅蘿蔔','🥕'],22:['木瓜','🥭'],23:['葡萄柚','🍊'],24:['玉米','🌽'],25:['花椰菜','🥦'],26:['萵苣','🥬'],27:['高麗菜','🥬'],28:['茄子','🍆'],29:['小南瓜','🎃'],30:['大白菜','🥬'],31:['椰子','🥥'],32:['大芒果','🥭'],33:['鳳梨','🍍'],34:['香瓜','🍈'],35:['哈密瓜','🍈'],36:['蘿蔓生菜','🥬'],37:['冬瓜','🍈'],38:['南瓜','🎃'],39:['小西瓜','🍉'],40:['西瓜','🍉']};
 const sizeOf=w=>SIZE[Math.min(40,w)]||null;
 function hero(){
- const h0=hero0(),em=S.mode==='preg'?'🤰':S.mode==='born'?'👶':'🌱';
- return h0+`<span class="em">${em}</span>`;
+ return hero0()+`<span class="em dk">${duck(S.mode)}</span>`;
 }
 function hero0(){
  const nv=nextVisit(),nvL=nv?`<div class="ln">📅 下次產檢 ${mdw(nv)}${diff(TODAY,nv)===0?' 今天':diff(TODAY,nv)===1?' 明天':'，還有 '+diff(TODAY,nv)+' 天'}</div>`:'';
@@ -242,7 +247,7 @@ function hero0(){
    <div class="pg"><i style="width:${Math.max(3,Math.min(100,n/280*100))}%"></i></div>${sizeOf(w)?`<span class="fr">寶寶現在大約像${sizeOf(w)[1].length>1?' '+sizeOf(w)[1]+' ':''}${sizeOf(w)[0]}那麼大</span>`:''}${nvL}`;
  }
  if(S.mode==='born'){
-  if(!okD(S.born))return `<div class="big">寶寶出生了</div><div class="ln">填上出生日期，就會算寶寶幾個月 ›</div>`;
+  if(!okD(S.born)||S.born>TODAY)return `<div class="big">寶寶出生了</div><div class="ln">${okD(S.born)?'出生日期還沒到（'+S.born.replace(/-/g,'/')+'），點這裡修改 ›':'填上出生日期，就會算寶寶幾個月 ›'}</div>`;
   const b=pdD(S.born),t=pdD(TODAY);let m=(t.getFullYear()-b.getFullYear())*12+t.getMonth()-b.getMonth();if(t.getDate()<b.getDate())m--;
   const dd=diff(isoD(new Date(b.getFullYear(),b.getMonth()+m,b.getDate())),TODAY);
   return `<div class="big">${E(S.nick||'寶寶')} ${m>0?m+' 個月 ':''}${dd} 天</div><div class="ln">出生 ${S.born.replace(/-/g,'/')} · 第 ${diff(S.born,TODAY)+1} 天</div>${nvL}`;
@@ -294,6 +299,43 @@ function toast(msg,undo){
  clearTimeout(TT);TT=setTimeout(()=>t.classList.remove('on'),undo?5000:2200);
 }
 
+
+// ---------- 柯爾鴨（白色、短嘴、圓頭，不要太胖）----------
+// 外框技巧：同樣的形狀先畫一次粗邊框，再畫一次沒有邊框的蓋上去，看起來就是一整隻
+function duckShape(fill,wing){
+ const sh=`<path d="M80 72Q99 57 99 70Q98 84 84 87Z"/><ellipse cx="63" cy="81" rx="28" ry="20"/><path d="M37 50Q39 70 50 76L70 68Q60 58 59 46Z"/><circle cx="47" cy="43" r="18"/>`;
+ return `<g fill="#E9DCCF" stroke="#E9DCCF" stroke-width="5" stroke-linejoin="round">${sh}</g><g fill="${fill}">${sh}</g>
+  <path d="M60 74Q73 66 85 76Q79 89 63 88Q55 84 60 74Z" fill="${wing}"/><path d="M66 80Q74 78 80 82" stroke="#E2D3C6" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+  <path d="M46 26Q47 19 53 21" stroke="#E2D3C6" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+  <path d="M31 45Q21 44 20 49Q20 54 30 54Q35 52 34 48Z" fill="#F6A53B"/><path d="M21 50Q26 51 31 50" stroke="#E08A22" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+  <circle cx="41" cy="40" r="3" fill="#3B2F2F"/><circle cx="42" cy="39" r="1" fill="#fff"/>
+  <ellipse cx="46" cy="50" rx="4.5" ry="2.6" fill="#F8B9C8" opacity=".75"/>`;
+}
+const FEET='<g stroke="#F29A3A" stroke-width="3" stroke-linecap="round"><path d="M56 99V103M70 99V103"/></g><g fill="#F6A53B"><ellipse cx="54" cy="104" rx="7" ry="2.8"/><ellipse cx="69" cy="104" rx="7" ry="2.8"/></g>';
+const ACC={
+ log:'<rect x="3" y="72" width="22" height="28" rx="4" fill="#FFD3DD" transform="rotate(-8 14 86)"/><g stroke="#fff" stroke-width="2" stroke-linecap="round" transform="rotate(-8 14 86)"><path d="M8 80h12M8 86h12M8 92h8"/></g><path d="M26 66l8-10" stroke="#F6C356" stroke-width="5" stroke-linecap="round"/><path d="M34 56l2-3" stroke="#5A4A4E" stroke-width="2" stroke-linecap="round"/>',
+ cost:'<circle cx="17" cy="92" r="12" fill="#FFD66B" stroke="#F0B93A" stroke-width="2"/><text x="17" y="97.5" text-anchor="middle" font-size="15" font-weight="700" fill="#C98A12" font-family="sans-serif">$</text><circle cx="31" cy="101" r="6" fill="#FFE399" stroke="#F0B93A" stroke-width="1.5"/>',
+ ins:'<path d="M50 14V30" stroke="#9CC9EA" stroke-width="2.6"/><path d="M14 16Q50 -22 86 16Q80 10 74 16Q68 10 62 16Q56 10 50 16Q44 10 38 16Q32 10 26 16Q20 10 14 16Z" fill="#A9D3F0"/><path d="M50 16Q50 -8 50 -3M50 16Q40 -6 32 1M50 16Q60 -6 68 1" stroke="#8FC0E4" stroke-width="1.4" fill="none"/><path d="M50 -3V-7" stroke="#7FB3DA" stroke-width="2.6" stroke-linecap="round"/>',
+ item:'<rect x="6" y="76" width="16" height="26" rx="5" fill="#DCEFFC" stroke="#A9D3F0" stroke-width="2"/><rect x="5" y="71" width="18" height="6" rx="2" fill="#F7B6C5"/><path d="M10 71Q14 61 18 71Z" fill="#FFE1B3"/><path d="M10 86h4M10 92h4" stroke="#A9D3F0" stroke-width="1.6" stroke-linecap="round"/>',
+ ben:'<rect x="2" y="84" width="26" height="20" rx="3" fill="#BFE8D6"/><rect x="0" y="79" width="30" height="7" rx="2" fill="#A6DEC8"/><path d="M15 79V104" stroke="#F7A1B6" stroke-width="4"/><path d="M15 79Q6 70 9 76Q11 80 15 79Q24 70 21 76Q19 80 15 79Z" fill="#F7A1B6"/>',
+ try:'<path d="M48 25V13" stroke="#7CC49A" stroke-width="2.4" stroke-linecap="round"/><path d="M48 15Q40 6 35 12Q41 18 48 15ZM48 13Q55 3 62 8Q56 16 48 13Z" fill="#9ED9B5"/>',
+ preg:'<ellipse cx="16" cy="93" rx="10" ry="12.5" fill="#FFF6E0" stroke="#F3DDB0" stroke-width="2"/><path d="M16 92q-4-4-6 0q0 3 6 7q6-4 6-7q-2-4-6 0Z" fill="#F7A1B6"/><path d="M80 28q-3-4-5 0q0 2 5 5q5-3 5-5q-2-4-5 0Z" fill="#F7B6C5"/>',
+ born:''
+};
+function duck(k){
+ const kid=k==='born'?`<g transform="translate(-6 60) scale(.48)">${duckShape('#FFE9A8','#FCDB86')}<g transform="translate(0 0)">${FEET}</g></g>`:'';
+ const back=k==='ins'?ACC.ins:'';
+ return `<svg viewBox="-4 -4 108 114" aria-hidden="true">${back}${FEET}${duckShape('#fff','#F6F0EA')}${k!=='ins'?ACC[k]||'':''}${kid}</svg>`;
+}
+// 每一頁鴨子說的話
+function duckSay(){
+ if(TAB==='log')return S.logs.some(x=>x.d===TODAY)?'今天記好了，好棒！':'今天身體還好嗎？記一筆吧';
+ if(TAB==='cost')return '每一筆花費都幫你記著';
+ if(TAB==='ins'){const n=S.ins.filter(x=>x.st==='考慮中').length;return n?'還有 '+n+' 張保險在考慮中':'保障準備好，安心一點'}
+ if(TAB==='item'){const n=S.items.filter(x=>!x.done).length;return n?'還有 '+n+' 樣要準備喔':'全部準備好了！'}
+ const n=S.bens.filter(x=>x.st==='還沒申請').length;return n?'別忘了領福利，還有 '+n+' 項還沒申請':'福利都處理好了！';
+}
+
 // ---------- 畫面 ----------
 const TABS=[['log','紀錄','📒'],['cost','費用','🐷'],['ins','保險','🛡️'],['item','用品','🍼'],['ben','福利','🎁']];
 function shell(){
@@ -301,6 +343,7 @@ function shell(){
  <div id="st"></div>
  <button class="card hero" data-a="stage" id="hero"></button>
  <div class="tabs" id="tabs"></div>
+ <div class="duckbar"><div class="dk" id="dk"></div><div class="bub" id="bub"></div></div>
  <div class="bar"><div class="chips" id="chips"></div><button class="go" data-a="new">＋ 新增</button></div>
  <div id="list"></div>`;
 }
@@ -312,6 +355,7 @@ function render(){
  const ch=['全部',...cats.filter(c=>has(c))];
  if(!ch.includes(FIL[TAB]))FIL[TAB]='全部';
  $('chips').innerHTML=ch.length>1?ch.map(c=>`<button data-a="fil" data-v="${E(c)}" class="${FIL[TAB]===c?'on':''}">${E(c)}</button>`).join(''):'';
+ $('dk').innerHTML=duck(TAB);$('bub').textContent=duckSay();
  $('list').innerHTML=({log:logList,cost:costList,ins:insList,item:itemList,ben:benList})[TAB]();
  status();
 }
@@ -323,7 +367,7 @@ function has(c){
  return L.some(x=>x.k===c||x.cat===c||x.who===c||x.st===c);
 }
 const pass=(x,f)=>f==='全部'||x.k===f||x.cat===f||x.who===f||x.st===f;
-const empty=t=>`<div class="empty">${t}</div>`;
+const empty=t=>`<div class="empty"><div class="dk">${duck(TAB)}</div>${t}</div>`;
 
 function logList(){
  const f=FIL.log,ls=S.logs.filter(x=>pass(x,f)).sort((a,b)=>(b.d||'').localeCompare(a.d||'')||(b.u||0)-(a.u||0));
