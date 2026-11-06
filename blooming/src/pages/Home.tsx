@@ -31,9 +31,9 @@ export default function Home() {
   const hello = (h < 11 ? '早安' : h < 18 ? '午安' : '晚安') + (s.name ? '，' + s.name : '');
   const helloSub = h < 11 ? '新的一天，從照顧自己開始。' : h < 18 ? '記得喝水，也記得休息一下。' : '今天辛苦了，好好放鬆。';
   const quote = quoteOf(today);
-  // 首頁的鴨子跟著階段改變：備孕張開翅膀、懷孕抱著蛋、產後帶著小鴨
-  const stageDuck: DuckSpec = s.stage === 'pregnant' ? { pose: 'sit', prop: 'egg' } : s.stage === 'postpartum' ? { pose: 'stand', prop: 'heart' } : { pose: 'spread', prop: 'flower' };
-  const stageDuckTitle = s.stage === 'pregnant' ? '抱著蛋的柯爾鴨' : s.stage === 'postpartum' ? '柯爾鴨' : '張開翅膀的柯爾鴨';
+  // 首頁的鴨子跟著階段改變：備孕站在小花旁、懷孕抱著蛋、產後旁邊一顆小愛心
+  const stageDuck: DuckSpec = s.stage === 'pregnant' ? { pose: 'sit', prop: 'egg' } : s.stage === 'postpartum' ? { pose: 'stand', prop: 'heart' } : { pose: 'stand', prop: 'flower' };
+  const stageDuckTitle = s.stage === 'pregnant' ? '抱著蛋的柯爾鴨' : s.stage === 'postpartum' ? '柯爾鴨' : '站在小花旁的柯爾鴨';
 
   const tb = body.find(b => b.date === today), ts = sleep.find(x => x.date === today), tj = journal.find(j => j.date === today);
   const activeSups = sups.filter(x => activeOn(x, today));
