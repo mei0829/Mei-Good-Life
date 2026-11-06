@@ -159,7 +159,7 @@ function CycleSummary({ st }: { st: ReturnType<typeof cycleStats> }) {
         <div className="grid grid-cols-3 gap-4 py-2">
           <div><div className="text-[12px] text-mute">下次月經</div><div className="serif text-[17px] sm:text-[20px] mt-1">{md(st.nextStart)}</div><div className="text-[11.5px] text-mute">預測</div></div>
           <div><div className="text-[12px] text-mute">排卵期</div><div className="serif text-[17px] sm:text-[20px] mt-1">{md(st.ovulation)}</div><div className="text-[11.5px] text-mute">預測</div></div>
-          <div><div className="text-[12px] text-mute">易孕期</div><div className="serif text-[17px] sm:text-[20px] mt-1 leading-snug">{md(st.fertileStart)}<br /><span className="text-[13px] text-mute">至</span> {md(st.fertileEnd)}</div><div className="text-[11.5px] text-mute">預測</div></div>
+          <div><div className="text-[12px] text-mute">易孕期</div><div className="serif text-[15.5px] sm:text-[20px] mt-1 leading-snug"><span className="whitespace-nowrap">{md(st.fertileStart)}</span><br /><span className="whitespace-nowrap"><span className="text-[13px] text-mute">至</span> {md(st.fertileEnd)}</span></div><div className="text-[11.5px] text-mute">預測</div></div>
         </div>
       )}
       <div className="flex flex-wrap gap-2 mt-3">

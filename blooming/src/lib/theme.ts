@@ -1,6 +1,6 @@
 // ---------- 顏色主題 ----------
 // 所有顏色都在這裡；切換主題時把這些值寫進 CSS 變數，畫面（含圖表）就會一起換色。
-export type ThemeId = 'forest' | 'rose' | 'mist' | 'cream' | 'night';
+export type ThemeId = 'forest' | 'rose' | 'mist' | 'cream' | 'burgundy' | 'amber' | 'indigo' | 'emerald' | 'night';
 export interface Palette {
   ivory: string; paper: string; forest: string; 'forest-deep': string; sage: string; 'sage-soft': string;
   oat: string; 'oat-soft': string; rose: string; 'rose-soft': string; ink: string; mute: string; line: string;
@@ -28,6 +28,26 @@ export const THEMES: Record<ThemeId, Theme> = {
     name: '鴨子奶黃', desc: '奶油黃與焦糖色，跟柯爾鴨最搭',
     c: { ivory: '#FBF6EA', paper: '#FFFDF7', forest: '#8A6A3B', 'forest-deep': '#6F532C', sage: '#B7C2A0', 'sage-soft': '#EDF0E2', oat: '#F0C978', 'oat-soft': '#F8EBCB', rose: '#E7B9A6', 'rose-soft': '#F8E6DD', ink: '#3F3A31', mute: '#8C8270', line: '#EDE4CF', alert: '#A65B4F', 'rose-ink': '#8E5844', 'oat-ink': '#7D6230' },
     chart: ['#8A6A3B', '#B7C2A0', '#F0C978', '#E7B9A6', '#A78A5C', '#D9C08F', '#C9967F', '#6F532C', '#E5D6B0'],
+  },
+  burgundy: {
+    name: '酒紅', desc: '深勃艮第紅配奶茶米色，優雅成熟',
+    c: { ivory: '#F6EFEA', paper: '#FFFBF8', forest: '#7A2E35', 'forest-deep': '#5E2229', sage: '#C98F8A', 'sage-soft': '#F2E1DE', oat: '#E2C9A8', 'oat-soft': '#F2E7D6', rose: '#B85C5C', 'rose-soft': '#F4E0DD', ink: '#3A2A2B', mute: '#8A7672', line: '#EADCD6', alert: '#A23B32', 'rose-ink': '#8C3A3A', 'oat-ink': '#7A5F3A' },
+    chart: ['#7A2E35', '#C98F8A', '#E2C9A8', '#B85C5C', '#9E5A55', '#D8B48C', '#5E2229', '#E7C3BC', '#A6786A'],
+  },
+  amber: {
+    name: '琥珀金', desc: '溫暖低調的金色，像午後陽光',
+    c: { ivory: '#F8F3E6', paper: '#FFFCF4', forest: '#8C5F0F', 'forest-deep': '#6E4A0A', sage: '#D9B65E', 'sage-soft': '#F3EAD0', oat: '#E8D3A6', 'oat-soft': '#F4EBD7', rose: '#D9A17E', 'rose-soft': '#F6E5DA', ink: '#3B3426', mute: '#857A64', line: '#EBE1C9', alert: '#A5492F', 'rose-ink': '#8E5434', 'oat-ink': '#7A5B1C' },
+    chart: ['#8C5F0F', '#D9B65E', '#E8D3A6', '#D9A17E', '#B08636', '#C9A86A', '#6E4A0A', '#EFDDB0', '#A88A5E'],
+  },
+  indigo: {
+    name: '靛藍', desc: '深靛藍配霧灰，沉穩有質感',
+    c: { ivory: '#F2F3F6', paper: '#FCFCFD', forest: '#253C66', 'forest-deep': '#1A2C4D', sage: '#8DA2C4', 'sage-soft': '#E1E7F1', oat: '#D6CFC0', 'oat-soft': '#ECE8E0', rose: '#C9A9A6', 'rose-soft': '#F1E5E3', ink: '#222A38', mute: '#747C8C', line: '#DDE1E8', alert: '#A4483C', 'rose-ink': '#7E4E48', 'oat-ink': '#6B5F48' },
+    chart: ['#253C66', '#8DA2C4', '#D6CFC0', '#C9A9A6', '#5B7299', '#B7AE98', '#3E5A8C', '#C7D2E4', '#9C8F7C'],
+  },
+  emerald: {
+    name: '祖母綠', desc: '寶石般的深綠，比森林綠更鮮明',
+    c: { ivory: '#F1F4F0', paper: '#FBFCFA', forest: '#1F5C4A', 'forest-deep': '#154536', sage: '#7FAF98', 'sage-soft': '#DEEBE3', oat: '#D8CBB0', 'oat-soft': '#EEE8DA', rose: '#D2A79C', 'rose-soft': '#F3E3DE', ink: '#22312B', mute: '#6F7D75', line: '#DCE3DD', alert: '#A5483A', 'rose-ink': '#84493F', 'oat-ink': '#6E5E3E' },
+    chart: ['#1F5C4A', '#7FAF98', '#D8CBB0', '#D2A79C', '#3F7E68', '#B9A983', '#A8CBB8', '#154536', '#C3D9CC'],
   },
   night: {
     name: '夜間', desc: '深色模式，晚上記錄不刺眼', dark: true,
