@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* ---------- Blooming Days Design System ---------- */
+/* ---------- 幸孕女子 設計系統 ---------- */
 @theme {
   --color-ivory: #F5F1E9;      /* primary background */
   --color-paper: #FFFCF7;      /* white / surface */
@@ -19,10 +19,10 @@
   --color-rose-ink: #8A5B53;   /* 淡玫瑰底上的文字 */
   --color-oat-ink: #7A6648;    /* 燕麥底上的文字 */
 
-  /* 標題與大數字用圓體（jf 粉圓），看起來柔和、不嚴肅；品牌名稱另外用 Cormorant */
+  /* 標題與大數字用圓體（jf 粉圓），看起來柔和、不嚴肅；品牌名稱「幸孕女子」用霞鶩文楷，跟毛筆字標誌搭配 */
   --font-display: "Huninn", "Noto Sans TC", sans-serif;
   --font-serif: "Huninn", "Noto Sans TC", sans-serif;
-  --font-brand: "Cormorant Garamond", "Huninn", serif;
+  --font-brand: "LXGW WenKai TC", "Huninn", serif;
   --font-sans: "Noto Sans TC", -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
   --font-num: ui-sans-serif, -apple-system, "Helvetica Neue", Arial, sans-serif;
 
@@ -49,7 +49,7 @@ input, select, textarea, button { font: inherit; color: inherit; }
 
 @utility eyebrow { font-size: 13px; letter-spacing: .06em; color: var(--color-mute); font-family: var(--font-serif); }
 @utility display { font-family: var(--font-display); font-weight: 400; letter-spacing: 0; }
-@utility brand { font-family: var(--font-brand); font-weight: 600; letter-spacing: .005em; }
+@utility brand { font-family: var(--font-brand); font-weight: 700; letter-spacing: .08em; }
 @utility serif { font-family: var(--font-serif); font-weight: 400; }
 @utility num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
 @utility surface { background: var(--color-paper); border: 1px solid var(--color-line); border-radius: 20px; }

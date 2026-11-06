@@ -47,7 +47,7 @@ export default function Wellness() {
   const tab = (['body', 'nutrition', 'sleep', 'exercise'].includes(sub) ? sub : 'body') as Tab;
   return (
     <div>
-      <PageHeader kicker="Blooming Days・身體與日常" title="健康管理" sub="身體、營養、睡眠與運動。紀錄是給自己看的，不需要每天完美。" />
+      <PageHeader kicker="幸孕女子・身體與日常" title="健康管理" sub="身體、營養、睡眠與運動。紀錄是給自己看的，不需要每天完美。" />
       <Tabs value={tab} onChange={t => go('wellness', t)} items={[['body', '身體紀錄'], ['nutrition', '營養補充'], ['sleep', '睡眠'], ['exercise', '運動']]} />
       {tab === 'body' && <Body />}{tab === 'nutrition' && <Nutrition />}{tab === 'sleep' && <SleepTab />}{tab === 'exercise' && <ExerciseTab />}
     </div>

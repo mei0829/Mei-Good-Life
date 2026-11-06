@@ -19,7 +19,7 @@ export default function Medical() {
   const p = preg ? pregnancy(s.lmp, s.edd, today) : null;
   return (
     <div>
-      <PageHeader kicker="Blooming Days・檢查與產檢" title="醫療管理" sub={preg ? '孕週、預產期、產檢行事曆與每次看診的紀錄。' : '備孕檢查建議、看診紀錄、醫院與醫師資料。'} />
+      <PageHeader kicker="幸孕女子・檢查與產檢" title="醫療管理" sub={preg ? '孕週、預產期、產檢行事曆與每次看診的紀錄。' : '備孕檢查建議、看診紀錄、醫院與醫師資料。'} />
       {preg && <PregBanner p={p} />}
       <Tabs value={tab} onChange={t => go('medical', t)} items={[['guide', preg ? '產檢行事曆' : '備孕檢查建議'], ['visits', preg ? '產檢與看診紀錄' : '看診紀錄'], ['care', '醫院與醫師']]} />
       {tab === 'guide' && (preg ? <PrenatalGuide week={p ? p.weeks : null} /> : <CheckList items={PRECONCEPTION_CHECKS} />)}

@@ -20,7 +20,7 @@ export default function Finance() {
   const tab = sub === 'insurance' ? 'insurance' : 'expenses';
   return (
     <div>
-      <PageHeader kicker="Blooming Days・花費與保單" title="財務與保險" sub="孕期花費、預算與保單資料。" />
+      <PageHeader kicker="幸孕女子・花費與保單" title="財務與保險" sub="孕期花費、預算與保單資料。" />
       <Tabs value={tab} onChange={t => go('finance', t)} items={[['expenses', '孕期花費'], ['insurance', '保險管理']]} />
       {tab === 'expenses' ? <Expenses /> : <Insurance />}
     </div>

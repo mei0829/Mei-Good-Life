@@ -37,7 +37,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return () => { removeEventListener('hashchange', h); clearInterval(t); };
   }, []);
   const go = (r: Route, sb = '') => { location.hash = '/' + r + (sb ? '/' + sb : ''); };
-  if (!s) return <div className="min-h-screen grid place-items-center text-mute brand text-2xl">Blooming Days</div>;
+  if (!s) return <div className="min-h-screen grid place-items-center text-mute brand text-2xl">幸孕女子</div>;
   return <AppCtx.Provider value={{ s: s || DEFAULT_SETTINGS, today: day, route, sub, go, themeId, theme: THEMES[themeId] }}>{children}</AppCtx.Provider>;
 }
 

@@ -26,7 +26,7 @@ export default function Cycle() {
 
   return (
     <div>
-      <PageHeader kicker="Blooming Days・日曆與預測" title="月經週期" sub="預測只根據你自己的紀錄估算，記得越多越準。預測和實際紀錄在日曆上用不同樣式標示。"
+      <PageHeader kicker="幸孕女子・日曆與預測" title="月經週期" sub="預測只根據你自己的紀錄估算，記得越多越準。預測和實際紀錄在日曆上用不同樣式標示。"
         action={<button className="btn-primary" onClick={() => pe.add({ start: today })}><Plus size={16} strokeWidth={1.6} />記錄月經</button>} />
 
       {preg && <div className="mb-6"><Note tone="rose">目前是懷孕階段，週期預測已暫停。過去的月經與備孕紀錄都完整保留在這裡。</Note></div>}
@@ -92,7 +92,7 @@ function Prediction({ st, onConfirm }: { st: ReturnType<typeof cycleStats>; onCo
       {st.lateBy && (
         <div className="mt-4 pt-4 border-t border-line text-[13.5px] leading-relaxed">
           月經比預測晚了 <b className="num">{st.lateBy}</b> 天。週期本來就可能變動；想確認的話可以驗孕或就醫。
-          <span className="text-mute">Blooming Days 不會因為月經延遲自動切換成懷孕階段。</span>
+          <span className="text-mute">幸孕女子不會因為月經延遲自動切換成懷孕階段。</span>
           <div className="mt-2"><button className="btn-ghost" onClick={onConfirm}>我已確認懷孕</button></div>
         </div>
       )}

@@ -24,7 +24,7 @@ export default function Lifestyle() {
 
   return (
     <div>
-      <PageHeader kicker="Blooming Days・運動與飲食" title="生活管理" sub={preg ? '孕期適合的活動、伸展與飲食。' : '備孕期的運動、伸展與飲食建議。'} />
+      <PageHeader kicker="幸孕女子・運動與飲食" title="生活管理" sub={preg ? '孕期適合的活動、伸展與飲食。' : '備孕期的運動、伸展與飲食建議。'} />
       <div className="mb-7"><Note tone="oat">以下為一般性建議，{preg ? '懷孕期間運動前請先跟產檢醫師確認，' : ''}請依個人身體狀況與醫師建議調整。運動中如有出血、腹痛、頭暈、胸痛或呼吸困難，請立即停止並就醫。</Note></div>
       <Chips value={cat} onChange={setCat} items={cats} />
       {list.length ? (

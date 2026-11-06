@@ -38,7 +38,7 @@ export default function SettingsPage() {
   };
   const backup = async () => {
     const b = await data.exportBackup();
-    download(`blooming-days-backup-${todayStr()}.json`, JSON.stringify(b));
+    download(`幸孕女子-備份-${todayStr()}.json`, JSON.stringify(b));
     toast('已下載完整備份（含附件）');
   };
   const restore = async (f?: File) => {
@@ -52,14 +52,14 @@ export default function SettingsPage() {
   };
   const persist = async () => { const ok = await navigator.storage?.persist?.(); setPersisted(!!ok); toast(ok ? '瀏覽器已同意保留資料' : '瀏覽器沒有同意，請定期備份'); };
   const wipe = async () => {
-    const t = prompt('這會刪除這個瀏覽器裡 Blooming Days 的全部資料，無法復原。\n請輸入「刪除」確認：');
+    const t = prompt('這會刪除這個瀏覽器裡「幸孕女子」的全部資料，無法復原。\n請輸入「刪除」確認：');
     if (t !== '刪除') return;
     await data.clearAll(); toast('已刪除全部資料');
   };
 
   return (
     <div>
-      <PageHeader kicker="Blooming Days・個人與資料" title="設定與備份" />
+      <PageHeader kicker="幸孕女子・個人與資料" title="設定與備份" />
       <div className="grid lg:grid-cols-2 gap-x-12">
         <div>
           <Section title="個人">
@@ -108,7 +108,7 @@ export default function SettingsPage() {
               <label className="block text-[12.5px] text-mute mb-1.5" htmlFor="csv">匯出試算表檔案（可以用試算表軟體打開）</label>
               <div className="flex gap-2">
                 <select id="csv" className="field" value={csv} onChange={e => setCsv(e.target.value as TableName)}>{TABLES.map(t => <option key={t} value={t}>{TABLE_LABEL[t]}</option>)}</select>
-                <button className="btn-ghost shrink-0" onClick={async () => download(`blooming-${csv}-${todayStr()}.csv`, await data.exportCSV(csv), 'text/csv')}>匯出</button>
+                <button className="btn-ghost shrink-0" onClick={async () => download(`幸孕女子-${TABLE_LABEL[csv]}-${todayStr()}.csv`, await data.exportCSV(csv), 'text/csv')}>匯出</button>
               </div>
             </div>
           </Section>
@@ -144,7 +144,7 @@ function ThemeCard({ id, on, showing, onPick }: { id: ThemeId; on: boolean; show
     <button role="radio" aria-checked={on} onClick={onPick} className={cx('relative text-left rounded-[16px] border p-2.5 transition', on ? 'border-forest ring-1 ring-forest' : 'border-line')}>
       <div className="rounded-[11px] p-2.5 h-[78px] flex flex-col justify-between" style={{ background: c.ivory, border: '1px solid ' + c.line }}>
         <div className="flex items-center justify-between">
-          <span className="brand text-[13px]" style={{ color: c.forest }}>Blooming</span>
+          <span className="brand text-[13px]" style={{ color: c.forest }}>幸孕女子</span>
           <span className="w-9 h-3.5 rounded-full" style={{ background: c.forest }} />
         </div>
         <div className="rounded-[8px] px-2 py-1.5" style={{ background: c.paper, border: '1px solid ' + c.line }}>

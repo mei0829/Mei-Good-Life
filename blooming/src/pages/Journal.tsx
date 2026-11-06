@@ -43,7 +43,7 @@ export default function Journal() {
   const list = rows.filter(r => !from || r.date >= from);
   return (
     <div>
-      <PageHeader kicker="Blooming Days・心情與身體" title="每日日記" sub="今天的心情、身體與一點點小事。" action={<button className="btn-primary" onClick={open}><Plus size={16} />今天</button>} />
+      <PageHeader kicker="幸孕女子・心情與身體" title="每日日記" sub="今天的心情、身體與一點點小事。" action={<button className="btn-primary" onClick={open}><Plus size={16} />今天</button>} />
       <Chips value={range} onChange={setRange} items={['全部', '最近 7 天', '最近 30 天']} />
       {list.length ? list.map(j => {
         const p = preg ? pregnancy(s.lmp, s.edd, j.date) : null;
