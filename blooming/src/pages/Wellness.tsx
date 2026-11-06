@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Check, Plus } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useApp } from '../app';
+import type { Palette } from '../lib/theme';
 import { useTable } from '../data/hooks';
 import { data } from '../data/repo';
 import { mdShort, shift, sleepHours, ymd } from '../lib/dates';
@@ -11,8 +12,9 @@ import { INTENSITY } from '../content/options';
 import { BODY_FIELDS } from './fields';
 
 type Tab = 'body' | 'nutrition' | 'sleep' | 'exercise';
-const TT = { contentStyle: { borderRadius: 12, border: '1px solid #E6E0D5', background: '#FFFCF7', fontSize: 12 } };
-const AX = { tick: { fontSize: 11, fill: '#888478' }, tickLine: false };
+// 圖表顏色跟著主題
+const TT = (C: Palette) => ({ contentStyle: { borderRadius: 12, border: '1px solid ' + C.line, background: C.paper, color: C.ink, fontSize: 12 } });
+const AX = (C: Palette) => ({ tick: { fontSize: 11, fill: C.mute }, tickLine: false });
 
 export const SUP_FIELDS: Field[] = [
   { key: 'name', label: '品名', type: 'text', required: true },
@@ -53,7 +55,8 @@ export default function Wellness() {
 }
 
 function Body() {
-  const { today } = useApp();
+  const { today, theme } = useApp();
+  const C = theme.c;
   const rows = (useTable('body') || []).sort((a, b) => b.date.localeCompare(a.date));
   const ed = useEditor();
   const w = rows.filter(r => r.weight != null).slice(0, 90).reverse().map(r => ({ d: mdShort(r.date), w: r.weight, f: r.bodyFat }));
@@ -71,7 +74,7 @@ function Body() {
       </div>
       {w.length >= 2 && (
         <Section title="體重變化">
-          <div className="h-52 -ml-3"><ResponsiveContainer><LineChart data={w}><CartesianGrid stroke="#E6E0D5" vertical={false} /><XAxis dataKey="d" {...AX} minTickGap={20} axisLine={{ stroke: '#E6E0D5' }} /><YAxis domain={['dataMin - 1', 'dataMax + 1']} {...AX} axisLine={false} width={36} /><Tooltip {...TT} formatter={(v: any) => [v + ' 公斤', '體重']} /><Line dataKey="w" stroke="#455C4A" strokeWidth={1.6} dot={{ r: 2.5 }} isAnimationActive={false} /></LineChart></ResponsiveContainer></div>
+          <div className="h-52 -ml-3"><ResponsiveContainer><LineChart data={w}><CartesianGrid stroke={C.line} vertical={false} /><XAxis dataKey="d" {...AX(C)} minTickGap={20} axisLine={{ stroke: C.line }} /><YAxis domain={['dataMin - 1', 'dataMax + 1']} {...AX(C)} axisLine={false} width={36} /><Tooltip {...TT(C)} formatter={(v: any) => [v + ' 公斤', '體重']} /><Line dataKey="w" stroke={C.forest} strokeWidth={1.6} dot={{ r: 2.5 }} isAnimationActive={false} /></LineChart></ResponsiveContainer></div>
         </Section>
       )}
       <Section title="每日紀錄">
@@ -127,7 +130,8 @@ function Nutrition() {
 }
 
 function SleepTab() {
-  const { today } = useApp();
+  const { today, theme } = useApp();
+  const C = theme.c;
   const rows = (useTable('sleep') || []).sort((a, b) => b.date.localeCompare(a.date));
   const ed = useEditor();
   const d14 = Array.from({ length: 14 }, (_, i) => shift(today, i - 13));
@@ -147,7 +151,7 @@ function SleepTab() {
       </div>
       {rows.length > 0 && (
         <Section title="最近 14 天">
-          <div className="h-44 -ml-3"><ResponsiveContainer><BarChart data={chart}><CartesianGrid stroke="#E6E0D5" vertical={false} /><XAxis dataKey="d" {...AX} minTickGap={10} axisLine={{ stroke: '#E6E0D5' }} /><YAxis {...AX} axisLine={false} width={30} domain={[0, 12]} /><Tooltip {...TT} formatter={(v: any) => [v + ' 小時', '睡眠']} /><Bar dataKey="h" fill="#A8B5A0" radius={[6, 6, 0, 0]} isAnimationActive={false} /></BarChart></ResponsiveContainer></div>
+          <div className="h-44 -ml-3"><ResponsiveContainer><BarChart data={chart}><CartesianGrid stroke={C.line} vertical={false} /><XAxis dataKey="d" {...AX(C)} minTickGap={10} axisLine={{ stroke: C.line }} /><YAxis {...AX(C)} axisLine={false} width={30} domain={[0, 12]} /><Tooltip {...TT(C)} formatter={(v: any) => [v + ' 小時', '睡眠']} /><Bar dataKey="h" fill={C.sage} radius={[6, 6, 0, 0]} isAnimationActive={false} /></BarChart></ResponsiveContainer></div>
         </Section>
       )}
       <Section title="睡眠紀錄">

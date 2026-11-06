@@ -41,7 +41,7 @@ function Input({ f, value, set, onFile }: { f: Field; value: any; set: (v: any) 
     }
     case 'scale': return <Scale value={value} onChange={set} min={f.min ?? 0} max={f.max ?? 5} labels={f.scaleLabels} />;
     case 'check': return (
-      <label className="flex items-center gap-2.5 text-[14.5px]"><input id={id} type="checkbox" className="w-5 h-5 accent-[#455C4A]" checked={!!value} onChange={e => set(e.target.checked)} />{f.label}</label>);
+      <label className="flex items-center gap-2.5 text-[14.5px]"><input id={id} type="checkbox" className="w-5 h-5 accent-forest" checked={!!value} onChange={e => set(e.target.checked)} />{f.label}</label>);
     case 'files': case 'images': return <FilesInput ids={value || []} set={set} images={f.type === 'images'} onFile={onFile} />;
     default: return <input id={id} className={cx('field', (f.type === 'date' || f.type === 'time') && 'num')} type={f.type} value={value ?? ''} onChange={e => set(e.target.value)} />;
   }

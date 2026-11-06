@@ -6,6 +6,8 @@ import { TABLES, TABLE_LABEL, type Stage, type TableName } from '../data/types';
 import { ConfirmPregnancy } from '../components/Stage';
 import { Note, PageHeader, Section, cx, useToast } from '../components/ui';
 import { today as todayStr } from '../lib/dates';
+import { THEMES, THEME_IDS, isTheme, type ThemeId } from '../lib/theme';
+import { Check } from 'lucide-react';
 
 function download(name: string, text: string | Blob, type = 'application/json') {
   const a = document.createElement('a');
@@ -14,9 +16,10 @@ function download(name: string, text: string | Blob, type = 'application/json') 
 }
 
 export default function SettingsPage() {
-  const { s } = useApp();
+  const { s, themeId } = useApp();
   const toast = useToast();
   const [name, setName] = useState(s.name);
+  useEffect(() => { setName(s.name); }, [s.name]);  // 還原備份後也要更新
   const [confirm, setConfirm] = useState(false);
   const [csv, setCsv] = useState<TableName>('expenses');
   const [usage, setUsage] = useState<string>('');
@@ -62,6 +65,19 @@ export default function SettingsPage() {
           <Section title="個人">
             <label className="block text-[12.5px] text-mute mb-1.5" htmlFor="nm">稱呼（顯示在首頁問候）</label>
             <div className="flex gap-2"><input id="nm" className="field" value={name} onChange={e => setName(e.target.value)} maxLength={20} /><button className="btn-primary" onClick={async () => { await data.saveSettings({ name: name.trim() }); toast('已儲存'); }}>儲存</button></div>
+          </Section>
+
+          <Section title="外觀">
+            <p className="text-[12.5px] text-mute mb-3">選一個喜歡的顏色主題，會記在這支手機上。</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-2.5" role="radiogroup" aria-label="顏色主題">
+              {THEME_IDS.map(id => <ThemeCard key={id} id={id} on={(isTheme(s.theme) ? s.theme : 'forest') === id} showing={themeId === id}
+                onPick={async () => { await data.saveSettings({ theme: id }); toast('已換成「' + THEMES[id].name + '」'); }} />)}
+            </div>
+            <label className="flex items-center justify-between gap-3 mt-4 text-[14px] cursor-pointer">
+              <span>夜間模式跟著手機自動切換<span className="block text-[12px] text-mute">手機切到深色模式時，自動改用「夜間」主題</span></span>
+              <Switch on={!!s.themeAuto} onChange={v => data.saveSettings({ themeAuto: v })} label="夜間模式跟著手機自動切換" />
+            </label>
+            {s.themeAuto && themeId === 'night' && s.theme !== 'night' && <p className="text-[12px] text-mute mt-2">手機目前是深色模式，所以先顯示「夜間」；手機切回淺色就會用你選的「{THEMES[isTheme(s.theme) ? s.theme : 'forest'].name}」。</p>}
           </Section>
 
           <Section title="目前階段">
@@ -120,3 +136,34 @@ export default function SettingsPage() {
   );
 }
 const confirm_ = (m: string) => window.confirm(m);
+
+/** 主題卡片：主題自己的顏色畫一個小小的畫面預覽 */
+function ThemeCard({ id, on, showing, onPick }: { id: ThemeId; on: boolean; showing: boolean; onPick: () => void }) {
+  const t = THEMES[id], c = t.c;
+  return (
+    <button role="radio" aria-checked={on} onClick={onPick} className={cx('relative text-left rounded-[16px] border p-2.5 transition', on ? 'border-forest ring-1 ring-forest' : 'border-line')}>
+      <div className="rounded-[11px] p-2.5 h-[78px] flex flex-col justify-between" style={{ background: c.ivory, border: '1px solid ' + c.line }}>
+        <div className="flex items-center justify-between">
+          <span className="brand text-[13px]" style={{ color: c.forest }}>Blooming</span>
+          <span className="w-9 h-3.5 rounded-full" style={{ background: c.forest }} />
+        </div>
+        <div className="rounded-[8px] px-2 py-1.5" style={{ background: c.paper, border: '1px solid ' + c.line }}>
+          <div className="h-1.5 w-12 rounded-full" style={{ background: c.sage }} />
+          <div className="flex gap-1 mt-1.5">{[c.oat, c.rose, c['sage-soft']].map((x, i) => <span key={i} className="h-1.5 flex-1 rounded-full" style={{ background: x }} />)}</div>
+        </div>
+      </div>
+      <div className="mt-2 flex items-center gap-1.5"><span className="serif text-[14.5px]">{t.name}</span>{on && <Check size={14} className="text-forest" strokeWidth={2} />}</div>
+      <div className="text-[11.5px] text-mute leading-snug">{t.desc}</div>
+      {showing && !on && <span className="absolute top-1.5 right-1.5 tag bg-forest text-paper">顯示中</span>}
+    </button>
+  );
+}
+
+function Switch({ on, onChange, label }: { on: boolean; onChange: (v: boolean) => void; label: string }) {
+  return (
+    <button type="button" role="switch" aria-checked={on} aria-label={label} onClick={e => { e.preventDefault(); onChange(!on); }}
+      className={cx('relative w-12 h-7 rounded-full transition shrink-0', on ? 'bg-forest' : 'bg-line')}>
+      <span className={cx('absolute top-1 w-5 h-5 rounded-full bg-paper shadow transition-all', on ? 'left-6' : 'left-1')} />
+    </button>
+  );
+}

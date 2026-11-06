@@ -77,7 +77,7 @@ export function Empty({ title, hint, action }: { title: string; hint?: string; a
 
 /** 數字＋說明（雜誌風大數字） */
 export function Figure({ value, unit, label, tone = 'ink' }: { value: ReactNode; unit?: string; label: string; tone?: 'ink' | 'forest' | 'rose' | 'mute' }) {
-  const c = { ink: 'text-ink', forest: 'text-forest', rose: 'text-[#9C6E66]', mute: 'text-mute' }[tone];
+  const c = { ink: 'text-ink', forest: 'text-forest', rose: 'text-rose-ink', mute: 'text-mute' }[tone];
   return (
     <div>
       <div className={cx('num text-[26px] leading-tight', c)}>{value}{unit && <span className="text-[13px] text-mute ml-1">{unit}</span>}</div>
@@ -92,7 +92,7 @@ export function Note({ children, tone = 'sage' }: { children: ReactNode; tone?: 
 }
 
 export function Badge({ children, tone = 'sage' }: { children: ReactNode; tone?: 'sage' | 'rose' | 'oat' | 'forest' | 'line' }) {
-  const c = { sage: 'bg-sage-soft text-forest', rose: 'bg-rose-soft text-[#8A5B53]', oat: 'bg-oat-soft text-[#7A6648]', forest: 'bg-forest text-paper', line: 'border border-line text-mute' }[tone];
+  const c = { sage: 'bg-sage-soft text-forest', rose: 'bg-rose-soft text-rose-ink', oat: 'bg-oat-soft text-oat-ink', forest: 'bg-forest text-paper', line: 'border border-line text-mute' }[tone];
   return <span className={cx('tag', c)}>{children}</span>;
 }
 
@@ -128,7 +128,7 @@ export function Sheet({ open, onClose, title, children, wide }: { open: boolean;
   // 用 portal 放到 body 底下，才不會被頁面動畫的圖層蓋住（手機底部導覽列）
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center" role="dialog" aria-modal="true" aria-label={title}>
-      <div className="absolute inset-0 bg-[#343B34]/30" onClick={onClose} />
+      <div className="absolute inset-0 bg-[var(--backdrop)]" onClick={onClose} />
       <div ref={ref} tabIndex={-1} className={cx('relative bg-ivory w-full max-h-[92vh] overflow-y-auto rounded-t-[24px] md:rounded-[24px] outline-none fade-in', wide ? 'md:max-w-2xl' : 'md:max-w-lg')}>
         <div className="sticky top-0 z-10 bg-ivory/95 backdrop-blur flex items-center justify-between px-5 pt-4 pb-3 border-b border-line">
           <h3 className="serif text-[17px]">{title}</h3>

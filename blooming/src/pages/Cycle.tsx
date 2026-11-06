@@ -118,7 +118,7 @@ function Calendar({ month, today, periods, st, body, onPick }: { month: string; 
             className="relative h-11 flex flex-col items-center justify-center">
             {m.fertile && <span className="absolute inset-x-0 inset-y-1.5 bg-sage-soft" />}
             <span className={cx('relative w-8 h-8 rounded-full grid place-items-center num text-[13.5px]',
-              m.period && 'bg-rose text-paper', m.predicted && 'border border-dashed border-rose text-[#9C6E66]',
+              m.period && 'bg-rose text-paper', m.predicted && 'border border-dashed border-rose text-rose-ink',
               m.ovulation && !m.period && 'ring-1 ring-forest text-forest', d === today && !m.period && 'font-semibold underline underline-offset-4 decoration-forest')}>{+d.slice(8)}</span>
             <span className="relative flex gap-0.5 h-1 mt-0.5">
               {b?.bbt != null && <span className="w-1 h-1 rounded-full bg-oat" />}
@@ -145,6 +145,7 @@ function Legend() {
 }
 
 function BBTChart({ body, today, ovulation }: { body: any[]; today: string; ovulation?: string }) {
+  const C = useApp().theme.c;
   const from = shift(today, -59);
   const pts = body.filter(b => b.bbt != null && b.date >= from && b.date <= today).sort((a, b) => a.date.localeCompare(b.date)).map(b => ({ d: mdShort(b.date), date: b.date, t: b.bbt, opk: b.opk }));
   if (pts.length < 2) return <Empty title="體溫資料還不夠" hint="記錄兩天以上的基礎體溫，就會顯示最近 60 天的曲線。排卵後體溫通常會上升約 0.3–0.5°C。" />;
@@ -153,13 +154,13 @@ function BBTChart({ body, today, ovulation }: { body: any[]; today: string; ovul
     <div className="h-56 -ml-3" aria-label="基礎體溫折線圖">
       <ResponsiveContainer>
         <LineChart data={pts} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-          <CartesianGrid stroke="#E6E0D5" vertical={false} />
-          <XAxis dataKey="d" tick={{ fontSize: 11, fill: '#888478' }} tickLine={false} axisLine={{ stroke: '#E6E0D5' }} minTickGap={18} />
-          <YAxis domain={[lo, hi]} tick={{ fontSize: 11, fill: '#888478' }} tickLine={false} axisLine={false} width={40} />
-          <Tooltip formatter={(v: any) => [v + ' °C', '體溫']} labelFormatter={(l: any) => { const p = pts.find(x => x.d === l); return p ? md(p.date) : l; }} labelStyle={{ color: '#343B34' }} contentStyle={{ borderRadius: 12, border: '1px solid #E6E0D5', background: '#FFFCF7', fontSize: 12 }} />
-          <Line type="monotone" dataKey="t" stroke="#455C4A" strokeWidth={1.6} dot={{ r: 2.5, fill: '#455C4A' }} isAnimationActive={false} />
-          {pts.filter(p => p.opk?.startsWith('陽性')).map(p => <ReferenceDot key={p.date} x={p.d} y={p.t} r={5} fill="#D8B7B0" stroke="none" />)}
-          {ovulation && pts.some(p => p.date === ovulation) && <ReferenceDot x={mdShort(ovulation)} y={pts.find(p => p.date === ovulation)!.t} r={6} fill="none" stroke="#455C4A" />}
+          <CartesianGrid stroke={C.line} vertical={false} />
+          <XAxis dataKey="d" tick={{ fontSize: 11, fill: C.mute }} tickLine={false} axisLine={{ stroke: C.line }} minTickGap={18} />
+          <YAxis domain={[lo, hi]} tick={{ fontSize: 11, fill: C.mute }} tickLine={false} axisLine={false} width={40} />
+          <Tooltip formatter={(v: any) => [v + ' °C', '體溫']} labelFormatter={(l: any) => { const p = pts.find(x => x.d === l); return p ? md(p.date) : l; }} labelStyle={{ color: C.ink }} contentStyle={{ borderRadius: 12, border: '1px solid ' + C.line, background: C.paper, fontSize: 12 }} />
+          <Line type="monotone" dataKey="t" stroke={C.forest} strokeWidth={1.6} dot={{ r: 2.5, fill: C.forest }} isAnimationActive={false} />
+          {pts.filter(p => p.opk?.startsWith('陽性')).map(p => <ReferenceDot key={p.date} x={p.d} y={p.t} r={5} fill={C.rose} stroke="none" />)}
+          {ovulation && pts.some(p => p.date === ovulation) && <ReferenceDot x={mdShort(ovulation)} y={pts.find(p => p.date === ovulation)!.t} r={6} fill="none" stroke={C.forest} />}
         </LineChart>
       </ResponsiveContainer>
       <p className="text-[11.5px] text-mute ml-3">粉色點：排卵試紙陽性</p>

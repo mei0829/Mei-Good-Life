@@ -12,6 +12,10 @@
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon.svg">
 <title>Blooming Days</title>
+<script>
+  // 先套用上次選的顏色主題，打開時才不會閃一下預設顏色
+  try { var t = JSON.parse(localStorage.getItem('bd-theme') || 'null'); if (t && t.c) { var r = document.documentElement; for (var k in t.c) r.style.setProperty('--color-' + k, t.c[k]); r.style.colorScheme = t.dark ? 'dark' : 'light'; if (t.dark) { r.style.setProperty('--noise', 'transparent'); r.style.setProperty('--backdrop', 'rgba(0,0,0,.55)'); } document.querySelector('meta[name="theme-color"]').setAttribute('content', t.c.ivory); } } catch (e) {}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <!-- 標題與數字用圓體 jf 粉圓（Huninn），內文用 Noto Sans TC；品牌名稱用 Cormorant Garamond -->
 <link href="https://fonts.googleapis.com/css2?family=Huninn&family=Cormorant+Garamond:wght@600;700&family=Noto+Sans+TC:wght@400;500&display=swap" rel="stylesheet">

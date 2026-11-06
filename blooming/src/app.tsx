@@ -3,11 +3,12 @@ import { useSettings } from './data/hooks';
 import { DEFAULT_SETTINGS } from './data/repo';
 import type { Settings } from './data/types';
 import { today } from './lib/dates';
+import { applyTheme, resolveTheme, THEMES, type Theme, type ThemeId } from './lib/theme';
 
 export type Route = 'home' | 'cycle' | 'wellness' | 'medical' | 'lifestyle' | 'finance' | 'journal' | 'settings';
 export const ROUTES: Route[] = ['home', 'cycle', 'wellness', 'medical', 'lifestyle', 'finance', 'journal', 'settings'];
 
-interface Ctx { s: Settings; today: string; route: Route; sub: string; go: (r: Route, sub?: string) => void }
+interface Ctx { s: Settings; today: string; route: Route; sub: string; go: (r: Route, sub?: string) => void; themeId: ThemeId; theme: Theme }
 const AppCtx = createContext<Ctx>(null!);
 export const useApp = () => useContext(AppCtx);
 
@@ -20,6 +21,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const s = useSettings();
   const [[route, sub], setR] = useState(readHash);
   const [day, setDay] = useState(today());
+  // 手機是不是深色模式（給「夜間模式跟著手機」用）
+  const [sysDark, setSysDark] = useState(() => matchMedia('(prefers-color-scheme: dark)').matches);
+  useEffect(() => {
+    const m = matchMedia('(prefers-color-scheme: dark)'), f = () => setSysDark(m.matches);
+    m.addEventListener('change', f); return () => m.removeEventListener('change', f);
+  }, []);
+  const themeId = resolveTheme(s?.theme, s?.themeAuto, sysDark);
+  useEffect(() => { if (s) applyTheme(themeId); }, [themeId, !!s]);
   useEffect(() => {
     const h = () => { setR(readHash()); window.scrollTo({ top: 0 }); };
     addEventListener('hashchange', h);
@@ -29,7 +38,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
   const go = (r: Route, sb = '') => { location.hash = '/' + r + (sb ? '/' + sb : ''); };
   if (!s) return <div className="min-h-screen grid place-items-center text-mute brand text-2xl">Blooming Days</div>;
-  return <AppCtx.Provider value={{ s: s || DEFAULT_SETTINGS, today: day, route, sub, go }}>{children}</AppCtx.Provider>;
+  return <AppCtx.Provider value={{ s: s || DEFAULT_SETTINGS, today: day, route, sub, go, themeId, theme: THEMES[themeId] }}>{children}</AppCtx.Provider>;
 }
 
 export const STAGE_LABEL = { preconception: '備孕中', pregnant: '懷孕中', postpartum: '產後' } as const;

@@ -16,6 +16,8 @@
   --color-mute: #7D796E;       /* secondary text */
   --color-line: #E6E0D5;       /* border */
   --color-alert: #A65B4F;
+  --color-rose-ink: #8A5B53;   /* 淡玫瑰底上的文字 */
+  --color-oat-ink: #7A6648;    /* 燕麥底上的文字 */
 
   /* 標題與大數字用圓體（jf 粉圓），看起來柔和、不嚴肅；品牌名稱另外用 Cormorant */
   --font-display: "Huninn", "Noto Sans TC", sans-serif;
@@ -38,7 +40,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
   /* 很淡的紙張紋理 */
-  background-image: radial-gradient(rgba(136,132,120,.035) 1px, transparent 1px);
+  background-image: radial-gradient(var(--noise, rgba(136,132,120,.035)) 1px, transparent 1px);
   background-size: 3px 3px;
 }
 button { cursor: pointer; touch-action: manipulation; }

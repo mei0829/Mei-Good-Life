@@ -41,7 +41,7 @@ export function ConfirmPregnancy({ open, onClose }: { open: boolean; onClose: ()
         </div>
         {p && !bad && <Note>目前約 <b className="num">{weekLabel(p)}</b>，預產期 <b className="num">{ymd(p.edd)}</b></Note>}
         {bad && <p className="text-alert text-[13px]">{bad}</p>}
-        <label className="flex gap-2.5 items-start text-[13.5px]"><input type="checkbox" className="w-5 h-5 mt-0.5 accent-[#455C4A]" checked={ok} onChange={e => setOk(e.target.checked)} />我已經由驗孕或醫師確認懷孕</label>
+        <label className="flex gap-2.5 items-start text-[13.5px]"><input type="checkbox" className="w-5 h-5 mt-0.5 accent-forest" checked={ok} onChange={e => setOk(e.target.checked)} />我已經由驗孕或醫師確認懷孕</label>
       </div>
       <div className="flex justify-end gap-2 mt-6"><button className="btn-ghost" onClick={onClose}>取消</button><button className="btn-primary px-6 disabled:opacity-40" disabled={!lmp || !!bad || !ok} onClick={save}>確認切換</button></div>
     </Sheet>

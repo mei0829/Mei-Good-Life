@@ -39,7 +39,7 @@ export default function Lifestyle() {
                 <button onClick={() => toggleFav(a.id)} aria-pressed={fav.has(a.id)} aria-label={fav.has(a.id) ? '取消收藏' : '收藏'} className="p-1"><Bookmark size={19} strokeWidth={1.4} className={fav.has(a.id) ? 'fill-forest text-forest' : 'text-mute'} /></button>
               </div>
               <p className="text-[13.5px] leading-relaxed text-ink/85 mt-2">{a.desc}</p>
-              {a.caution && <p className="text-[12.5px] text-[#8A5B53] mt-2 leading-relaxed">注意：{a.caution}</p>}
+              {a.caution && <p className="text-[12.5px] text-rose-ink mt-2 leading-relaxed">注意：{a.caution}</p>}
               <div className="flex items-center gap-3 mt-3">
                 {a.cat !== '健康飲食' && <button className="btn-ghost" onClick={() => finish(a)}><CheckCircle2 size={15} strokeWidth={1.5} />完成一次</button>}
                 {a.stage !== 'both' && <Badge tone={a.stage === 'preg' ? 'rose' : 'sage'}>{a.stage === 'preg' ? '孕期' : '備孕'}</Badge>}

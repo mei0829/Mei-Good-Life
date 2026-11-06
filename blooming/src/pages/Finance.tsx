@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { addMonths, format } from 'date-fns';
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useApp } from '../app';
+import type { Palette } from '../lib/theme';
 import { useTable } from '../data/hooks';
 import { data } from '../data/repo';
 import { money, parse, ym, ymd } from '../lib/dates';
@@ -10,8 +11,8 @@ import { EXPENSE_CAT, INS_STATUS, INS_TYPE, PAY_FREQ } from '../content/options'
 import { EntityForm, useEditor, type Field } from '../components/form';
 import { Badge, DateCell, Empty, Figure, Note, PageHeader, Row, Section, Sheet, Tabs, cx, useToast } from '../components/ui';
 
-const PALETTE = ['#455C4A', '#A8B5A0', '#D6C6AE', '#D8B7B0', '#7E8F78', '#B9A58A', '#C49A92', '#5F7565', '#CBBFA9'];
-const TT = { contentStyle: { borderRadius: 12, border: '1px solid #E6E0D5', background: '#FFFCF7', fontSize: 12 } };
+// 圖表顏色跟著主題
+const TT = (C: Palette) => ({ contentStyle: { borderRadius: 12, border: '1px solid ' + C.line, background: C.paper, color: C.ink, fontSize: 12 } });
 const PER_YEAR: Record<string, number> = { 年繳: 1, 半年繳: 2, 季繳: 4, 月繳: 12, 躉繳: 0 };
 
 export default function Finance() {
@@ -35,7 +36,8 @@ const EXP_FIELDS: Field[] = [
 ];
 
 function Expenses() {
-  const { today, s } = useApp();
+  const { today, s, theme } = useApp();
+  const C = theme.c;
   const rows = useTable('expenses') || [];
   const ed = useEditor();
   const [month, setMonth] = useState(today.slice(0, 7));
@@ -70,9 +72,9 @@ function Expenses() {
         <Section title="本月類別統計">
           {byCat.length ? (<>
             <div className="h-48 -ml-3"><ResponsiveContainer><BarChart data={byCat} layout="vertical" margin={{ left: 8, right: 16 }}>
-              <XAxis type="number" hide /><YAxis type="category" dataKey="c" width={78} tick={{ fontSize: 12, fill: '#343B34' }} tickLine={false} axisLine={false} />
-              <Tooltip {...TT} formatter={(v: any) => [money(v), '支出']} />
-              <Bar dataKey="v" radius={[0, 6, 6, 0]} isAnimationActive={false}>{byCat.map((_, i) => <Cell key={i} fill={PALETTE[i % PALETTE.length]} />)}</Bar>
+              <XAxis type="number" hide /><YAxis type="category" dataKey="c" width={78} tick={{ fontSize: 12, fill: C.ink }} tickLine={false} axisLine={false} />
+              <Tooltip {...TT(C)} formatter={(v: any) => [money(v), '支出']} />
+              <Bar dataKey="v" radius={[0, 6, 6, 0]} isAnimationActive={false}>{byCat.map((_, i) => <Cell key={i} fill={theme.chart[i % theme.chart.length]} />)}</Bar>
             </BarChart></ResponsiveContainer></div>
             <table className="w-full text-[13px] mt-2">
               <thead><tr className="text-mute text-left"><th className="font-normal py-1.5">類別</th><th className="font-normal text-right">支出</th><th className="font-normal text-right">預算</th><th className="font-normal text-right">差異</th></tr></thead>
@@ -82,10 +84,10 @@ function Expenses() {
         </Section>
         <Section title="每月支出">
           <div className="h-56 -ml-3"><ResponsiveContainer><BarChart data={trend}>
-            <CartesianGrid stroke="#E6E0D5" vertical={false} /><XAxis dataKey="m" tick={{ fontSize: 11, fill: '#888478' }} tickLine={false} axisLine={{ stroke: '#E6E0D5' }} />
-            <YAxis tick={{ fontSize: 11, fill: '#888478' }} tickLine={false} axisLine={false} width={52} tickFormatter={v => v >= 10000 ? +(v / 10000).toFixed(1) + ' 萬' : v >= 1000 ? +(v / 1000).toFixed(1) + ' 千' : v} />
-            <Tooltip {...TT} formatter={(v: any) => [money(v), '支出']} />
-            <Bar dataKey="v" radius={[6, 6, 0, 0]} isAnimationActive={false}>{trend.map(t => <Cell key={t.key} fill={t.key === month ? '#455C4A' : '#A8B5A0'} />)}</Bar>
+            <CartesianGrid stroke={C.line} vertical={false} /><XAxis dataKey="m" tick={{ fontSize: 11, fill: C.mute }} tickLine={false} axisLine={{ stroke: C.line }} />
+            <YAxis tick={{ fontSize: 11, fill: C.mute }} tickLine={false} axisLine={false} width={52} tickFormatter={v => v >= 10000 ? +(v / 10000).toFixed(1) + ' 萬' : v >= 1000 ? +(v / 1000).toFixed(1) + ' 千' : v} />
+            <Tooltip {...TT(C)} formatter={(v: any) => [money(v), '支出']} />
+            <Bar dataKey="v" radius={[6, 6, 0, 0]} isAnimationActive={false}>{trend.map(t => <Cell key={t.key} fill={t.key === month ? C.forest : C.sage} />)}</Bar>
           </BarChart></ResponsiveContainer></div>
           {budget ? <p className="text-[12px] text-mute">每月預算 {money(budget)}</p> : null}
         </Section>

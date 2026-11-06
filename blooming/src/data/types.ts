@@ -30,7 +30,9 @@ export interface FileRec { id: string; name: string; type: string; size: number;
 export interface Settings {
   id: 'me'; name: string; stage: Stage; lmp?: string; edd?: string; pregnantSince?: string;
   defaultCycle?: number; budgetMonthly?: number; budgetByCat?: Record<string, number>;
-  favorites?: string[]; heroPhoto?: string; updatedAt: number
+  favorites?: string[]; heroPhoto?: string;
+  /** 顏色主題；themeAuto = 夜間模式跟著手機自動切換 */ theme?: string; themeAuto?: boolean;
+  updatedAt: number
 }
 
 export interface Tables {
