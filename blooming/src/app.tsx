@@ -4,7 +4,7 @@ import { DEFAULT_SETTINGS } from './data/repo';
 import type { Settings } from './data/types';
 import { today } from './lib/dates';
 import { Brand } from './components/Brand';
-import { applyTheme, resolveTheme, THEMES, type Theme, type ThemeId } from './lib/theme';
+import { applyTheme, resolveTheme, sharedTheme, THEMES, type Theme, type ThemeId } from './lib/theme';
 
 export type Route = 'home' | 'cycle' | 'wellness' | 'medical' | 'lifestyle' | 'finance' | 'prep' | 'journal' | 'settings';
 export const ROUTES: Route[] = ['home', 'cycle', 'wellness', 'medical', 'lifestyle', 'finance', 'prep', 'journal', 'settings'];
@@ -22,13 +22,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const s = useSettings();
   const [[route, sub], setR] = useState(readHash);
   const [day, setDay] = useState(today());
-  // 手機是不是深色模式（給「夜間模式跟著手機」用）
-  const [sysDark, setSysDark] = useState(() => matchMedia('(prefers-color-scheme: dark)').matches);
+  // 全站共用的主色（首頁或這裡的「風格」換了，就跟著換）
+  const [shared, setShared] = useState(sharedTheme);
   useEffect(() => {
-    const m = matchMedia('(prefers-color-scheme: dark)'), f = () => setSysDark(m.matches);
-    m.addEventListener('change', f); return () => m.removeEventListener('change', f);
+    const f = () => setShared(sharedTheme());
+    addEventListener('mgl-look', f); return () => removeEventListener('mgl-look', f);
   }, []);
-  const themeId = resolveTheme(s?.theme, s?.themeAuto, sysDark);
+  const themeId = resolveTheme(shared, s?.theme);
   useEffect(() => { if (s) applyTheme(themeId); }, [themeId, !!s]);
   useEffect(() => {
     const h = () => { setR(readHash()); window.scrollTo({ top: 0 }); };

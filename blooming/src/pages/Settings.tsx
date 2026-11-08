@@ -6,7 +6,7 @@ import { TABLES, TABLE_LABEL, type Stage, type TableName } from '../data/types';
 import { ConfirmPregnancy } from '../components/Stage';
 import { Note, PageHeader, Section, cx, useToast } from '../components/ui';
 import { today as todayStr } from '../lib/dates';
-import { THEMES, THEME_IDS, isTheme, type ThemeId } from '../lib/theme';
+import { THEMES, THEME_IDS, type ThemeId } from '../lib/theme';
 import { Brand } from '../components/Brand';
 import { Check } from 'lucide-react';
 
@@ -69,16 +69,12 @@ export default function SettingsPage() {
           </Section>
 
           <Section title="外觀">
-            <p className="text-[12.5px] text-mute mb-3">選一個喜歡的顏色主題，會記在這支手機上。</p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-2.5" role="radiogroup" aria-label="顏色主題">
-              {THEME_IDS.map(id => <ThemeCard key={id} id={id} on={(isTheme(s.theme) ? s.theme : 'forest') === id} showing={themeId === id}
-                onPick={async () => { await data.saveSettings({ theme: id }); toast('已換成「' + THEMES[id].name + '」'); }} />)}
+            <p className="text-[12.5px] text-mute mb-3">底色都是米白色。選一個主色，Mei Good Life 的所有頁面會一起換。</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-2.5" role="radiogroup" aria-label="主色">
+              {THEME_IDS.map(id => <ThemeCard key={id} id={id} on={themeId === id}
+                onPick={async () => { window.MGL_LOOK?.set({ c: id }); await data.saveSettings({ theme: id }); toast('已換成「' + THEMES[id].name + '」'); }} />)}
             </div>
-            <label className="flex items-center justify-between gap-3 mt-4 text-[14px] cursor-pointer">
-              <span>夜間模式跟著手機自動切換<span className="block text-[12px] text-mute">手機切到深色模式時，自動改用「夜間」主題</span></span>
-              <Switch on={!!s.themeAuto} onChange={v => data.saveSettings({ themeAuto: v })} label="夜間模式跟著手機自動切換" />
-            </label>
-            {s.themeAuto && themeId === 'night' && s.theme !== 'night' && <p className="text-[12px] text-mute mt-2">手機目前是深色模式，所以先顯示「夜間」；手機切回淺色就會用你選的「{THEMES[isTheme(s.theme) ? s.theme : 'forest'].name}」。</p>}
+            <button className="btn-ghost mt-4" onClick={() => window.MGL_LOOK?.open()}>換主題圖案</button>
           </Section>
 
           <Section title="目前階段">
@@ -139,7 +135,7 @@ export default function SettingsPage() {
 const confirm_ = (m: string) => window.confirm(m);
 
 /** 主題卡片：主題自己的顏色畫一個小小的畫面預覽 */
-function ThemeCard({ id, on, showing, onPick }: { id: ThemeId; on: boolean; showing: boolean; onPick: () => void }) {
+function ThemeCard({ id, on, onPick }: { id: ThemeId; on: boolean; onPick: () => void }) {
   const t = THEMES[id], c = t.c;
   return (
     <button role="radio" aria-checked={on} onClick={onPick} className={cx('relative text-left rounded-[16px] border p-2.5 transition', on ? 'border-forest ring-1 ring-forest' : 'border-line')}>
@@ -155,16 +151,6 @@ function ThemeCard({ id, on, showing, onPick }: { id: ThemeId; on: boolean; show
       </div>
       <div className="mt-2 flex items-center gap-1.5"><span className="serif text-[14.5px]">{t.name}</span>{on && <Check size={14} className="text-forest" strokeWidth={2} />}</div>
       <div className="text-[11.5px] text-mute leading-snug">{t.desc}</div>
-      {showing && !on && <span className="absolute top-1.5 right-1.5 tag bg-forest text-paper">顯示中</span>}
-    </button>
-  );
-}
-
-function Switch({ on, onChange, label }: { on: boolean; onChange: (v: boolean) => void; label: string }) {
-  return (
-    <button type="button" role="switch" aria-checked={on} aria-label={label} onClick={e => { e.preventDefault(); onChange(!on); }}
-      className={cx('relative w-12 h-7 rounded-full transition shrink-0', on ? 'bg-forest' : 'bg-line')}>
-      <span className={cx('absolute top-1 w-5 h-5 rounded-full bg-paper shadow transition-all', on ? 'left-6' : 'left-1')} />
     </button>
   );
 }

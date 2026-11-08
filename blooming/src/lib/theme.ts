@@ -1,6 +1,6 @@
 // ---------- 顏色主題 ----------
 // 所有顏色都在這裡；切換主題時把這些值寫進 CSS 變數，畫面（含圖表）就會一起換色。
-export type ThemeId = 'forest' | 'rose' | 'mist' | 'cream' | 'burgundy' | 'amber' | 'indigo' | 'emerald' | 'night';
+export type ThemeId = 'forest' | 'rose' | 'mist' | 'cream' | 'burgundy' | 'amber' | 'indigo' | 'emerald';
 export interface Palette {
   ivory: string; paper: string; forest: string; 'forest-deep': string; sage: string; 'sage-soft': string;
   oat: string; 'oat-soft': string; rose: string; 'rose-soft': string; ink: string; mute: string; line: string;
@@ -8,7 +8,7 @@ export interface Palette {
 }
 export interface Theme { name: string; desc: string; dark?: boolean; c: Palette; chart: string[] }
 
-export const THEMES: Record<ThemeId, Theme> = {
+const RAW: Record<ThemeId, Theme> = {
   forest: {
     name: '森林綠', desc: '日系森林與莫蘭迪色，沉穩安靜',
     c: { ivory: '#F5F1E9', paper: '#FFFCF7', forest: '#455C4A', 'forest-deep': '#34463A', sage: '#A8B5A0', 'sage-soft': '#E4E8DF', oat: '#D6C6AE', 'oat-soft': '#EDE5D8', rose: '#D8B7B0', 'rose-soft': '#F1E4E0', ink: '#343B34', mute: '#7D796E', line: '#E6E0D5', alert: '#A65B4F', 'rose-ink': '#8A5B53', 'oat-ink': '#7A6648' },
@@ -25,7 +25,7 @@ export const THEMES: Record<ThemeId, Theme> = {
     chart: ['#4C6577', '#A3B8C4', '#CFC6B8', '#D3B4AE', '#7B93A3', '#B8AE9C', '#C49A92', '#3B5161', '#C9D4DA'],
   },
   cream: {
-    name: '鴨子奶黃', desc: '奶油黃與焦糖色，跟柯爾鴨最搭',
+    name: '焦糖', desc: '奶油黃與焦糖色，溫暖柔和',
     c: { ivory: '#FBF6EA', paper: '#FFFDF7', forest: '#8A6A3B', 'forest-deep': '#6F532C', sage: '#B7C2A0', 'sage-soft': '#EDF0E2', oat: '#F0C978', 'oat-soft': '#F8EBCB', rose: '#E7B9A6', 'rose-soft': '#F8E6DD', ink: '#3F3A31', mute: '#8C8270', line: '#EDE4CF', alert: '#A65B4F', 'rose-ink': '#8E5844', 'oat-ink': '#7D6230' },
     chart: ['#8A6A3B', '#B7C2A0', '#F0C978', '#E7B9A6', '#A78A5C', '#D9C08F', '#C9967F', '#6F532C', '#E5D6B0'],
   },
@@ -49,18 +49,21 @@ export const THEMES: Record<ThemeId, Theme> = {
     c: { ivory: '#F1F4F0', paper: '#FBFCFA', forest: '#1F5C4A', 'forest-deep': '#154536', sage: '#7FAF98', 'sage-soft': '#DEEBE3', oat: '#D8CBB0', 'oat-soft': '#EEE8DA', rose: '#D2A79C', 'rose-soft': '#F3E3DE', ink: '#22312B', mute: '#6F7D75', line: '#DCE3DD', alert: '#A5483A', 'rose-ink': '#84493F', 'oat-ink': '#6E5E3E' },
     chart: ['#1F5C4A', '#7FAF98', '#D8CBB0', '#D2A79C', '#3F7E68', '#B9A983', '#A8CBB8', '#154536', '#C3D9CC'],
   },
-  night: {
-    name: '夜間', desc: '深色模式，晚上記錄不刺眼', dark: true,
-    c: { ivory: '#1E221F', paper: '#272C28', forest: '#A8C0A6', 'forest-deep': '#C3D6C1', sage: '#6E8470', 'sage-soft': '#2F3A31', oat: '#8C7B60', 'oat-soft': '#3A352B', rose: '#C49A92', 'rose-soft': '#3E2F2D', ink: '#ECE8E0', mute: '#A39E92', line: '#3A403B', alert: '#E59484', 'rose-ink': '#E3B3A9', 'oat-ink': '#D9C39A' },
-    chart: ['#A8C0A6', '#6E8470', '#8C7B60', '#C49A92', '#86A08A', '#B3A07E', '#D7AFA7', '#C3D6C1', '#5E6B60'],
-  },
 };
+// 全站統一米白底：每個主題只換主色和點綴色，底色、卡片、文字都一樣
+export const CREAM = { ivory: '#F5F1E9', paper: '#FFFCF7', ink: '#3A3631', mute: '#857E73', line: '#E6DFD3' };
+export const THEMES = Object.fromEntries(Object.entries(RAW).map(([k, t]) => [k, { ...t, c: { ...t.c, ...CREAM } }])) as Record<ThemeId, Theme>;
 export const THEME_IDS = Object.keys(THEMES) as ThemeId[];
 export const isTheme = (x: unknown): x is ThemeId => typeof x === 'string' && x in THEMES;
 
-/** 實際要用的主題：開了「夜間模式跟著手機」且手機是深色，就用夜間 */
-export const resolveTheme = (theme: unknown, auto: boolean | undefined, systemDark: boolean): ThemeId =>
-  auto && systemDark ? 'night' : isTheme(theme) ? theme : 'forest';
+/** 全站共用的主色（首頁「風格」選的，存在 localStorage 'mgl-look'） */
+export function sharedTheme(): ThemeId | undefined {
+  try { const c = JSON.parse(localStorage.getItem('mgl-look') || 'null')?.c; return isTheme(c) ? c : undefined; } catch { return undefined; }
+}
+
+/** 實際要用的主題：先看全站共用的選擇，沒有就用這裡設定的，再沒有就森林綠 */
+export const resolveTheme = (shared: unknown, theme: unknown): ThemeId =>
+  isTheme(shared) ? shared : isTheme(theme) ? theme : 'forest';
 
 /** 把主題寫進 CSS 變數；也記在這支手機，下次打開時不會先閃一下別的顏色 */
 export function applyTheme(id: ThemeId) {
@@ -72,4 +75,9 @@ export function applyTheme(id: ThemeId) {
   r.dataset.theme = id;
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', t.c.ivory);
   try { localStorage.setItem('bd-theme', JSON.stringify({ id, c: t.c, dark: !!t.dark })); } catch { /* 無痕模式等情況存不了就算了 */ }
+}
+
+// 全站風格（../look.js）放在 window 上的工具
+declare global {
+  interface Window { MGL_LOOK?: { set: (p: { c?: string; p?: string }) => unknown; open: () => void } }
 }

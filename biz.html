@@ -11,7 +11,6 @@
 <link rel="icon" href="biz.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="biz.svg">
 <title>東京餅創業</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#F4EFE8;--card:#fff;--ink:#2B2A27;--sub:#7A766E;--line:#E4DCD1;--acc:#A85A30;--on:#fff;--ok:#3F8A5F;--bad:#C94A4A;--soft:#F6E6D8;--up:#C94A4A;--down:#3F8A5F}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171614;--card:#22211E;--ink:#EDEAE4;--sub:#A29D94;--line:#34322E;--acc:#E8A57C;--on:#171614;--ok:#7CC49A;--bad:#F07070;--soft:#3A2C22;--up:#F07070;--down:#7CC49A}}
@@ -90,6 +89,8 @@ textarea{min-height:72px;resize:vertical}
 #toast.on{display:flex}
 #toast button{border:0;background:none;color:var(--acc);font-weight:700;padding:0;white-space:nowrap}
 </style>
+<link rel="stylesheet" href="look.css">
+<script src="look.js"></script>
 </head>
 <body>
 <div id="auth" data-title="東京餅創業"></div>
@@ -485,6 +486,8 @@ function download(name,text,type){
 const stamp=()=>{const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()};
 function setSheet(){
  sheet(`<h3>設定</h3>
+  <div class="sub" style="margin-bottom:6px">風格</div>
+  <div class="row" style="margin-bottom:14px"><button class="bt" onclick="MGL_LOOK.open()">換主色和主題圖案</button></div>
   ${famHTML()}
   <div class="sub" style="margin-bottom:6px">匯出與備份</div>
   <div class="row" style="margin-bottom:14px"><button class="bt" id="csv">原物料價格表（Excel 可開）</button><button class="bt" id="exp">下載備份檔</button><button class="bt" id="imp">從備份檔還原</button></div>
