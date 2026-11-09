@@ -621,7 +621,8 @@ function vCard(){
  let h=`<button class="back" data-a="tab" data-i="home">‹ 總覽</button><h1>${E(c.name)}</h1>
  ${cards.length>1?`<div class="fs">${cards.map(x=>`<button class="chip ${x.id===c.id?'on':''}" data-a="card" data-i="${x.id}">${E(x.name)}</button>`).join('')}</div>`:''}
  ${I.credit>0.5?`<div class="note keep" style="font-size:14px;color:var(--ink)"><b>溢繳 ${M(I.credit)}</b>：繳的錢比已出帳的帳單多。會在 ${md(I.cur)} 結帳時自動扣抵下一期。<br><span class="sub">如果你沒有多繳，通常是上一期有消費漏記，或某筆的入帳日算到下一期了，對一下銀行帳單就會找到。</span></div>`:''}
- <div class="card"><b>一筆刷卡會經過 4 個階段</b><div class="sub" style="margin-top:6px;line-height:1.9">
+ ${(()=>{const x=cardSplit(c),bd=I.billed.filter(s=>s.left>0.5).map(s=>s.due).sort()[0];return`<div class="card"><div class="row"><div class="sp"><div class="sub">已出帳・還沒繳</div><div class="big ${x.due>=0.5?'neg':''}">${M(x.due)}</div><div class="sub">${x.due>=0.5&&bd?(bd<t0?'<span class="late">已過繳款日 '+md(bd)+'</span>':md(bd)+' 前要繳'):'目前沒有要繳的'}</div></div><div style="text-align:right"><div class="sub">未出帳（還在累積）</div><div class="big">${M(x.unb)}</div><div class="sub">${md(I.cur)} 結帳</div></div></div>${x.due>=0.5?`<button class="go q" style="margin-top:8px" data-a="paycard" data-i="${c.id}">記錄繳卡費</button>`:''}</div>`})()}
+ <div class="note" data-t="一筆刷卡會經過哪些階段？"><b>一筆刷卡會經過 4 個階段</b><div class="sub" style="margin-top:6px;line-height:1.9">
  <span class="st pending">… 未入帳</span> 你刷了、也記了，銀行還沒收到（通常 1～3 天）<br>
  <span class="st open">○ 未出帳</span> 銀行已經入帳，等結帳日（每月 ${c.close} 號）<br>
  <span class="st billed">● 已出帳</span> 已經在帳單上，要在 ${c.due} 號前繳<br>
