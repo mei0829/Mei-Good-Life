@@ -237,6 +237,9 @@ function nextDue(c,s){const d=pd(s),k=+c.due||1,x=ymd(d.getFullYear(),d.getMonth
 // 每一期帳單：刷卡、退款歸到所屬帳期，繳款從最舊的帳期開始抵
 // 每一期帳單：刷卡、退款依「入帳日」（還沒入帳就用消費日）歸到帳期；繳款依日期從最舊的帳期開始抵，抵完的帳期記下繳清日
 let CI={};
+// 信用卡分兩塊：已出帳還沒繳（due）、還沒結帳的這一期（unb）；溢繳先抵已出帳，再抵未出帳
+function cardSplit(c){const I=cardInfo(c),t0=today();let due=0,unb=0;I.st.forEach(s=>{if(s.left<=0.005)return;if(s.close==='init'||s.close<t0)due+=s.left;else unb+=s.left});
+ let cr=I.credit||0;const a=Math.min(cr,due);due-=a;cr-=a;unb=Math.max(0,unb-cr);return{due,unb}}
 function cardInfo(c){
  if(CI[c.id])return CI[c.id];
  const b={},pays=[],add=(k,due,v,t)=>{const x=b[k]=b[k]||{close:k,due,amt:0,tx:[]};x.amt+=v;if(t)x.tx.push(t)};
@@ -1762,12 +1765,12 @@ async function askAI(prompt,file,search){const sm=window.claude&&await claude.us
 // ── 總資產、對帳、截圖辨識、股價 ──
 // 總覽的帳戶清單：依銀行分組、金額大的在前，$0 的先收起來
 function acctBrief(){
- const v=a=>isCard(a)?-cardInfo(a).owe:conv(bal(a),a.cur,'TWD'),zero=a=>Math.abs(v(a))<0.5;
+ const v=a=>isCard(a)?-cardInfo(a).owe:conv(bal(a),a.cur,'TWD'),zero=a=>isCard(a)?(()=>{const x=cardSplit(a);return x.due+x.unb<0.5})():Math.abs(v(a))<0.5;
  const gs={},ord=[];S.accts.forEach(a=>{const k=a.excl?'\u0000x':a.hold&&!isCard(a)?'\u0000h':a.type!=='cash'&&a.group||'\u0000'+a.id;if(!gs[k]){gs[k]=[];ord.push(k)}gs[k].push(a)});
  const rows=[],ex=[];let nz=0;
  ord.forEach(k=>{const as=gs[k].slice().sort((x,y)=>isCard(x)-isCard(y)||Math.abs(v(y))-Math.abs(v(x))),show=U.az?as:as.filter(a=>!zero(a));nz+=as.length-as.filter(a=>!zero(a)).length;if(!show.length)return;
   const own=show.filter(a=>!isCard(a)).reduce((t,a)=>t+v(a),0),owe=show.filter(isCard).reduce((t,a)=>t-v(a),0),one=show.length===1&&!(show[0].group&&show[0].type!=='cash');
-  const item=a=>`<span class="ai" data-a="${isCard(a)?'card':'acctv'}" data-i="${a.id}">${E(k==='\u0000x'||k==='\u0000h'?nm(a):a.name+(a.cur==='USD'?'（美元）':''))} <b class="num ${isCard(a)&&!zero(a)?'neg':''}">${isCard(a)?(zero(a)?'已繳清':'未繳 '+M(-v(a))):MA(a)}</b></span>`;
+  const item=a=>`<span class="ai" data-a="${isCard(a)?'card':'acctv'}" data-i="${a.id}">${E(k==='\u0000x'||k==='\u0000h'?nm(a):a.name+(a.cur==='USD'?'（美元）':''))} <b class="num ${isCard(a)&&!zero(a)?'neg':''}">${isCard(a)?(()=>{const x=cardSplit(a);return(x.due>=0.5?'未繳 '+M(x.due):x.unb>=0.5?'':'已繳清')+(x.unb>=0.5?'</b> <span class="sub">'+(x.due>=0.5?'・':'')+'未出帳</span> <b class="num">'+M(x.unb):'')})():MA(a)}</b></span>`;
   const r={w:Math.abs(own)+owe,h:`<div class="ag"${one?` data-a="${isCard(show[0])?'card':'acctv'}" data-i="${show[0].id}" style="cursor:pointer"`:''}><div class="row"><b class="sp">${E(k==='\u0000x'?'📒 獨立帳本（沒算進總資產）':k==='\u0000h'?S.holdIn?'📦 預存（存著要繳的，不能花）':'📦 預存（要繳出去，沒算進總資產）':one?show[0].name:k)}</b>${own||!owe?`<b class="num ${own<-0.5?'neg':''}">${M(own)}</b>`:''}</div>${one&&k!=='\u0000x'&&k!=='\u0000h'&&!isCard(show[0])&&!show[0].cur?'':`<div class="ais">${show.map(item).join('')}</div>`}</div>`};
   (k==='\u0000x'?ex:k==='\u0000h'?(ex.unshift(r),[]):rows).push(r)});
  rows.sort((x,y)=>y.w-x.w);
