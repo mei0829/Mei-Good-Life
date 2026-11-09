@@ -111,7 +111,7 @@ textarea{min-height:72px;resize:vertical}
 </style>
 </head>
 <body>
-<div id="auth" data-title="旅遊行程"></div>
+<div id="auth" data-title="旅遊行程" data-only="admin"></div>
 <div id="app"></div><div id="sheet"></div><div id="toast"></div>
 <input type="file" id="impf" accept="application/json,.json" style="display:none">
 <script type="module" src="auth.js"></script>
@@ -174,58 +174,92 @@ function dayItems(t,d){const xs=t.items.filter(i=>i.d===d);return xs.map((x,k)=>
 function pocket(t){const ds=new Set(days(t));return t.items.filter(i=>!ds.has(i.d))}
 const spent=t=>t.items.reduce((s,i)=>s+(+i.cost||0),0);
 
-// ---------- 儲存：先存手機，再同步到家庭空間（家人改了會即時更新）----------
-const CL={F:null,fam:null,fams:[],ref:null,unsub:null,tm:0,busy:false,again:false,dirty:false,pending:null,st:''};
-const me=()=>CL.F?CL.F.email:'';
-const who=e=>e?String(e).split('@')[0]:'';
-function status(t){CL.st=t;const s=$('st');if(s)s.textContent=(CL.fam?CL.fam.name+' · ':'')+S.trips.length+' 趟旅行 · '+t}
+// ---------- 儲存：先存手機，再存到自己的私人雲端（data/users/{uid}/trip，只有自己看得到）----------
+const CL={ref:null,col:null,tm:0,busy:false,again:false,dirty:false,pending:null,st:''};
+function status(t){CL.st=t;const s=$('st');if(s)s.textContent=S.trips.length+' 趟旅行 · '+t}
 function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(S));localStorage.setItem(KT,String(T))}catch(e){}}
 function commit(){T=Date.now();saveLocal();render();CL.dirty=true;status('同步中…');clearTimeout(CL.tm);CL.tm=setTimeout(cloudPush,700)}
 async function cloudPush(){
  if(!CL.ref){status(CL.st.startsWith('⚠︎')?CL.st:'⚠︎ 沒有連到雲端，資料只存在這支手機');return}
  if(CL.busy){CL.again=true;return}
  CL.busy=true;CL.dirty=false;
- try{await CL.ref.set({j:JSON.stringify(S),t:T,by:me()});status('✓ 已同步')}
+ try{await CL.ref.set({j:JSON.stringify(S),t:T});status('✓ 已同步')}
  catch(e){CL.dirty=true;status('⚠︎ 還沒同步，變更先存在這支手機，連上網路會再試')}
  CL.busy=false;
  if(CL.again){CL.again=false;cloudPush()}
 }
 const busyUI=()=>$('sheet').classList.contains('on');
 function onCloud(d){
- if(!d){if(!T)T=Date.now();CL.dirty=true;return cloudPush()}  // 家庭空間還沒有旅遊資料：把手機上的放上去
+ if(!d){if(!T)T=Date.now();CL.dirty=true;return cloudPush()}  // 雲端還沒有：把手機上的放上去
  const ct=+d.t||0;
  if(ct>T){
   if(CL.dirty||CL.busy)return;
   if(busyUI()){CL.pending=d;return}  // 正在編輯：關掉視窗後再更新
   try{S=fix(JSON.parse(d.j))}catch(e){return}
   T=ct;saveLocal();render();
-  if(d.by&&d.by!==me())toast(who(d.by)+' 剛剛更新了行程');
  }else if(ct<T&&!CL.busy){CL.dirty=true;return cloudPush()}
  if(!CL.dirty)status('✓ 已同步');
 }
 function applyPending(){if(CL.pending&&!busyUI()){const d=CL.pending;CL.pending=null;onCloud(d)}}
-function useFam(f){
- let prev='';try{prev=localStorage.getItem('trip-fid')||''}catch(e){}
- if(prev&&prev!==f.id){S={trips:[]};T=0;CL.dirty=false;saveLocal()}  // 換到別的家庭空間：以那邊的資料為準
- try{localStorage.setItem('trip-fid',f.id)}catch(e){}
- if(!CL.fams.some(x=>x.id===f.id))CL.fams.push(f);
- CL.fam=f;CL.ref=CL.F.doc(f.id,'trip');
- if(CL.unsub)CL.unsub();
- status('連線中…');render();
- CL.unsub=CL.ref.watch(onCloud,()=>status('⚠︎ 無法連線，先顯示這支手機上的資料'));
+// 一開始的版本存在家庭空間：搬回自己的私人資料，家庭空間那份清空（家人就看不到了）
+async function moveFromFamily(){
+ try{
+  const F=await claude.use('family');if(!F)return;
+  for(const f of (await F.list()).filter(x=>x.kind!=='biz')){
+   const r=F.doc(f.id,'trip'),d=await r.get();
+   if(!d||d.moved)continue;
+   let o=null;try{o=fix(JSON.parse(d.j))}catch(e){}
+   const add=o?o.trips.filter(x=>!trip(x.id)):[];
+   if(add.length)op(()=>S.trips.push(...add));
+   await r.set({moved:1,t:Date.now()});
+  }
+ }catch(e){}
 }
 async function cloudInit(){
  try{
-  const F=CL.F=await claude.use('family');
-  if(!F)return status('⚠︎ 沒有連到雲端（請重新登入），資料只存在這支手機');
-  // 跟「我的櫃子」用同一個家庭空間（不是創業空間）
-  try{CL.fams=(await F.list()).filter(x=>x.kind!=='biz')}catch(e){return status(e&&e.code==='permission-denied'?'⚠︎ 家庭空間還沒開通（Firebase 要加上規則），資料先存在這支手機':'⚠︎ 無法連線，先顯示這支手機上的資料')}
-  let pick='';try{pick=localStorage.getItem('trip-fid')||localStorage.getItem('cab-fid')||''}catch(e){}
-  const f=CL.fams.find(x=>x.id===pick)||CL.fams.slice().sort((a,b)=>b.members.length-a.members.length)[0]||await F.create('我的家');
-  useFam(f);
- }catch(e){status('⚠︎ 沒有連到雲端，資料只存在這支手機')}
+  const db=await claude.use('db'),us=await claude.use('user'),uid=us&&await us.id();
+  if(!db||!uid)return status('⚠︎ 沒有連到雲端（請重新登入），資料只存在這支手機');
+  CL.col=db.collection('data/users/'+uid);CL.ref=CL.col.doc('trip');
+  status('連線中…');
+  onCloud(await CL.ref.get());
+  await moveFromFamily();
+  monCloud();
+ }catch(e){status('⚠︎ 無法連線，先顯示這支手機上的資料')}
 }
 addEventListener('online',()=>{if(CL.dirty)cloudPush()});
+// 在別的裝置改過：回到這頁時再抓一次
+document.addEventListener('visibilitychange',()=>{if(document.hidden||!CL.ref)return;CL.ref.get().then(onCloud).catch(()=>{});monCloud()});
+
+// ---------- 跟「記帳」連動：讀記帳的資料算這趟實際花了多少（只讀，不會改到記帳）----------
+// 記帳的「旅行」裡，每趟行程會自動有一筆同名、同日期的旅行（plan＝這裡的旅行 id），記帳打開時自動建立
+let MON=null;
+try{const o=JSON.parse(localStorage.getItem('money-v1')||'null');if(o&&Array.isArray(o.tx))MON={o,t:+localStorage.getItem('money-t')||0}}catch(e){}
+async function monCloud(){
+ if(!CL.col)return;
+ try{
+  const s=await CL.col.get(),o={tx:[]};let t=0;
+  s.docs.forEach(d=>{if(!d.id.startsWith('m_'))return;const v=d.data();if(d.id==='m__meta'){t=+v.t||0;return}
+   try{const x=JSON.parse(v.j),k=d.id.slice(2);if(k.startsWith('tx_'))o.tx.push(...x);else o[k]=x}catch(e){}});
+  if(t&&(!MON||t>MON.t)){MON={o,t};if(VIEW()&&TAB==='cost'&&!busyUI())render()}
+ }catch(e){}
+}
+// 跟記帳的算法一樣：出發到回家這幾天的支出，加上指定到這次旅行的（出發前買的機票、訂房）；
+// 不算幫別人代墊的部分、獨立帳本、固定收支自動記的、在記帳裡按「不算」的
+function actual(t){
+ if(!MON)return null;
+ const o=MON.o,MT=arr(o.trips).find(x=>x.plan===t.id),from=MT?MT.from:t.start,to=MT?MT.to:(t.end||t.start);
+ if(!from)return null;
+ const ex=MT?arr(MT.ex):[],id=MT?MT.id:null,acc={},lent={};
+ arr(o.accts).forEach(a=>{acc[a.id]=a});
+ arr(o.iou).forEach(x=>{if(x.tx&&x.dir==='in')lent[x.tx]=(lent[x.tx]||0)+(+x.amt||0)});
+ const my=x=>{const a=acc[x.acct];return a&&a.type!=='card'&&(a.book||a.excl)?0:Math.max(0,(+x.amt||0)-(lent[x.id]||0))};
+ const xs=o.tx.filter(x=>x&&x.type==='out'&&my(x)>0&&((id&&x.trip===id)||(!x.trip&&x.d>=from&&x.d<=to&&!x.bill&&!ex.includes(x.id))));
+ const by={};xs.forEach(x=>{const c=x.cat||'其他';by[c]=(by[c]||0)+my(x)});
+ return {tot:xs.reduce((s,x)=>s+my(x),0),n:xs.length,by};
+}
+// 行程類型 → 記帳分類（記帳裡沒有這個分類就讓記帳自己猜）
+const MCAT={美食:'餐飲',交通:'交通',購物:'購物',景點:'娛樂'};
+function goMoney(kind,q){location.href='money.html#'+kind+'='+encodeURIComponent(JSON.stringify(q))}
 
 // 每次變更都可以「復原」
 function op(fn,msg){const prev=JSON.stringify(S);fn();commit();if(msg)toast(msg,()=>{S=fix(JSON.parse(prev));commit();toast('已復原')})}
@@ -259,7 +293,7 @@ function listPage(){
 const TABS=[['plan','行程'],['pack','準備清單'],['cost','花費']];
 function tripPage(t){
  const p=phase(t);
- return `<div class="top"><div style="min-width:0"><a class="home" href="#" data-a="back">‹ 全部旅行</a><h1>${E(t.name)}</h1></div><div class="row"><button class="bt" data-a="trip" aria-label="編輯旅行">⋯</button></div></div>
+ return `<div class="top"><div style="min-width:0"><a class="home" href="#" data-a="back">‹ 全部旅行</a><h1>${E(t.name)}</h1></div><div class="row"><button class="bt" data-a="pay" aria-label="記帳">💰 記帳</button><button class="bt" data-a="trip" aria-label="編輯旅行">⋯</button></div></div>
  <div class="sub" style="margin-top:2px">${t.dest?'📍 '+E(t.dest)+' · ':''}${E(range(t))} · <span class="tag ${p.k==='past'||p.k==='plan'?'g':''}">${E(p.txt)}</span></div>
  <div id="st"></div>
  <div class="tabs">${TABS.map(([k,n])=>`<button data-a="tab" data-k="${k}" class="${TAB===k?'on':''}">${n}</button>`).join('')}</div>
@@ -293,16 +327,21 @@ function packTab(t){
  ${t.pack.map(p=>`<div class="ck ${p.on?'on':''}"><label><input type="checkbox" data-pk="${p.id}" ${p.on?'checked':''}><span>${E(p.n)}</span></label><button data-a="packdel" data-id="${p.id}" aria-label="刪除">✕</button></div>`).join('')||'<div class="empty">清單是空的</div>'}`;
 }
 function costTab(t){
- const tot=spent(t),b=+t.budget||0,ds=days(t);
+ const est=spent(t),b=+t.budget||0,ds=days(t),ac=actual(t),real=ac?ac.tot:0;
  const by=TYPES.map(([k,ic])=>[k,ic,t.items.filter(i=>i.type===k).reduce((s,i)=>s+(+i.cost||0),0)]).filter(x=>x[2]);
  const perDay=ds.map((d,k)=>[k,d,dayItems(t,d).reduce((s,i)=>s+(+i.cost||0),0)]).filter(x=>x[2]);
  const pk=pocket(t).reduce((s,i)=>s+(+i.cost||0),0);
- return `<div class="card"><div class="sum"><div><b>${money(tot)}</b><span>預估花費</span></div><div><b>${t.budget===''?'—':money(b)}</b><span>預算</span></div>
-  <div><b class="${b&&tot>b?'bad':''}">${t.budget===''?'—':money(b-tot)}</b><span>${b&&tot>b?'超出':'剩下'}</span></div></div>
-  ${b?`<div class="bar ${tot>b?'over':''}"><i style="width:${Math.min(100,tot/b*100)}%"></i></div>`:'<div class="sub" style="margin-top:8px;text-align:center">按右上角「⋯」可以設定預算</div>'}</div>
- ${by.length?`<h2>分類</h2><div class="card">${by.map(([k,ic,v])=>`<div class="kv"><span>${ic} ${k}</span><b>${money(v)}</b></div>`).join('')}</div>`:''}
- ${perDay.length||pk?`<h2>每天</h2><div class="card">${perDay.map(([k,d,v])=>`<div class="kv"><span>第 ${k+1} 天 · ${md(d)}</span><b>${money(v)}</b></div>`).join('')}${pk?`<div class="kv"><span>口袋名單（還沒排）</span><b>${money(pk)}</b></div>`:''}</div>`:''}
- ${tot?'':'<div class="empty">每個行程可以填「預估花費」，這裡會幫你加總</div>'}`;
+ const bar=v=>b?`<div class="bar ${v>b?'over':''}"><i style="width:${Math.min(100,v/b*100)}%"></i></div>`:'';
+ const ac2=ac?Object.keys(ac.by).map(k=>[k,ac.by[k]]).sort((x,y)=>y[1]-x[1]):[];
+ return `<div class="card"><div class="sum"><div><b>${money(real)}</b><span>實際花了</span></div><div><b>${money(est)}</b><span>預估</span></div>
+  <div><b class="${b&&real>b?'bad':''}">${t.budget===''?'—':money(b-real)}</b><span>${t.budget===''?'預算':b&&real>b?'超出預算':'預算剩下'}</span></div></div>
+  ${bar(real)}
+  <div class="sub" style="margin-top:8px">${ac?`「實際花了」是記帳裡這趟旅行的花費（${ac.n} 筆）：${isD(t.start)?md(t.start)+' 到 '+md(t.end||t.start)+' 記的帳都會算進去，':''}出發前買的機票、訂房，到記帳那邊按「加入出發前的花費」。`:'這支手機還沒打開過記帳，打開一次記帳後這裡就會顯示實際花了多少。'}${t.budget===''?'按右上角「⋯」可以設定預算。':''}</div>
+  <div class="row" style="margin-top:10px"><button class="go" data-a="pay">💰 記一筆</button><button class="bt" data-a="mdetail">在記帳看明細</button></div></div>
+ ${ac2.length?`<h2>實際花在哪</h2><div class="card">${ac2.map(([k,v])=>`<div class="kv"><span>${E(k)}</span><b>${money(v)}</b></div>`).join('')}</div>`:''}
+ ${by.length?`<h2>預估：分類</h2><div class="card">${by.map(([k,ic,v])=>`<div class="kv"><span>${ic} ${k}</span><b>${money(v)}</b></div>`).join('')}</div>`:''}
+ ${perDay.length||pk?`<h2>預估：每天</h2><div class="card">${perDay.map(([k,d,v])=>`<div class="kv"><span>第 ${k+1} 天 · ${md(d)}</span><b>${money(v)}</b></div>`).join('')}${pk?`<div class="kv"><span>口袋名單（還沒排）</span><b>${money(pk)}</b></div>`:''}</div>`:''}
+ ${est?'':'<div class="empty">每個行程可以填「預估花費」，這裡會幫你加總</div>'}`;
 }
 
 // ---------- 彈出視窗 ----------
@@ -386,6 +425,7 @@ function itemSheet(t,id,d){
   <label class="f"><span>備註</span><textarea id="ino" placeholder="訂位代號、營業時間、必點…">${E(i?i.note:'')}</textarea></label>
   ${i?`<label class="row" style="margin-bottom:6px"><input type="checkbox" id="idone" style="width:20px;height:20px;accent-color:var(--acc)" ${i.done?'checked':''}> 已經去過／完成</label>`:''}
   <div id="imsg" class="sub bad" style="min-height:18px"></div>
+  ${i?'<button class="bt" id="ipay" style="width:100%;margin-bottom:6px">💰 付錢了，記到記帳</button>':''}
   <div class="foot">${i?'<button class="bt bad" id="idel">刪除</button>':'<span></span>'}<button class="go" id="iok">${i?'儲存':'加入'}</button></div>`,p=>{
   p.querySelectorAll('[data-ty]').forEach(b=>b.onclick=()=>{type=b.dataset.ty;p.querySelectorAll('[data-ty]').forEach(x=>x.classList.toggle('on',x===b))});
   const ok=()=>{
@@ -397,30 +437,21 @@ function itemSheet(t,id,d){
    closeSheet();
   };
   p.querySelector('#iok').onclick=ok;enter(p.querySelector('#ititle'),ok);
+  if(i)p.querySelector('#ipay').onclick=()=>{
+   const q={plan:t.id,d:i.d&&i.d<=today()?i.d:today(),note:i.title};if(i.cost!=='')q.amt=i.cost;if(MCAT[i.type])q.cat=MCAT[i.type];
+   goMoney('add',q);
+  };
   if(i)p.querySelector('#idel').onclick=()=>{closeSheet();op(()=>{const x=trip(t.id);x.items=x.items.filter(y=>y.id!==i.id)},'已刪除「'+i.title+'」')};
   if(!i)setTimeout(()=>p.querySelector('#ititle').focus(),50);
  });
 }
 
-// 家人共用：跟「我的櫃子」同一個家庭空間；邀請家人要到「物品存放 → ⋯ 設定」
 function setSheet(){
- const f=CL.fam,others=CL.fams.filter(x=>f&&x.id!==f.id);
  sheet(`<h3>設定</h3>
-  <div class="sub" style="margin-bottom:6px">家人共用</div>
-  <div class="card" style="margin-bottom:14px">${f?`<div style="font-weight:700;margin-bottom:6px">${E(f.name)}</div>
-   <div class="sub" style="margin-bottom:6px">成員（${f.members.length}）：都能看到、修改這裡的旅行。跟「物品存放」是同一群家人。</div>
-   ${f.members.map(m=>`<div class="li"><span>${E(m)}${m===me()?'<small>你</small>':''}</span></div>`).join('')}
-   <div class="sub">要邀請或移除家人，請到 <a href="cabinet.html">物品存放</a> 的「⋯ 設定 → 家人共用」。</div>
-   ${others.length?`<div class="sub" style="margin:12px 0 6px">你也在這些家庭空間：</div>`+others.map(x=>`<div class="li"><span>${E(x.name)}<small>${x.members.length} 位成員</small></span><button class="bt" data-fsw="${x.id}">切換</button></div>`).join(''):''}`
-   :`<div class="sub">${E(CL.st.startsWith('⚠︎')?CL.st:'還沒連上家庭空間')}</div>`}</div>
+  <div class="card sub" style="margin-bottom:14px">旅遊行程只有你自己看得到，存在你的帳號裡，手機和電腦會同步。<br>每趟旅行在「記帳 → 更多 → 旅行」會自動有一筆，旅行期間記的帳都會算進去。</div>
   <div class="sub" style="margin-bottom:6px">備份</div>
   <div class="row" style="margin-bottom:14px"><button class="bt" id="exp">下載備份檔</button><button class="bt" id="imp">從備份檔還原</button></div>
   <div class="foot">${window.fbLogout?'<button class="bt" id="lo">登出</button>':'<span></span>'}<button class="go" data-x>完成</button></div>`,p=>{
-  p.querySelectorAll('[data-fsw]').forEach(b=>b.onclick=()=>{
-   const x=CL.fams.find(y=>y.id===b.dataset.fsw);
-   if(!confirm('切換到「'+x.name+'」？這支手機會改顯示那邊的旅行。'))return;
-   closeSheet();useFam(x);
-  });
   p.querySelector('#exp').onclick=()=>{
    const d=new Date(),a=document.createElement('a');
    a.href=URL.createObjectURL(new Blob([JSON.stringify(S,null,1)],{type:'application/json'}));a.download='旅遊行程-'+ymd(d)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
@@ -446,6 +477,8 @@ function onClick(e){
  if(a==='set')return setSheet();
  if(!t)return;
  if(a==='trip')return tripSheet(t.id);
+ if(a==='pay')return goMoney('add',{plan:t.id,d:today()});
+ if(a==='mdetail')return goMoney('trip',{plan:t.id});
  if(a==='tab'){TAB=b.dataset.k;try{localStorage.setItem('trip-tab',TAB)}catch(x){}return render()}
  if(a==='jump'){const el=$('d-'+b.dataset.d);if(el)el.scrollIntoView({behavior:'smooth',block:'start'});return}
  if(a==='additem')return itemSheet(t,null,b.dataset.d);
