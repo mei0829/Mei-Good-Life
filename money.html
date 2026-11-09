@@ -249,18 +249,19 @@ function cardInfo(c){
  const st=Object.values(b).sort((x,y)=>x.due<y.due?-1:x.due>y.due?1:0);
  st.forEach(s=>{if(s.amt<0){pays.push({d:s.close==='init'?'':s.close,v:-s.amt});s.amt=0}s.left=s.amt});
  pays.sort((x,y)=>x.d<y.d?-1:x.d>y.d?1:0);
- let i=0,credit=0;
- for(const p of pays){let v=p.v;while(v>0.005&&i<st.length){const s=st[i];if(s.left<=0.005){i++;continue}const x=Math.min(v,s.left);s.left-=x;v-=x;if(s.left<=0.005){s.left=0;s.paid=p.d;i++}}credit+=v}
- const open=st.filter(s=>s.left>0.5),t0=today(),cur=closeOf(c,t0),by={};st.forEach(s=>{by[s.close]=s});
+ // 繳款只能抵「已經結帳」的帳單；多繳的錢先放著（溢繳），等下一期結帳那天再扣抵，不會讓還沒出帳的消費提早顯示已繳清
+ const t0=today();let i=0,credit=0;
+ for(const p of pays){let v=p.v;while(v>0.005&&i<st.length){const s=st[i];if(s.close!=='init'&&s.close>=t0)break;if(s.left<=0.005){i++;continue}const x=Math.min(v,s.left);s.left-=x;v-=x;if(s.left<=0.005){s.left=0;s.paid=s.close!=='init'&&s.close>p.d?s.close:p.d;s.offset=s.close!=='init'&&s.close>p.d;i++}}credit+=v}
+ const open=st.filter(s=>s.left>0.5),cur=closeOf(c,t0),by={};st.forEach(s=>{by[s.close]=s});
  const billed=open.filter(s=>s.close==='init'||s.close<t0);
- return CI[c.id]={st,by,open,billed,owe:open.reduce((x,s)=>x+s.left,0),cur,curAmt:(by[cur]||{amt:0}).amt,credit};
+ return CI[c.id]={st,by,open,billed,owe:Math.max(0,open.reduce((x,s)=>x+s.left,0)-credit),cur,curAmt:(by[cur]||{amt:0}).amt,credit};
 }
 // 一筆刷卡現在在哪個階段：未入帳 → 未出帳 → 已出帳待繳 → 已繳清
 function txStatus(t){
  const c=A(t.acct);if(!isCard(c)||t.type==='xfer')return null;
  if(c.start&&(t.pd||t.d)<c.start)return{k:'pre',txt:'開始記帳前',close:closeOf(c,t.pd||t.d),s:{}};
  const k=closeOf(c,t.pd||t.d),s=cardInfo(c).by[k]||{due:dueOf(c,k),left:1,amt:1},t0=today();
- if(s.amt>0&&s.left<=0.5)return{k:'paid',txt:'✓ 已繳清'+(s.paid?' '+md(s.paid):''),close:k,s};
+ if(s.amt>0&&s.left<=0.5)return{k:'paid',txt:'✓ 已繳清'+(s.paid?' '+md(s.paid)+(s.offset?'（溢繳扣抵）':''):''),close:k,s};
  if(k<t0)return{k:'billed',txt:'● 已出帳・'+md(s.due)+(s.due<t0?' 已過繳款日':' 前繳'),close:k,s};
  if(!t.pd)return{k:'pending',txt:'… 未入帳',close:k,s,edge:dleft(k)<=3};
  return{k:'open',txt:'○ 未出帳・'+md(k)+' 結帳',close:k,s};
@@ -322,6 +323,7 @@ function vHome(){
  const cards=S.accts.filter(isCard);
  if(cards.length)h+=`<h2>信用卡</h2>`+cards.map(c=>{const I=cardInfo(c),pend=S.tx.filter(t=>t.acct===c.id&&(txStatus(t)||{}).k==='pending');return`<div class="card" data-a="card" data-i="${c.id}" style="cursor:pointer"><div class="row"><b class="sp">${E(c.name)}</b><span class="sub">每月 ${c.close} 號結帳、${c.due} 號繳款 ›</span></div>
   <div class="row" style="margin-top:6px"><div class="sp"><div class="sub">本期（${md(I.cur)} 結帳）</div><b class="num">${M(I.curAmt)}</b></div><div class="sp" style="text-align:right"><div class="sub">已出帳待繳</div><b class="num ${I.billed.length?'neg':''}">${M(I.billed.reduce((s,x)=>s+x.left,0))}</b></div></div>
+  ${I.credit>0.5?`<div class="sub">溢繳 ${M(I.credit)}：多繳的錢，${md(I.cur)} 結帳時會自動扣抵</div>`:''}
   ${pend.length?`<div class="sub">… ${pend.length} 筆還沒入帳（${M(pend.reduce((s,t)=>s+(t.type==='in'?-t.amt:t.amt),0))}）</div>`:''}
   ${I.billed.map(s=>`<div class="sub">${md(s.close)} 帳單 ${M(s.left)}，${s.due<today()?'<span class="late">已過繳款日 '+md(s.due)+'</span>':md(s.due)+' 前要繳'}</div>`).join('')}
   ${I.billed.length?`<button class="go q" style="margin-top:6px" data-a="paycard" data-i="${c.id}">記錄繳卡費</button>`:''}</div>`}).join('');
@@ -612,9 +614,10 @@ const hbars=(rows,tot)=>{const mx=Math.max(...rows.map(r=>r[1]),1);return rows.m
 function vCard(){
  const c=A(U.cardId)||S.accts.find(isCard);if(!c)return'<h1>信用卡</h1><div class="card sub">還沒有信用卡，到「設定」新增。</div>';
  const I=cardInfo(c),t0=today(),cards=S.accts.filter(isCard);
- const lab=s=>s.amt>0&&s.left<=0.5?['✓ 已繳清'+(s.paid?' '+md(s.paid):''),'paid']:s.close==='init'||s.close<t0?['● 已出帳・'+(s.due<t0?'已過繳款日 ':'')+md(s.due)+' 前繳','billed']:['○ 未出帳（還在累積）','open'];
+ const lab=s=>s.amt>0&&s.left<=0.5?['✓ 已繳清'+(s.paid?' '+md(s.paid)+(s.offset?'（溢繳扣抵）':''):''),'paid']:s.close==='init'||s.close<t0?['● 已出帳・'+(s.due<t0?'已過繳款日 ':'')+md(s.due)+' 前繳','billed']:['○ 未出帳（還在累積）','open'];
  let h=`<button class="back" data-a="tab" data-i="home">‹ 總覽</button><h1>${E(c.name)}</h1>
  ${cards.length>1?`<div class="fs">${cards.map(x=>`<button class="chip ${x.id===c.id?'on':''}" data-a="card" data-i="${x.id}">${E(x.name)}</button>`).join('')}</div>`:''}
+ ${I.credit>0.5?`<div class="note keep" style="font-size:14px;color:var(--ink)"><b>溢繳 ${M(I.credit)}</b>：繳的錢比已出帳的帳單多。會在 ${md(I.cur)} 結帳時自動扣抵下一期。<br><span class="sub">如果你沒有多繳，通常是上一期有消費漏記，或某筆的入帳日算到下一期了，對一下銀行帳單就會找到。</span></div>`:''}
  <div class="card"><b>一筆刷卡會經過 4 個階段</b><div class="sub" style="margin-top:6px;line-height:1.9">
  <span class="st pending">… 未入帳</span> 你刷了、也記了，銀行還沒收到（通常 1～3 天）<br>
  <span class="st open">○ 未出帳</span> 銀行已經入帳，等結帳日（每月 ${c.close} 號）<br>
