@@ -1,0 +1,13 @@
+{
+  "name": "旅遊行程",
+  "short_name": "旅遊",
+  "start_url": "./trip.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#EEF3F2",
+  "theme_color": "#EEF3F2",
+  "lang": "zh-Hant",
+  "icons": [
+    { "src": "trip.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
