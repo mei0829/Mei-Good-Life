@@ -1,7 +1,7 @@
 import Dexie, { type Table } from 'dexie';
 import type { Tables, Settings, FileRec } from './types';
 
-// IndexedDB（透過 Dexie）：資料只存在這個瀏覽器
+// IndexedDB（透過 Dexie）：資料先存在這個瀏覽器，有登入就同步到雲端（見 cloud.ts）
 export class BloomDB extends Dexie {
   periods!: Table<Tables['periods'], string>;
   body!: Table<Tables['body'], string>;
