@@ -6,7 +6,7 @@ const box = document.getElementById('auth');
 // 離線使用：註冊 service worker，把網頁存在手機裡
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const LOCAL_KEYS = ['roster-v2', 'roster-t', 'roster-prev', 'money-v1', 'money-t', 'money-prev', 'ph-cloud', 'cab-v1', 'cab-t', 'cab-room', 'cab-fid', 'biz-v1', 'biz-t', 'biz-fid', 'biz-tab', 'baby-v1', 'baby-t', 'baby-tab', 'mgl-biz', 'mgl-role'];
+const LOCAL_KEYS = ['roster-v2', 'roster-t', 'roster-prev', 'money-v1', 'money-t', 'money-prev', 'ph-cloud', 'cab-v1', 'cab-t', 'cab-room', 'cab-fid', 'biz-v1', 'biz-t', 'biz-fid', 'biz-tab', 'baby-v1', 'baby-t', 'baby-tab', 'mgl-biz', 'mgl-role', 'trip-v1', 'trip-t', 'trip-fid', 'trip-tab'];
 // 只給管理員用的頁面（例如記帳）：確認是管理員之前，標題不顯示是哪個功能
 const ADMIN_ONLY = box.dataset.only === 'admin', PAGE_TITLE = document.title;
 if (ADMIN_ONLY) document.title = 'Mei Good Life';

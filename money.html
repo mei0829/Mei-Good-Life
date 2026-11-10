@@ -990,7 +990,7 @@ function vTrip(){
 function vTripOne(T){
  const xs=tripTx(T),tot=xs.reduce((a,t)=>a+myA(t),0),n=tripDays(T),pp=+T.ppl>1?+T.ppl:0,st=tripSt(T),ed=!!U.tripEd;
  let h=`<div class="row"><h1 class="sp" style="margin-bottom:4px">✈ ${E(T.name)}</h1><button class="go q" data-a="tripedit">修改</button></div>
- <div class="sub" style="margin:0 2px 10px">${T.from.slice(0,4)}・${tripRange(T)}・${st[0]}${st[1]?'（'+st[1]+'）':''}${T.note?'<br>'+E(T.note):''}</div>`;
+ <div class="sub" style="margin:0 2px 10px">${T.from.slice(0,4)}・${tripRange(T)}・${st[0]}${st[1]?'（'+st[1]+'）':''}${T.note?'<br>'+E(T.note):''}${T.plan?`<br><a href="trip.html#t=${encodeURIComponent(T.plan)}">🗺 看這趟的行程</a>`:''}</div>`;
  h+=`<div class="chips" style="margin:0 0 10px">${[['spend','我的花費'],['split','👥 分帳']].map(([k,n])=>`<button class="chip ${(U.tripV||'spend')===k?'on':''}" data-a="tripv" data-i="${k}">${n}</button>`).join('')}</div>`;
  if(U.tripV==='split')return h+vTripSplit(T);
  h+=`<div class="card"><div class="sub">一共花了</div><div class="big">${M(tot)}</div>${tripBar(T,tot)}
@@ -2274,7 +2274,7 @@ const ACT={
   const keep=new Set(L.map(x=>x.iid).filter(Boolean));S.iou=S.iou.filter(x=>!(x.tx===t.id&&x.dir==='in'&&!keep.has(x.id)));
   L.forEach(l=>{const x=l.iid&&S.iou.find(y=>y.id===l.iid);if(x)Object.assign(x,{who:l.who,amt:l.amt,d:t.d,note:t.note});else S.iou.push({id:nid()+Math.random().toString(36).slice(2,5),who:l.who,amt:l.amt,dir:'in',note:t.note,d:t.d,tx:t.id,back:[]})});
   const k=S.tx.findIndex(x=>x.id===t.id);if(k>=0)S.tx[k]=t;else S.tx.push(t);
-  S.lastAcct=o.acct;U.sheet=null;save();render();const neg=[o.acct,o.to].map(A).find(a=>a&&!isCard(a)&&bal(a)<-0.5);
+  S.lastAcct=o.acct;U.sheet=null;save();render();if(U.fromTrip&&U.fromTrip===o){U.fromTrip=0;setTimeout(()=>{if(history.length>1)history.back();else location.href='trip.html'},900)}const neg=[o.acct,o.to].map(A).find(a=>a&&!isCard(a)&&bal(a)<-0.5);
   toast(neg?neg.name+' 變成負的了，記得按「更新銀行餘額」填實際餘額':o.id?'已更新':'已記下 '+M(amt+fee))},
  deltx:()=>{const id=U.sheet.o.id;if(!confirm(S.iou.some(x=>x.tx===id)?'刪除這筆紀錄？（裡面的代墊也會一起刪）':'刪除這筆紀錄？'))return;S.tx=S.tx.filter(x=>x.id!==id);S.iou=S.iou.filter(x=>x.tx!==id);S.iou.forEach(x=>{if(x.back)x.back=x.back.filter(b=>b.tx!==id)});U.sheet=null;save();render()},
  addbill:i=>{const p=PRESETS[+i]||{name:'',cat:'其他',freq:1};openBill({name:p.sub?'':p.name,sub:!!p.sub,warn:3,quit:false,autoRec:!!p.sub,kind:p.kind||'out',amt:'',freq:p.freq,next:p.sub?'':today(),end:'',sym:'',acct:p.kind||p.bank?firstBank():(p.auto&&S.accts.find(isCard)||A(firstBank())||S.accts[0]).id,cat:pickCat(p.cat,p.alt,p.kind,p.name),sc:!p.kind&&subsOf(pickCat(p.cat,p.alt,'',p.name)).includes(p.name)?p.name:'',auto:!!p.auto||p.kind==='inv',vary:!!p.vary,note:p.note||'',to:p.kind==='save'?saveTo(firstBank()):'',goal:''})},
@@ -2532,7 +2532,7 @@ try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if
   if(!db||!uid){CL.st='⚠︎ 沒有連到雲端（請重新登入），資料只存在這支手機';return}
   CL.col=db.collection('data/users/'+uid);
   const snap=await CL.col.get(),docs={};
-  snap.docs.forEach(d=>{if(d.id.startsWith('m_'))docs[d.id]=d.data()});
+  let plan=null;snap.docs.forEach(d=>{if(d.id.startsWith('m_'))docs[d.id]=d.data();else if(d.id==='trip')plan=d.data()});
   const ct=docs.m__meta?(+docs.m__meta.t||0):0,lt=CL.LT0,hasLocal=CL.HAS0;
   if(ct>lt){
    let rl='';try{rl=sessionStorage.getItem('mrl')}catch(e){}
@@ -2545,10 +2545,38 @@ try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if
     location.reload();return}
   }
   Object.keys(docs).forEach(id=>{if(id!=='m__meta')CL.last[id.slice(2)]=docs[id].j});
-  if((ct===0&&hasLocal)||lt>ct)cloudPush();else CL.st='☁︎ 已同步到雲端';
+  try{if(plan&&plan.j&&syncPlan(JSON.parse(plan.j)))render()}catch(e){}  // 在別的裝置排的行程
+  // 打開時從行程頁自動建立的旅行（存在手機、還沒上雲端）也要推上去
+  if((ct===0&&hasLocal)||lt>ct||(+localStorage.getItem('money-t')||0)>ct)cloudPush();else CL.st='☁︎ 已同步到雲端';
   autoBills();
  }catch(e){CL.st='⚠︎ 雲端連線失敗，資料只存在這支手機'}
  if(U.tab==='set')render();
+})();
+// ── 旅遊行程（trip.html）連動 ──
+// 行程頁的每趟旅行（有出發日的），這裡自動有一筆同名、同日期的旅行（T.plan＝行程頁的旅行 id）；
+// 名稱、日期、預算以行程頁為準，同行的人、分帳、不算的明細照這裡的。行程頁刪掉的旅行，這裡留著（花費紀錄還在）
+const isYmd=x=>/^\d{4}-\d{2}-\d{2}$/.test(x||'');
+function syncPlan(P){
+ if(!P||!Array.isArray(P.trips))return 0;let ch=0;
+ P.trips.forEach(p=>{
+  if(!p||!p.id||!isYmd(p.start))return;
+  const to=isYmd(p.end)&&p.end>=p.start?p.end:p.start,o={plan:p.id,name:String(p.name||'旅行'),from:p.start,to};
+  if(+p.budget>0)o.budget=+p.budget;
+  let T=TRIPS().find(x=>x.plan===p.id)||TRIPS().find(x=>!x.plan&&x.from===o.from&&x.to===o.to);
+  if(!T){T={id:'tr'+nid(),ex:[],budget:'',ppl:'',note:''};TRIPS().push(T);ch=1}
+  Object.keys(o).forEach(k=>{if(T[k]!==o[k]){T[k]=o[k];ch=1}});
+ });
+ if(ch)save();return ch;
+}
+try{syncPlan(JSON.parse(localStorage.getItem('trip-v1')||'null'))}catch(e){}
+// 從旅遊行程按「💰 記帳」或「在記帳看明細」過來：#add={plan,d,amt,note,cat}、#trip={plan}
+(()=>{const h=location.hash,m=h.match(/^#(add|trip)=(.*)$/);if(!m)return;
+ let q;try{q=JSON.parse(decodeURIComponent(m[2]))}catch(e){return}
+ try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}
+ const T=q.plan&&TRIPS().find(x=>x.plan===q.plan);
+ if(m[1]==='trip'){U.tab='trip';U.trip=T?T.id:'';U.tripV='spend';U.tripEd=0;U.tripAdd=0;return}
+ openTx({type:'out',amt:q.amt!=null&&q.amt!==''?String(q.amt):'',acct:A(S.lastAcct)?S.lastAcct:S.accts[0].id,to:'',cat:(S.cats.out||[]).includes(q.cat)?q.cat:'',d:isYmd(q.d)?q.d:today(),note:q.note||'',trip:T?T.id:''});
+ U.fromTrip=U.sheet&&U.sheet.o;  // 記好之後自動回到行程
 })();
 render();autoPx();
 </script>
