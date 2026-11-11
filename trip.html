@@ -82,6 +82,13 @@ textarea{min-height:72px;resize:vertical}
 .ck span{overflow-wrap:anywhere}
 .ck.on span{text-decoration:line-through;color:var(--sub)}
 .ck button{border:0;background:none;padding:6px 10px;color:var(--sub)}
+.ck.tp{padding:4px 4px 4px 6px}
+.ck .tpn{flex:1;min-width:0;border:0;background:transparent;padding:6px 4px;font-size:16px}
+.ck .tpn:focus{outline:2px solid var(--soft);border-radius:8px;background:var(--bg)}
+.tplbtn{display:flex;align-items:center;gap:12px;width:100%;text-align:left;margin-top:10px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px 14px 8px 8px}
+.tplbtn img{width:52px;height:52px;object-fit:contain;flex:none}
+.tplbtn>span:nth-child(2){flex:1;min-width:0}
+.tplbtn small{display:block;font-size:12.5px;color:var(--sub)}
 .add{display:flex;gap:8px;margin:4px 0 14px}.add input{flex:1}.add button{flex:none}
 .bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin:6px 0 2px}
 .bar i{display:block;height:100%;background:var(--acc);border-radius:99px}
@@ -190,13 +197,13 @@ function fixTrip(t){
  return {id:t.id||nid(),name:String(t.name||'旅行'),dest:t.dest||'',start,end,budget:num(t.budget),memo:t.memo||'',
   items:arr(t.items).filter(i=>i&&i.title).map(i=>({id:i.id||nid(),d:isD(i.d)?i.d:'',tm:/^\d{2}:\d{2}$/.test(i.tm||'')?i.tm:'',type:ICON[i.type]?i.type:'其他',
    title:String(i.title),place:i.place||'',cost:num(i.cost),note:i.note||'',done:!!i.done})),
-  pack:arr(t.pack).filter(p=>p&&p.n).map(p=>({id:p.id||nid(),n:String(p.n),on:!!p.on})),
+  pack:arr(t.pack).filter(p=>p&&p.n).map(p=>({id:p.id||nid(),n:String(p.n),on:!!p.on,...(p.t?{t:String(p.t)}:{})})),
   theme:/^[a-z]{2}$/.test(t.theme||'')?t.theme:'',cv:+t.cv||0,u:+t.u||Date.now()};
 }
-function fix(o){if(!o||!Array.isArray(o.trips))throw new Error('bad');o.trips=o.trips.filter(Boolean).map(fixTrip);o.imp=arr(o.imp).map(String);return o}
+function fix(o){if(!o||!Array.isArray(o.trips))throw new Error('bad');o.trips=o.trips.filter(Boolean).map(fixTrip);o.imp=arr(o.imp).map(String);o.tpl=Array.isArray(o.tpl)?o.tpl.map(x=>String(x).trim()).filter(Boolean):PACK.slice();return o}
 let S=null,T=0;
 try{S=fix(JSON.parse(localStorage.getItem(KEY)));T=+localStorage.getItem(KT)||0}catch(e){S=null}
-if(!S){S={trips:[],imp:[]};T=0}
+if(!S){S={trips:[],imp:[],tpl:PACK.slice()};T=0}
 const trip=id=>S.trips.find(t=>t.id===id);
 const VIEW=()=>{const m=location.hash.match(/^#t=(.+)$/);return m&&trip(decodeURIComponent(m[1]))||null};
 let TAB='plan';try{TAB=localStorage.getItem('trip-tab')||'plan'}catch(e){}
@@ -300,7 +307,7 @@ function importMoney(){
   const to=isD(m.to)&&m.to>=m.from?m.to:m.from;
   // 這裡已經有同樣日期的旅行（還沒連起來）：不要多一趟
   if(S.trips.some(t=>t.start===m.from&&(t.end||t.start)===to))return;
-  add.push(fixTrip({id:m.id,name:m.name||'旅行',start:m.from,end:to,budget:+m.budget>0?+m.budget:'',memo:m.note||'',pack:PACK.map(x=>({n:x}))}));
+  add.push(fixTrip({id:m.id,name:m.name||'旅行',start:m.from,end:to,budget:+m.budget>0?+m.budget:'',memo:m.note||'',pack:S.tpl.map(x=>({n:x,t:x}))}));
  });
  if(!add.length)return;
  op(()=>{S.trips.push(...add);S.imp=[...S.imp,...add.map(t=>t.id)]});
@@ -426,6 +433,7 @@ function listPage(){
  return `<div class="top"><div><a class="home" href="./">‹ 首頁</a><h1>旅遊行程</h1></div><div class="row"><button class="bt" data-a="set" aria-label="設定">⋯</button></div></div>
  <div id="st"></div>
  <button class="go" data-a="newtrip" style="width:100%">＋ 規劃新的旅行</button>
+ <button class="tplbtn" data-a="tpl"><img src="${DUCK('backpack')}" alt=""><span><b>行李清單公定版</b><small>${S.tpl.length} 項・新的旅行會先複製一份，之後各自編輯</small></span><span class="sub">編輯 ›</span></button>
  ${S.trips.length?sec('now','旅行中')+sec('soon','即將出發')+sec('plan','還在想')+sec('past','去過的地方'):`<div class="empty"><img class="duck" src="${DUCK('read')}" alt="">還沒有旅行<br>按上面的按鈕，開始規劃第一趟吧</div>`}`;
 }
 const TABS=[['plan','行程'],['pack','準備清單'],['cost','花費']];
@@ -467,11 +475,13 @@ function planTab(t){
   +(t.memo?`<h2>備註</h2><div class="card" style="white-space:pre-wrap;overflow-wrap:anywhere">${E(t.memo)}</div>`:'');
 }
 function packTab(t){
- const on=t.pack.filter(p=>p.on).length,n=t.pack.length;
+ const on=t.pack.filter(p=>p.on).length,n=t.pack.length,have=new Set(t.pack.flatMap(p=>[p.n,p.t])),miss=S.tpl.filter(x=>!have.has(x)).length;
  return `<div class="card"><div class="row" style="justify-content:space-between"><b>準備好了 ${on} / ${n}</b>${on?'<button class="bt" data-a="packreset" style="padding:4px 10px;font-size:13px">全部取消勾選</button>':''}</div>
   <div class="bar"><i style="width:${n?on/n*100:0}%"></i></div></div>
  <div class="add"><input id="pin" placeholder="要帶的東西、出發前要做的事" autocomplete="off" enterkeyhint="done"><button class="go" data-a="packadd">加入</button></div>
- ${t.pack.map(p=>`<div class="ck ${p.on?'on':''}"><label><input type="checkbox" data-pk="${p.id}" ${p.on?'checked':''}><span>${E(p.n)}</span></label><button data-a="packdel" data-id="${p.id}" aria-label="刪除">✕</button></div>`).join('')||'<div class="empty">清單是空的</div>'}`;
+ ${t.pack.map(p=>`<div class="ck ${p.on?'on':''}"><label><input type="checkbox" data-pk="${p.id}" ${p.on?'checked':''}><span>${E(p.n)}</span></label><button data-a="packren" data-id="${p.id}" aria-label="改名">✎</button><button data-a="packdel" data-id="${p.id}" aria-label="刪除">✕</button></div>`).join('')||'<div class="empty">清單是空的</div>'}
+ <div class="card sub" style="margin-top:14px">這份清單只屬於這趟旅行，改了不會影響公定版和其他旅行。
+  <div class="row" style="margin-top:8px"><button class="bt" data-a="packfill" ${miss?'':'disabled style="opacity:.5"'}>從公定版補上缺少的${miss?'（'+miss+' 項）':''}</button><button class="bt" data-a="packsave">把這份存成公定版</button><button class="bt" data-a="tpl">看公定版</button></div></div>`;
 }
 function costTab(t){
  const est=spent(t),b=+t.budget||0,ds=days(t),ac=actual(t),real=ac?ac.tot:0;
@@ -534,7 +544,7 @@ function tripSheet(id){
     op(()=>{const x=trip(t.id);if(sh)x.items.forEach(i=>{if(i.d)i.d=addD(i.d,sh)});Object.assign(x,o,{u:Date.now()});Object.assign(x,fixTrip(x))},'已儲存');
     closeSheet();
    }else{
-    const n=fixTrip({...o,id:nid(),pack:PACK.map(x=>({n:x}))});
+    const n=fixTrip({...o,id:nid(),pack:S.tpl.map(x=>({n:x,t:x}))});
     op(()=>S.trips.push(n));TAB='plan';
     goTrip(n.id);
    }
@@ -609,6 +619,24 @@ function itemSheet(t,id,d){
  });
 }
 
+// 行李清單公定版：在這裡統一修改；新的旅行會複製一份，之後各自編輯，不再連動
+function tplSheet(){
+ const pn=document.querySelector('#sheet .pn'),y=pn?pn.scrollTop:0;
+ sheet(`<h3>行李清單公定版</h3>
+  <div class="sub" style="margin-bottom:10px">新的旅行會先複製這份清單，複製之後就各自獨立：在旅行裡改，不會改到這裡；這裡改了，也不會改到已經建立的旅行（可以在旅行裡按「從公定版補上缺少的」）。</div>
+  <div class="add" style="margin-top:0"><input id="tpin" placeholder="新增項目，例如：泳衣" autocomplete="off" enterkeyhint="done"><button class="go" id="tpadd">加入</button></div>
+  ${S.tpl.map((n,i)=>`<div class="ck tp"><input class="tpn" data-i="${i}" value="${E(n)}" aria-label="項目名稱"><button data-up="${i}" aria-label="往上移" ${i?'':'disabled style="opacity:.3"'}>↑</button><button data-tx="${i}" aria-label="刪除">✕</button></div>`).join('')||'<div class="empty">公定版是空的</div>'}
+  <div class="foot"><button class="bt" id="tpreset">恢復預設清單</button><button class="go" data-x>完成</button></div>`,p=>{
+  const again=()=>tplSheet();
+  const add=()=>{const v=p.querySelector('#tpin').value.trim();if(!v)return;if(S.tpl.includes(v))return toast('「'+v+'」已經在清單裡了');op(()=>S.tpl.push(v));again();setTimeout(()=>{const x=document.querySelector('#tpin');if(x)x.focus()},0)};
+  p.querySelector('#tpadd').onclick=add;enter(p.querySelector('#tpin'),add);
+  p.querySelectorAll('.tpn').forEach(inp=>inp.onchange=()=>{const i=+inp.dataset.i,v=inp.value.trim();if(!v){inp.value=S.tpl[i];return}if(v!==S.tpl[i])op(()=>{S.tpl[i]=v})});
+  p.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>{const i=+b.dataset.up;if(!i)return;op(()=>{[S.tpl[i-1],S.tpl[i]]=[S.tpl[i],S.tpl[i-1]]});again()});
+  p.querySelectorAll('[data-tx]').forEach(b=>b.onclick=()=>{const i=+b.dataset.tx,n=S.tpl[i];op(()=>{S.tpl.splice(i,1)},'已從公定版刪除「'+n+'」');again()});
+  p.querySelector('#tpreset').onclick=()=>{if(!confirm('把公定版恢復成一開始的預設清單？'))return;op(()=>{S.tpl=PACK.slice()},'已恢復預設');again()};
+ });
+ const p2=document.querySelector('#sheet .pn');if(p2)p2.scrollTop=y;
+}
 function setSheet(){
  sheet(`<h3>設定</h3>
   <div class="card sub" style="margin-bottom:14px">旅遊行程只有你自己看得到，存在你的帳號裡，手機和電腦會同步。<br>每趟旅行在「記帳 → 更多 → 旅行」會自動有一筆，旅行期間記的帳都會算進去。</div>
@@ -638,6 +666,7 @@ function onClick(e){
  if(a==='back'){e.preventDefault();return goTrip('')}
  if(a==='newtrip')return tripSheet();
  if(a==='set')return setSheet();
+ if(a==='tpl')return tplSheet();
  if(!t)return;
  if(a==='trip')return tripSheet(t.id);
  if(a==='pay')return goMoney('add',{plan:t.id,d:today()});
@@ -649,6 +678,9 @@ function onClick(e){
  if(a==='item')return itemSheet(t,b.dataset.id);
  if(a==='packadd'){const v=$('pin').value.trim();if(!v)return;op(()=>trip(t.id).pack.push({id:nid(),n:v,on:false}));setTimeout(()=>{const x=$('pin');if(x)x.focus()},0);return}
  if(a==='packdel'){const x=t.pack.find(y=>y.id===b.dataset.id);return op(()=>{const tt=trip(t.id);tt.pack=tt.pack.filter(y=>y.id!==x.id)},'已刪除「'+x.n+'」')}
+ if(a==='packren'){const x=t.pack.find(y=>y.id===b.dataset.id);if(!x)return;const n=prompt('改成什麼？',x.n);if(n==null||!n.trim()||n.trim()===x.n)return;return op(()=>{const y=trip(t.id).pack.find(z=>z.id===x.id);if(y)y.n=n.trim()},'已改成「'+n.trim()+'」')}
+ if(a==='packfill'){const have=new Set(t.pack.flatMap(p=>[p.n,p.t])),add=S.tpl.filter(x=>!have.has(x));if(!add.length)return toast('公定版的項目都有了');return op(()=>trip(t.id).pack.push(...add.map(n=>({id:nid(),n,t:n,on:false}))),'已補上 '+add.length+' 項')}
+ if(a==='packsave'){if(!confirm('用這趟的清單（'+t.pack.length+' 項）取代公定版？之後新的旅行會用這份。已經建立的旅行不會改變。'))return;return op(()=>{S.tpl=[...new Set(trip(t.id).pack.map(p=>p.n))]},'已存成公定版')}
  if(a==='packreset')return op(()=>trip(t.id).pack.forEach(x=>x.on=false),'已全部取消勾選');
 }
 $('app').addEventListener('click',onClick);
