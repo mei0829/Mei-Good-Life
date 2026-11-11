@@ -35,6 +35,7 @@ function fatal(msg) { shell(`<div class="sub" style="color:var(--bad)">${esc(msg
 function clearLocal() {
   try { LOCAL_KEYS.forEach(k => localStorage.removeItem(k)); sessionStorage.removeItem('rl'); sessionStorage.removeItem('mrl'); } catch (e) {}
   try { indexedDB.deleteDatabase('roster-photos'); } catch (e) {}
+  try { indexedDB.deleteDatabase('trip-covers'); } catch (e) {}
 }
 
 let started = false, FBAPP = null;
