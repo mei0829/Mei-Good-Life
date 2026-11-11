@@ -161,10 +161,10 @@ function fixTrip(t){
   pack:arr(t.pack).filter(p=>p&&p.n).map(p=>({id:p.id||nid(),n:String(p.n),on:!!p.on})),
   u:+t.u||Date.now()};
 }
-function fix(o){if(!o||!Array.isArray(o.trips))throw new Error('bad');o.trips=o.trips.filter(Boolean).map(fixTrip);return o}
+function fix(o){if(!o||!Array.isArray(o.trips))throw new Error('bad');o.trips=o.trips.filter(Boolean).map(fixTrip);o.imp=arr(o.imp).map(String);return o}
 let S=null,T=0;
 try{S=fix(JSON.parse(localStorage.getItem(KEY)));T=+localStorage.getItem(KT)||0}catch(e){S=null}
-if(!S){S={trips:[]};T=0}
+if(!S){S={trips:[],imp:[]};T=0}
 const trip=id=>S.trips.find(t=>t.id===id);
 const VIEW=()=>{const m=location.hash.match(/^#t=(.+)$/);return m&&trip(decodeURIComponent(m[1]))||null};
 let TAB='plan';try{TAB=localStorage.getItem('trip-tab')||'plan'}catch(e){}
@@ -222,6 +222,7 @@ async function cloudInit(){
   CL.col=db.collection('data/users/'+uid);CL.ref=CL.col.doc('trip');
   status('連線中…');
   onCloud(await CL.ref.get());
+  importMoney();
   await moveFromFamily();
   monCloud();
  }catch(e){status('⚠︎ 無法連線，先顯示這支手機上的資料')}
@@ -240,7 +241,7 @@ async function monCloud(){
   const s=await CL.col.get(),o={tx:[]};let t=0;
   s.docs.forEach(d=>{if(!d.id.startsWith('m_'))return;const v=d.data();if(d.id==='m__meta'){t=+v.t||0;return}
    try{const x=JSON.parse(v.j),k=d.id.slice(2);if(k.startsWith('tx_'))o.tx.push(...x);else o[k]=x}catch(e){}});
-  if(t&&(!MON||t>MON.t)){MON={o,t};if(VIEW()&&TAB==='cost'&&!busyUI())render()}
+  if(t&&(!MON||t>MON.t)){MON={o,t};importMoney();if(VIEW()&&TAB==='cost'&&!busyUI())render()}
  }catch(e){}
 }
 // 跟記帳的算法一樣：出發到回家這幾天的支出，加上指定到這次旅行的（出發前買的機票、訂房）；
@@ -256,6 +257,22 @@ function actual(t){
  const xs=o.tx.filter(x=>x&&x.type==='out'&&my(x)>0&&((id&&x.trip===id)||(!x.trip&&x.d>=from&&x.d<=to&&!x.bill&&!ex.includes(x.id))));
  const by={};xs.forEach(x=>{const c=x.cat||'其他';by[c]=(by[c]||0)+my(x)});
  return {tot:xs.reduce((s,x)=>s+my(x),0),n:xs.length,by};
+}
+// 在記帳裡新增的旅行，這裡也自動有一趟（id 用記帳那邊的，記帳打開時會連起來，不會重複）
+// 已經搬過來的記在 S.imp：在這裡刪掉，也不會又搬回來
+function importMoney(){
+ if(!MON)return;
+ const seen=new Set(S.imp),have=new Set(S.trips.map(t=>t.id)),add=[];
+ arr(MON.o.trips).forEach(m=>{
+  if(!m||!m.id||m.plan||have.has(m.id)||seen.has(m.id)||!isD(m.from))return;
+  const to=isD(m.to)&&m.to>=m.from?m.to:m.from;
+  // 這裡已經有同樣日期的旅行（還沒連起來）：不要多一趟
+  if(S.trips.some(t=>t.start===m.from&&(t.end||t.start)===to))return;
+  add.push(fixTrip({id:m.id,name:m.name||'旅行',start:m.from,end:to,budget:+m.budget>0?+m.budget:'',memo:m.note||'',pack:PACK.map(x=>({n:x}))}));
+ });
+ if(!add.length)return;
+ op(()=>{S.trips.push(...add);S.imp=[...S.imp,...add.map(t=>t.id)]});
+ toast('從記帳帶進 '+add.length+' 趟旅行');
 }
 // 行程類型 → 記帳分類（記帳裡沒有這個分類就讓記帳自己猜）
 const MCAT={美食:'餐飲',交通:'交通',購物:'購物',景點:'娛樂'};

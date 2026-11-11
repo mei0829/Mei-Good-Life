@@ -2562,7 +2562,8 @@ function syncPlan(P){
   if(!p||!p.id||!isYmd(p.start))return;
   const to=isYmd(p.end)&&p.end>=p.start?p.end:p.start,o={plan:p.id,name:String(p.name||'旅行'),from:p.start,to};
   if(+p.budget>0)o.budget=+p.budget;
-  let T=TRIPS().find(x=>x.plan===p.id)||TRIPS().find(x=>!x.plan&&x.from===o.from&&x.to===o.to);
+  // 先找連好的；再找從這裡帶過去的（行程頁用同一個 id）；最後找同日期還沒連的
+  let T=TRIPS().find(x=>x.plan===p.id)||TRIPS().find(x=>!x.plan&&x.id===p.id)||TRIPS().find(x=>!x.plan&&x.from===o.from&&x.to===o.to);
   if(!T){T={id:'tr'+nid(),ex:[],budget:'',ppl:'',note:''};TRIPS().push(T);ch=1}
   Object.keys(o).forEach(k=>{if(T[k]!==o[k]){T[k]=o[k];ch=1}});
  });
