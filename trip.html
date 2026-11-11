@@ -434,7 +434,7 @@ function tripPage(t){
  return `<div class="top" style="align-items:center"><a class="home" href="#" data-a="back">‹ 全部旅行</a><div class="row"><button class="bt" data-a="pay" aria-label="記帳">💰 記帳</button><button class="bt" data-a="trip" aria-label="編輯旅行">⋯</button></div></div>
  ${hero(t)}
  <div class="tcard">${th.n?`<div class="fl">${th.flag} ${E(th.n)}</div>`:''}<h1>${E(t.name)}</h1>
- <div class="sub" style="margin-top:2px">${t.dest?'📍 '+E(t.dest)+' · ':''}${E(range(t))} · <span class="tag ${p.k==='past'||p.k==='plan'?'g':''}">${E(p.txt)}</span></div></div>
+ <div class="sub" style="margin-top:2px">${t.dest?'📍 '+E(t.dest)+' · ':''}${E(range(t))} · <span class="tag ${p.k==='past'||p.k==='plan'?'g':''}">${E(p.txt)}</span></div>${/東京|tokyo/i.test((t.dest||'')+' '+t.name)?'<a class="bt" href="tokyo.html" style="display:inline-block;margin-top:8px;text-decoration:none">📖 打開東京旅行手帳</a>':''}</div>
  <div id="st"></div>
  <div class="tabs">${TABS.map(([k,n])=>`<button data-a="tab" data-k="${k}" class="${TAB===k?'on':''}">${n}</button>`).join('')}</div>
  ${TAB==='pack'?packTab(t):TAB==='cost'?costTab(t):planTab(t)}`;
