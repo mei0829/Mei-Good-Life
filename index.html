@@ -76,6 +76,11 @@ footer{text-align:center;font-size:11px;color:var(--sub);margin-top:36px;opacity
   <div><b>物品存放</b><p>哪個櫃子哪一格放了什麼</p></div>
   <span class="tag">家人共用</span>
  </a>
+ <a class="tile k1" id="school" href="school.html" hidden>
+  <div class="ic"><svg viewBox="0 0 24 24"><path d="M5 4.5h11a2 2 0 0 1 2 2V20H7a2 2 0 0 1-2-2z"/><path d="M5 18a2 2 0 0 1 2-2h11"/><path d="M9 9.5l1.8 1.8L14.5 7.6"/></svg></div>
+  <div><b>作業與成績</b><p>作業繳交、考試成績、訂正打勾</p></div>
+  <span class="tag">家人老師共用</span>
+ </a>
  <a class="tile k6" id="biz" href="biz.html" hidden>
   <div class="ic"><svg viewBox="0 0 24 24"><path d="M4 15a8 8 0 0 1 16 0z"/><path d="M3 15h18"/><path d="M9 11.5h.01M12 10h.01M15 11.5h.01"/></svg></div>
   <div><b>東京餅創業</b><p>原物料價格、新點子、口味筆記</p></div>
@@ -97,6 +102,8 @@ footer{text-align:center;font-size:11px;color:var(--sub);margin-top:36px;opacity
 <script>
 // 記帳只在管理員登入過的手機上顯示
 try{if(localStorage.getItem('mgl-role')==='admin'){document.getElementById('money').hidden=false;document.getElementById('cal').hidden=false;document.getElementById('roster').hidden=false;document.getElementById('bloom').hidden=false;document.getElementById('trip').hidden=false}}catch(e){}
+// 作業與成績：管理員和被邀請一起管理的人看得到
+try{if(localStorage.getItem('mgl-role')==='admin'||localStorage.getItem('mgl-school')==='1')document.getElementById('school').hidden=false}catch(e){}
 // 創業頁只給管理員和被邀請的夥伴看到
 try{if(localStorage.getItem('mgl-role')==='admin'||localStorage.getItem('mgl-biz')==='1')document.getElementById('biz').hidden=false}catch(e){}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
