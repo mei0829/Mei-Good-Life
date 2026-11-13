@@ -4,10 +4,27 @@
   "start_url": "./biz.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#F4EFE8",
-  "theme_color": "#F4EFE8",
+  "background_color": "#F5F1E9",
+  "theme_color": "#F5F1E9",
   "lang": "zh-Hant",
   "icons": [
-    { "src": "biz.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    {
+      "src": "biz-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "biz-180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "biz.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
   ]
 }

@@ -3,15 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#F4F1EC">
+<meta name="theme-color" content="#F5F1E9">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Good Life">
 <link rel="manifest" href="home.webmanifest">
 <link rel="icon" href="home.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="home.svg">
+<link rel="apple-touch-icon" href="home-180.png">
 <title>Mei Good Life</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#F4F1EC;--card:#fff;--ink:#2B2A27;--sub:#7A766E;--line:#E4DFD6;--acc:#5E7A6A;
  --t6:#F6E6D8;--i6:#A85A30;--t1:#E1E7EF;--i1:#4F6F8C;--t2:#E3E9DF;--i2:#5E7A6A;--t3:#F3E2E1;--i3:#A8625F;--t4:#F0E7DA;--i4:#9A7440;--t5:#E9E3F0;--i5:#76619A}
@@ -31,19 +30,30 @@ h2{font-size:14px;color:var(--sub);font-weight:500;margin:24px 2px 10px}
 a.tile:active{transform:scale(.97)}
 .ic{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:var(--t)}
 .ic svg{width:26px;height:26px;stroke:var(--i);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.tile b{font-size:17px;display:block}
+.tile b{font-size:18px;display:block;font-weight:400;letter-spacing:.06em}
 .tile p{margin:2px 0 0;font-size:13px;color:var(--sub);line-height:1.45}
 .tag{margin-top:auto;align-self:flex-start;font-size:12px;border-radius:999px;padding:2px 9px;background:var(--t);color:var(--i)}
 .soon{opacity:.6}
 .soon .tag{background:none;border:1px dashed var(--line);color:var(--sub)}
 .k1{--t:var(--t1);--i:var(--i1)}.k2{--t:var(--t2);--i:var(--i2)}.k3{--t:var(--t3);--i:var(--i3)}.k4{--t:var(--t4);--i:var(--i4)}.k5{--t:var(--t5);--i:var(--i5)}.k6{--t:var(--t6);--i:var(--i6)}
+.hd{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.lk{display:flex;align-items:center;gap:5px;margin-top:2px;border:1px solid var(--line);background:var(--card);color:var(--acc);border-radius:999px;padding:6px 13px 6px 10px;font:inherit;font-size:13px;cursor:pointer}
+.lk svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tile{position:relative}
+.cp{position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--sub);display:grid;place-items:center;padding:0;cursor:pointer}
+.cp svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.cp.ok{color:var(--acc);border-color:var(--acc)}
+#toast{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);font-size:13px;padding:9px 16px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .2s;white-space:nowrap;z-index:20}
+#toast.on{opacity:.92}
 footer{text-align:center;font-size:11px;color:var(--sub);margin-top:36px;opacity:.8}
 </style>
+<link rel="stylesheet" href="look.css">
+<script src="look.js"></script>
 </head>
 <body>
 <main>
-<p class="hi" id="hi">今天</p>
-<h1>Mei Good Life</h1>
+<div class="hd"><div><p class="hi" id="hi">今天</p>
+<h1>Mei Good Life</h1></div><button class="lk" onclick="MGL_LOOK.open()" aria-label="換風格"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.8-.8 1.8-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-1 .8-1.7 1.7-1.7H16a5 5 0 0 0 5-5C21 6.3 17 3 12 3z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7.3" r="1"/><circle cx="14.5" cy="7.3" r="1"/></svg>風格</button></div>
 
 <div class="grid">
  <a class="tile k1" id="money" href="money.html" hidden>
@@ -99,6 +109,18 @@ footer{text-align:center;font-size:11px;color:var(--sub);margin-top:36px;opacity
 try{if(localStorage.getItem('mgl-role')==='admin'){document.getElementById('money').hidden=false;document.getElementById('cal').hidden=false;document.getElementById('roster').hidden=false;document.getElementById('bloom').hidden=false;document.getElementById('trip').hidden=false}}catch(e){}
 // 創業頁只給管理員和被邀請的夥伴看到
 try{if(localStorage.getItem('mgl-role')==='admin'||localStorage.getItem('mgl-biz')==='1')document.getElementById('biz').hidden=false}catch(e){}
+// 每張卡片右上角的「複製連結」：貼到 Safari 打開，就能用「加入主畫面」
+const ICON='<svg viewBox="0 0 24 24"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg>';
+const CHECK='<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+function toast(t){let el=document.getElementById('toast');if(!el){el=document.createElement('div');el.id='toast';document.body.appendChild(el)}el.textContent=t;el.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('on'),2200)}
+async function copy(t){try{await navigator.clipboard.writeText(t);return true}catch(e){const a=document.createElement('textarea');a.value=t;a.setAttribute('readonly','');a.style.cssText='position:fixed;top:0;opacity:0';document.body.appendChild(a);a.select();a.setSelectionRange(0,t.length);let ok=false;try{ok=document.execCommand('copy')}catch(x){}a.remove();return ok}}
+document.querySelectorAll('a.tile').forEach(t=>{
+ const b=document.createElement('button');b.type='button';b.className='cp';b.innerHTML=ICON;
+ const name=t.querySelector('b').textContent;b.setAttribute('aria-label','複製「'+name+'」的連結');
+ b.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();
+  if(await copy(t.href)){b.classList.add('ok');b.innerHTML=CHECK;toast('已複製「'+name+'」的連結，貼到 Safari 網址列');setTimeout(()=>{b.classList.remove('ok');b.innerHTML=ICON},1800)}
+  else prompt('複製這個連結：',t.href)});
+ t.appendChild(b)});
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 const d=new Date(),h=d.getHours();
 document.getElementById('hi').textContent=(h<11?'早安':h<18?'午安':'晚安')+'・'+(d.getMonth()+1)+'/'+d.getDate()+'（'+'日一二三四五六'[d.getDay()]+'）';

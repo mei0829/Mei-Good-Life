@@ -3,29 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#4F6F8C">
+<meta name="theme-color" content="#F5F1E9">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="記帳">
 <link rel="manifest" href="money.webmanifest">
 <link rel="icon" href="money.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="money.svg">
+<link rel="apple-touch-icon" href="money-180.png">
 <title>我的記帳</title>
 <script>
-// 顏色風格：名稱、背景、卡片、文字、次要文字、線、主色、深色模式主色
-const SKINS={blue:['藍灰','#E9EEF3','#fff','#1E2935','#697686','#D3DCE5','#4F6F8C','#8DB0D0'],rose:['粉嫩','#F6EEEA','#FFFCFA','#3A2826','#8C746F','#E9D8D1','#A8625F','#E0A09C'],forest:['森林','#EEF1EC','#fff','#1D2A23','#6F7B73','#DCE2DA','#4E7A62','#9DBFAB'],tea:['奶茶','#F5F0E8','#FFFDF8','#3B3026','#85776A','#E6DCCD','#8A6A4A','#D2B48C'],purple:['薰衣草','#EFECF6','#fff','#2A2438','#776F88','#DDD7EA','#6B5B9A','#B4A6E6']};
+// 顏色和圖案改成全站一起設定（look.js），這裡只是叫它重新套用
 let DARK=false;
-function applyTheme(skin,mode){
- const k=SKINS[skin]?skin:'blue',s=SKINS[k],mq=window.matchMedia&&matchMedia('(prefers-color-scheme: dark)');
- DARK=mode==='dark'||(mode!=='light'&&!!(mq&&mq.matches));
- const v=DARK?{bg:'#11161C',card:'#1A222B',ink:'#E8EEF4',sub:'#93A1B0',line:'#2A3642',acc:s[7],on:'#11161C'}:{bg:s[1],card:s[2],ink:s[3],sub:s[4],line:s[5],acc:s[6],on:'#fff'};
- const r=document.documentElement;Object.keys(v).forEach(n=>r.style.setProperty('--'+n,v[n]));r.dataset.theme=DARK?'dark':'light';
- const m=document.querySelector('meta[name=theme-color]');if(m)m.content=v.bg;
- try{localStorage.setItem('money-theme',JSON.stringify([skin||'',mode||'auto']))}catch(e){}
-}
-try{const t=JSON.parse(localStorage.getItem('money-theme')||'null');if(t)applyTheme(t[0],t[1])}catch(e){}
+function applyTheme(){if(window.MGL_LOOK)MGL_LOOK.apply()}
 </script>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#E9EEF3;--card:#fff;--ink:#1E2935;--sub:#697686;--line:#D3DCE5;--acc:#4F6F8C;--on:#fff;--ok:#3F8A5F;--bad:#D64545;--warn:#FCEBEB;--amber:#B07800;--up:#D64545;--down:#2E8B57}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#11161C;--card:#1A222B;--ink:#E8EEF4;--sub:#93A1B0;--line:#2A3642;--acc:#8DB0D0;--on:#11161C;--ok:#7CC49A;--warn:#3A2224;--amber:#E0A530;--up:#F07070;--down:#5CC08A}}
@@ -148,6 +138,8 @@ svg.ch{width:100%;height:auto;display:block;overflow:visible}svg.ch text{font-si
 #authwrap{max-width:420px;margin:0 auto;padding:40px 16px}#authwrap a{color:var(--acc)}
 .afl{display:block;margin-bottom:10px}.afl span{display:block;font-size:13px;color:var(--sub);margin-bottom:4px}
 </style>
+<link rel="stylesheet" href="look.css">
+<script src="look.js"></script>
 </head>
 <body>
 <div id="auth" data-title="我的記帳" data-only="admin"></div>
@@ -559,11 +551,10 @@ function vSet(){
 
 // ── 風格、新手教學、更多 ──
 function skinPicker(){
- return`<div class="sub">顏色</div><div class="chips" style="margin:4px 0 10px">${Object.keys(SKINS).map(k=>`<button class="chip skin ${(S.skin||'blue')===k?'on':''}" data-a="skin" data-i="${k}"><i style="background:${SKINS[k][6]}"></i>${SKINS[k][0]}</button>`).join('')}</div>
- <div class="sub">明暗</div><div class="chips" style="margin-top:4px">${[['auto','跟著手機'],['light','淺色'],['dark','深色']].map(([k,n])=>`<button class="chip ${(S.mode||'auto')===k?'on':''}" data-a="mode" data-i="${k}">${n}</button>`).join('')}</div>`;
+ return`<div class="sub" style="margin-bottom:8px">底色都是米白色，可以選主色和主題圖案，所有頁面會一起換。</div><button class="go q" data-a="look">換主色和圖案</button>`;
 }
 function guideSteps(){return[
- ['選風格','挑一個喜歡的顏色，晚上用可以選深色。',!!S.skin,'guide'],
+ ['選風格','挑一個喜歡的主色和主題圖案。',!!(S.skin||localStorage.getItem('mgl-look')),'guide'],
  ['開始記帳','先到「設定」把信用卡加好（結帳日、繳款日），再填今天現金、銀行有多少錢、信用卡欠多少。過去的帳不用補。',!!S.started,'start'],
  ['記第一筆','按右下角的「＋」，打金額、選分類，按儲存。',S.tx.some(t=>!t.src||t.src==='m'),'addtx'],
  ['加固定收支','把每個月固定要繳的錢（房貸、房租、電話費、保險…）和薪水加進「固定收支」',S.bills.length>0,'bills'],
@@ -1623,7 +1614,7 @@ function sheetAcct(o){
 const STK=[['stock','我的持股'],['news','股價與新聞'],['calc','複利計算']];
 const stkSeg=()=>`<div class="chips" style="margin:0 0 12px">${STK.map(([k,n])=>`<button class="chip ${U.tab===k?'on':''}" data-a="tab" data-i="${k}">${n}</button>`).join('')}</div>`;
 const TABS=[['home','◎','總覽'],['tx','✎','記帳'],['cal','▦','月曆'],['bills','◷','固定收支'],['stock','↗','股票'],['more','⋯','更多']];
-const MORE=[['fund','📦','預存核對','每個預存存了多少、在哪個帳戶，跟餘額對一下'],['retire','⛱','退休計畫','幾歲可以退休、花這筆錢會晚多久退休'],['trip','✈','旅行','每次旅行花了多少：機票、住宿、吃、買…'],['week','✉','每週報告','這週和上一週花了多少，週日晚上 10 點出爐'],['idea','✧','賺錢點子','想到能賺錢的方法，先記下來慢慢研究'],['check','☑','對帳便條','每週打開網銀看一次，看過就打勾'],['book','▣','獨立帳本','爸媽帳戶、副業：收入和投資另外算'],['iou','⇄','代墊與欠款','幫朋友代墊、誰欠我、我欠誰'],['wallet','◉','我的錢一覽','總餘額、信用卡、每天該存多少、時薪'],['ask','？','要不要買？','想買東西時，像聊天一樣問問看'],['perk','✦','刷卡優惠','在哪裡刷用哪張卡、CUBE 要切哪個權益'],['plan','◫','分帳戶','薪水進來先分好：固定支出、生活費、存錢、投資'],['budget','◔','預算','每個分類一個月能花多少，快超過會提醒'],['chart','▥','圖表','每個月花多少、錢都花在哪'],['imp','⇣','匯入明細','信用卡、銀行、電子發票、截圖'],['set','⚙︎','設定與風格','帳戶、顏色、深色模式、備份'],['guide','?','新手教學','從頭一步一步開始']];
+const MORE=[['fund','📦','預存核對','每個預存存了多少、在哪個帳戶，跟餘額對一下'],['retire','⛱','退休計畫','幾歲可以退休、花這筆錢會晚多久退休'],['trip','✈','旅行','每次旅行花了多少：機票、住宿、吃、買…'],['week','✉','每週報告','這週和上一週花了多少，週日晚上 10 點出爐'],['idea','✧','賺錢點子','想到能賺錢的方法，先記下來慢慢研究'],['check','☑','對帳便條','每週打開網銀看一次，看過就打勾'],['book','▣','獨立帳本','爸媽帳戶、副業：收入和投資另外算'],['iou','⇄','代墊與欠款','幫朋友代墊、誰欠我、我欠誰'],['wallet','◉','我的錢一覽','總餘額、信用卡、每天該存多少、時薪'],['ask','？','要不要買？','想買東西時，像聊天一樣問問看'],['perk','✦','刷卡優惠','在哪裡刷用哪張卡、CUBE 要切哪個權益'],['plan','◫','分帳戶','薪水進來先分好：固定支出、生活費、存錢、投資'],['budget','◔','預算','每個分類一個月能花多少，快超過會提醒'],['chart','▥','圖表','每個月花多少、錢都花在哪'],['imp','⇣','匯入明細','信用卡、銀行、電子發票、截圖'],['set','⚙︎','設定與風格','帳戶、主色與圖案、備份'],['guide','?','新手教學','從頭一步一步開始']];
 let RD=0,RD2=0,KF=0;
 function render(){
  // 換掉畫面時，正在輸入的欄位失焦會觸發 change；那次重畫延後到這次畫完再做
@@ -2421,8 +2412,7 @@ Object.assign(ACT,{
  go:i=>i==='addtx'?ACT.addtx():i==='start'?ACT.start():ACT.tab(i),
  guideoff:()=>{S.guideOff=true;save();render();toast('之後可以在「更多 → 新手教學」再打開')},
  guideon:()=>{S.guideOff=false;save();render()},
- skin:i=>{S.skin=i;applyTheme(S.skin,S.mode);save();render()},
- mode:i=>{S.mode=i;applyTheme(S.skin,S.mode);save();render()},
+ look:()=>{if(window.MGL_LOOK)MGL_LOOK.open()},
  cmon:i=>{U.cm=addM(U.cm+'-01',+i).slice(0,7);render()},
  cd:i=>{U.cd=i;render()},
  bmon:i=>{U.bm=addM(U.bm+'-01',+i).slice(0,7);render()},
@@ -2524,7 +2514,6 @@ async function cloudPush(){
  CL.busy=0;if(CL.again){CL.again=0;cloudQ()}
 }
 applyTheme(S.skin,S.mode);
-try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(S.mode==='auto'){applyTheme(S.skin,S.mode);render()}})}catch(e){}
 (async()=>{
  try{
   const db=await claude.use('db'),us=await claude.use('user');

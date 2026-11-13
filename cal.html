@@ -3,14 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#F2EFE9">
+<meta name="theme-color" content="#F5F1E9">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<link rel="manifest" href="home.webmanifest">
-<link rel="icon" href="home.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="home.svg">
+<link rel="manifest" href="cal.webmanifest">
+<link rel="icon" href="cal.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="cal-180.png">
 <title>行事曆</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#F2EFE9;--card:#fff;--ink:#2B2A27;--sub:#7A766E;--line:#E2DDD3;--acc:#5E7A6A;--on:#fff;--bad:#C94A4A;
  --ev:#4F86B8;--fu:#5E8F6A;--bd:#C0607E;--wty:#B07800}
@@ -57,6 +56,8 @@ input{font:inherit;font-size:16px;color:inherit;background:var(--card);border:1p
 .empty{text-align:center;color:var(--sub);padding:18px 0}
 .warn{color:var(--bad)}
 </style>
+<link rel="stylesheet" href="look.css">
+<script src="look.js"></script>
 </head>
 <body>
 <div id="auth" data-title="行事曆" data-only="admin"></div>
@@ -161,7 +162,7 @@ function render(){
  else{const od=overdue(),up=entries(TODAY,shift(TODAY,30));
   list=(od.length?`<h2 class="warn">已經過了跟進日期（${od.length}）</h2>${od.map(row).join('')}`:'')+
    `<h2>接下來 30 天</h2>`+(up.length?groupHTML(up):`<div class="empty">${loading?'讀取中…':'接下來 30 天沒有事情'}</div>`)}
- $('app').innerHTML=`<a class="home" href="./">‹ 首頁</a><h1>行事曆</h1>
+ $('app').innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center"><a class="home" href="./">‹ 首頁</a><button class="bt" onclick="MGL_LOOK.open()" style="font-size:13px;padding:4px 12px">風格</button></div><h1>行事曆</h1>
   <div id="st">${loading?'讀取中…':'課表、跟進、生日來自新人名單；保固來自物品存放'}${errs.length?` · <span class="warn">${E(errs.join('、'))}</span>`:''}</div>
   <div class="chips">${[['','全部'],...Object.entries(CAT)].map(([k,n])=>`<button data-f="${k}" class="${F===k?'on':''} c-${k}">${k?'<span class="dot"></span>':''}${n}</button>`).join('')}</div>
   <div class="card"><div class="mh"><button class="bt" data-m="${mv(-1)}" aria-label="上個月">‹</button><div><b>${Y} 年 ${Mo} 月</b>${M!==TODAY.slice(0,7)?' <button class="bt" data-m="'+TODAY.slice(0,7)+'" style="padding:2px 8px;font-size:12px">回本月</button>':''}</div><button class="bt" data-m="${mv(1)}" aria-label="下個月">›</button></div>

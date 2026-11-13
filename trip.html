@@ -3,15 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#EEF3F2">
+<meta name="theme-color" content="#F5F1E9">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="旅遊行程">
 <link rel="manifest" href="trip.webmanifest">
 <link rel="icon" href="trip.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="trip.svg">
+<link rel="apple-touch-icon" href="trip-180.png">
 <title>旅遊行程</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#EEF3F2;--card:#fff;--ink:#2B2A27;--sub:#737A78;--line:#DCE4E2;--acc:#3D7A86;--on:#fff;--ok:#3F8A5F;--bad:#C94A4A;--soft:#DCEBEE}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#151718;--card:#202425;--ink:#EDEAE4;--sub:#9DA5A4;--line:#323839;--acc:#8CC5CF;--on:#151718;--ok:#7CC49A;--bad:#F07070;--soft:#233237}}
@@ -148,6 +147,8 @@ textarea{min-height:72px;resize:vertical}
 #toast.on{display:flex}
 #toast button{border:0;background:none;color:var(--acc);font-weight:700;padding:0;white-space:nowrap}
 </style>
+<link rel="stylesheet" href="look.css">
+<script src="look.js"></script>
 </head>
 <body>
 <div id="auth" data-title="旅遊行程" data-only="admin"></div>

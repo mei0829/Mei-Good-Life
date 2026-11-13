@@ -35,7 +35,7 @@ export interface Settings {
   id: 'me'; name: string; stage: Stage; lmp?: string; edd?: string; pregnantSince?: string;
   defaultCycle?: number; budgetMonthly?: number; budgetByCat?: Record<string, number>;
   favorites?: string[]; heroPhoto?: string;
-  /** 顏色主題；themeAuto = 夜間模式跟著手機自動切換 */ theme?: string; themeAuto?: boolean;
+  /** 顏色主題（全站共用的選擇優先）；themeAuto 已不再使用 */ theme?: string; themeAuto?: boolean;
   /** 已經放好預設的嬰兒用品與福利清單 */ prepSeeded?: boolean;
   updatedAt: number
 }
