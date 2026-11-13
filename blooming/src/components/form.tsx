@@ -47,7 +47,7 @@ function Input({ f, value, set, onFile }: { f: Field; value: any; set: (v: any) 
   }
 }
 
-/** 附件：存在這個瀏覽器（IndexedDB） */
+/** 附件：先存在這個瀏覽器（IndexedDB），有登入就同步到雲端 */
 function FilesInput({ ids, set, images, onFile }: { ids: string[]; set: (v: string[]) => void; images?: boolean; onFile?: (ids: string[]) => void }) {
   const inp = useRef<HTMLInputElement>(null);
   const toast = useToast();

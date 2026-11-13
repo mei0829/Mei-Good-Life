@@ -22,6 +22,14 @@ export interface Backup {
   app: 'blooming-days'; version: 1; exportedAt: string; settings: Settings | null;
   tables: { [K in TableName]?: Tables[K][] }; files: (Omit<FileRec, 'blob'> & { data: string })[];
 }
+/** 給雲端同步用：資料改了、刪了要通知；手機上找不到的附件可以從雲端抓 */
+export interface SyncHooks {
+  changed(): void;
+  deleted(table: TableName | '_files', ids: string[]): void;
+  fetchFile(id: string): Promise<FileRec | undefined>;
+}
+export const syncHooks: SyncHooks = { changed() {}, deleted() {}, fetchFile: async () => undefined };
+
 export interface DataService {
   table<K extends TableName>(name: K): Repo<Tables[K]>;
   getSettings(): Promise<Settings>;
@@ -36,6 +44,8 @@ export interface DataService {
   bulkAdd<K extends TableName>(name: K, rows: NewRec<Tables[K]>[]): Promise<number>;
   clearAll(): Promise<void>;
   subscribe(fn: () => void): () => void;
+  /** 雲端同步把別台裝置的資料放進來之後，通知畫面重新讀（不會再觸發同步） */
+  refresh(): void;
 }
 
 export const DEFAULT_SETTINGS: Settings = { id: 'me', name: '', stage: 'preconception', defaultCycle: 28, budgetByCat: {}, favorites: [], updatedAt: 0 };
@@ -92,13 +102,14 @@ async function toB64(b: Blob) {
 const fromB64 = async (d: string) => (await fetch(d)).blob();
 const csvCell = (v: unknown) => { const s = Array.isArray(v) ? v.join('、') : v == null ? '' : typeof v === 'boolean' ? (v ? '是' : '否') : String(v); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
 
-export function createDexieService(db = new BloomDB()): DataService {
+export function createDexieService(db = new BloomDB(), hooks: SyncHooks = { changed() {}, deleted() {}, fetchFile: async () => undefined }): DataService & { db: BloomDB } {
   const subs = new Set<() => void>();
   const emit = () => subs.forEach(f => f());
   // 別的分頁改了資料也要更新
   let bc: BroadcastChannel | null = null;
   try { bc = new BroadcastChannel('blooming-days'); bc.onmessage = () => subs.forEach(f => f()); } catch { /* 不支援就算了 */ }
-  const changed = () => { emit(); try { bc?.postMessage(1); } catch { /* ignore */ } };
+  const refresh = () => { emit(); try { bc?.postMessage(1); } catch { /* ignore */ } };
+  const changed = () => { refresh(); hooks.changed(); };
 
   const repos = new Map<TableName, Repo<any>>();
   function table<K extends TableName>(name: K): Repo<Tables[K]> {
@@ -126,11 +137,15 @@ export function createDexieService(db = new BloomDB()): DataService {
         const cur: any = await t.get(id);
         // 一起刪掉附件
         const files = [...(cur?.files || []), ...(cur?.photos || [])];
+        const logs = name === 'supplements' ? (await db.supplementLogs.where('supplementId').equals(id).primaryKeys()) as string[] : [];
         await db.transaction('rw', [t, db.files, db.supplementLogs], async () => {
           await t.delete(id);
           if (files.length) await db.files.bulkDelete(files);
           if (name === 'supplements') await db.supplementLogs.where('supplementId').equals(id).delete();
         });
+        hooks.deleted(name, [id]);
+        if (files.length) hooks.deleted('_files', files);
+        if (logs.length) hooks.deleted('supplementLogs', logs);
         changed();
       }
     };
@@ -138,7 +153,24 @@ export function createDexieService(db = new BloomDB()): DataService {
     return repo;
   }
 
+  // 刪掉整批資料前，先記下有哪些（雲端也要一起刪）
+  const allIds = async () => {
+    const r: Record<string, string[]> = {};
+    for (const n of TABLES) r[n] = (await (db as any)[n].toCollection().primaryKeys()) as string[];
+    r._files = (await db.files.toCollection().primaryKeys()) as string[];
+    return r;
+  };
+  const deletedSince = async (before: Record<string, string[]>) => {
+    const now = await allIds();
+    for (const k of Object.keys(before)) {
+      const keep = new Set(now[k] || []), gone = before[k].filter(id => !keep.has(id));
+      if (gone.length) hooks.deleted(k as TableName, gone);
+    }
+  };
+
   return {
+    db,
+    refresh,
     table,
     async getSettings() { return { ...DEFAULT_SETTINGS, ...(await db.settings.get('me')) }; },
     async saveSettings(patch) {
@@ -149,10 +181,12 @@ export function createDexieService(db = new BloomDB()): DataService {
     async putFile(file, name) {
       const id = uid();
       await db.files.put({ id, name: name || (file as File).name || '檔案', type: file.type || 'application/octet-stream', size: file.size, blob: file, createdAt: Date.now() });
+      hooks.changed();
       return id;
     },
-    getFile: id => db.files.get(id),
-    async removeFile(id) { await db.files.delete(id); changed(); },
+    // 這支手機上沒有（別台裝置加的）：從雲端抓下來
+    getFile: async id => (await db.files.get(id)) || (await hooks.fetchFile(id).catch(() => undefined)),
+    async removeFile(id) { await db.files.delete(id); hooks.deleted('_files', [id]); changed(); },
     async exportBackup() {
       const tables: Backup['tables'] = {};
       for (const n of TABLES) (tables as any)[n] = await (db as any)[n].toArray();
@@ -178,11 +212,14 @@ export function createDexieService(db = new BloomDB()): DataService {
       }
       const files: FileRec[] = [];
       for (const f of b.files || []) { try { files.push({ id: f.id, name: f.name, type: f.type, size: f.size, createdAt: f.createdAt, blob: await fromB64(f.data) }); } catch { skipped++; } }
+      const before = await allIds();
       await db.transaction('rw', [...TABLES.map(n => (db as any)[n]), db.files, db.settings], async () => {
         for (const n of TABLES) { await (db as any)[n].clear(); await (db as any)[n].bulkPut(ok[n]); }
         await db.files.clear(); await db.files.bulkPut(files);
-        await db.settings.clear(); if (b.settings) await db.settings.put({ ...DEFAULT_SETTINGS, ...b.settings, id: 'me' });
+        // 還原的設定算是最新的，雲端才不會用舊的蓋回來
+        await db.settings.clear(); if (b.settings) await db.settings.put({ ...DEFAULT_SETTINGS, ...b.settings, id: 'me', updatedAt: Date.now() });
       });
+      await deletedSince(before);
       changed();
       return { imported, skipped };
     },
@@ -197,14 +234,20 @@ export function createDexieService(db = new BloomDB()): DataService {
       await (db as any)[name].bulkAdd(ok); changed(); return ok.length;
     },
     async clearAll() {
+      const before = await allIds();
       await db.transaction('rw', [...TABLES.map(n => (db as any)[n]), db.files, db.settings], async () => {
         for (const n of TABLES) await (db as any)[n].clear();
         await db.files.clear(); await db.settings.clear();
+        // 設定改回預設，並標成最新，雲端上的舊設定才不會蓋回來
+        await db.settings.put({ ...DEFAULT_SETTINGS, updatedAt: Date.now() });
       });
+      await deletedSince(before);
       changed();
     },
     subscribe(fn) { subs.add(fn); return () => { subs.delete(fn); }; }
   };
 }
 
-export const data: DataService = createDexieService();
+export const data = createDexieService(new BloomDB(), {
+  changed: () => syncHooks.changed(), deleted: (t, ids) => syncHooks.deleted(t, ids), fetchFile: id => syncHooks.fetchFile(id)
+});

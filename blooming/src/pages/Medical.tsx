@@ -139,7 +139,7 @@ function Visits() {
           {(v.advice || v.results) && <p className="text-[13px] text-ink/80 mt-1 line-clamp-2">{v.advice || v.results}</p>}
         </Row>
       )) : <Empty title="還沒有看診紀錄" hint="每次看診可以記下檢查項目、結果、醫師建議和報告照片。" />}
-      <EntityForm table="visits" title={preg ? '產檢／看診' : '看診紀錄'} fields={fields} {...ed} onClose={ed.close} derive={derive} footnote="報告與附件只存在這個瀏覽器，記得定期到「設定」下載備份。" />
+      <EntityForm table="visits" title={preg ? '產檢／看診' : '看診紀錄'} fields={fields} {...ed} onClose={ed.close} derive={derive} footnote="報告與附件會同步到你的私人雲端（照片太大會縮小後再上傳）。" />
     </>
   );
 }

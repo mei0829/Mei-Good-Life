@@ -13,9 +13,13 @@ import Finance from './pages/Finance';
 import Journal from './pages/Journal';
 import Prep from './pages/Prep';
 import SettingsPage from './pages/Settings';
+import { startCloud } from './data/cloud';
 
 const PAGES = { home: Home, cycle: Cycle, wellness: Wellness, medical: Medical, lifestyle: Lifestyle, finance: Finance, prep: Prep, journal: Journal, settings: SettingsPage };
 function Router() { const { route } = useApp(); const P = PAGES[route]; return <P />; }
+
+// 有登入就同步到自己的私人雲端（沒網路也可以照常用）
+startCloud();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

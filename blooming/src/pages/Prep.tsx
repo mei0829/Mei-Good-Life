@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { cloud } from '../data/cloud';
 import { Check, Plus } from 'lucide-react';
 import { useApp } from '../app';
 import { useTable } from '../data/hooks';
@@ -15,6 +16,8 @@ let seeding = false;
 async function seedOnce() {
   if (seeding) return; seeding = true;
   try {
+    // 先等雲端同步完：別台裝置已經放過清單的話，這裡就不用再放一份
+    await cloud.ready();
     const s = await data.getSettings();
     if (s.prepSeeded) return;
     if (!(await data.table('items').list()).length) await data.bulkAdd('items', ITEM_SEED);

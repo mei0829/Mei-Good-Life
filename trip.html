@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#EEF3F2">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="旅遊行程">
+<link rel="manifest" href="trip.webmanifest">
+<link rel="icon" href="trip.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="trip.svg">
+<title>旅遊行程</title>
+<style>
+:root{--bg:#EEF3F2;--card:#fff;--ink:#2B2A27;--sub:#737A78;--line:#DCE4E2;--acc:#3D7A86;--on:#fff;--ok:#3F8A5F;--bad:#C94A4A;--soft:#DCEBEE}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#151718;--card:#202425;--ink:#EDEAE4;--sub:#9DA5A4;--line:#323839;--acc:#8CC5CF;--on:#151718;--ok:#7CC49A;--bad:#F07070;--soft:#233237}}
+:root[data-theme="dark"]{--bg:#151718;--card:#202425;--ink:#EDEAE4;--sub:#9DA5A4;--line:#323839;--acc:#8CC5CF;--on:#151718;--ok:#7CC49A;--bad:#F07070;--soft:#233237}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Noto Sans TC","PingFang TC",-apple-system,"Microsoft JhengHei",sans-serif}
+#app{max-width:760px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top)) 16px 90px}
+#app::after{content:"© 2026 mei0829 版權所有";display:block;text-align:center;font-size:11px;color:var(--sub);margin-top:28px;opacity:.8}
+h1{font-size:24px;margin:4px 0 0;font-weight:700;overflow-wrap:anywhere}
+h2{font-size:14px;margin:18px 2px 8px;color:var(--sub);font-weight:500}
+a{color:var(--acc)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;touch-action:manipulation}
+input,select,textarea{font-size:16px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 10px;width:100%;min-width:0}
+textarea{min-height:72px;resize:vertical}
+.card{background:var(--card);border-radius:16px;padding:12px 14px;margin-bottom:10px;border:1px solid var(--line)}
+.sub{font-size:13px;color:var(--sub)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.go{background:var(--acc);color:var(--on);border:0;border-radius:12px;padding:10px 16px;font-weight:700}
+.bt{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 12px}
+.bad{color:var(--bad)}
+#authwrap{max-width:420px;margin:0 auto;padding:40px 16px}#authwrap a{color:var(--acc)}
+.afl{display:block;margin-bottom:10px}.afl span{display:block;font-size:13px;color:var(--sub);margin-bottom:4px}
+
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.top .row{flex-wrap:nowrap}
+.home{font-size:14px;text-decoration:none}
+#st{font-size:12px;color:var(--sub);margin:2px 0 10px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px;margin-bottom:10px}
+.tabs button{border:0;background:none;border-radius:10px;padding:7px 4px;font-weight:500;color:var(--sub)}
+.tabs button.on{background:var(--acc);color:var(--on)}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none;position:sticky;top:0;z-index:5;background:var(--bg)}
+.chips::-webkit-scrollbar{display:none}
+.chips button{flex:none;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:4px 12px;font-size:13px}
+.chips button.on{background:var(--acc);border-color:var(--acc);color:var(--on)}
+.empty{text-align:center;padding:28px 12px;color:var(--sub)}
+.tag{display:inline-block;font-size:12px;border-radius:999px;padding:1px 8px;background:var(--soft);color:var(--acc);font-weight:500;white-space:nowrap}
+.tag.g{background:none;border:1px solid var(--line);color:var(--sub)}
+
+/* 行程列表 */
+.tr{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:10px}
+.tr .hd{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.tr b{font-size:17px;overflow-wrap:anywhere}
+.tr .ln{font-size:13px;color:var(--sub);margin-top:2px}
+.tr.past{opacity:.75}
+
+/* 每天的行程 */
+.day{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 12px 8px;margin-bottom:12px;scroll-margin-top:52px}
+.day .dh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:4px}
+.day .dh b{font-size:16px}
+.day.today{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc) inset}
+.it{display:flex;gap:10px;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);padding:9px 0}
+.it:first-of-type{border-top:0}
+.it .tm{flex:none;width:46px;font-size:13px;color:var(--sub);padding-top:2px;font-variant-numeric:tabular-nums}
+.it .ic{flex:none;width:30px;height:30px;border-radius:9px;background:var(--soft);display:grid;place-items:center;font-size:16px}
+.it .bd{flex:1;min-width:0}
+.it .bd b{font-weight:500;overflow-wrap:anywhere}
+.it .bd .ln{font-size:13px;color:var(--sub);overflow-wrap:anywhere}
+.it .bd .nt{font-size:13px;margin-top:2px;white-space:pre-wrap;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.it .co{flex:none;font-size:13px;color:var(--sub);padding-top:2px}
+.it.done .bd b{text-decoration:line-through;color:var(--sub)}
+.dadd{display:block;width:100%;border:1px dashed var(--line);background:none;border-radius:10px;padding:7px;color:var(--acc);margin-top:4px;font-size:14px}
+
+/* 準備清單 */
+.ck{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px 4px 4px 10px;margin-bottom:6px}
+.ck label{flex:1;display:flex;align-items:center;gap:10px;min-width:0;padding:6px 0;cursor:pointer}
+.ck input{width:20px;height:20px;flex:none;accent-color:var(--acc)}
+.ck span{overflow-wrap:anywhere}
+.ck.on span{text-decoration:line-through;color:var(--sub)}
+.ck button{border:0;background:none;padding:6px 10px;color:var(--sub)}
+.ck.tp{padding:4px 4px 4px 6px}
+.ck .tpn{flex:1;min-width:0;border:0;background:transparent;padding:6px 4px;font-size:16px}
+.ck .tpn:focus{outline:2px solid var(--soft);border-radius:8px;background:var(--bg)}
+.tplbtn{display:flex;align-items:center;gap:12px;width:100%;text-align:left;margin-top:10px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px 14px 8px 8px}
+.tplbtn img{width:52px;height:52px;object-fit:contain;flex:none}
+.tplbtn>span:nth-child(2){flex:1;min-width:0}
+.tplbtn small{display:block;font-size:12.5px;color:var(--sub)}
+.add{display:flex;gap:8px;margin:4px 0 14px}.add input{flex:1}.add button{flex:none}
+.bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin:6px 0 2px}
+.bar i{display:block;height:100%;background:var(--acc);border-radius:99px}
+.bar.over i{background:var(--bad)}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center}
+.sum b{display:block;font-size:17px}.sum span{font-size:12px;color:var(--sub)}
+.kv{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid var(--line)}.kv:first-child{border-top:0}
+
+/* 封面與國家主題 */
+.hero{position:relative;border-radius:22px;overflow:hidden;aspect-ratio:16/9;background:var(--soft);margin-top:8px}
+.hero img.cv{width:100%;height:100%;object-fit:cover;display:block}
+.hero.gen{background:linear-gradient(180deg,var(--s1),var(--s2))}
+.hero .sun{position:absolute;right:14%;top:14%;width:16%;aspect-ratio:1;border-radius:50%;background:rgba(255,255,255,.6)}
+.hero .hills{position:absolute;left:0;right:0;bottom:0;width:100%;height:45%}
+.hero .mot{position:absolute;left:7%;bottom:20%;font-size:clamp(34px,10vw,58px);letter-spacing:6px;line-height:1}
+.hero .sd{position:absolute;right:3%;bottom:2%;width:36%;max-width:190px}
+.hero.sm{aspect-ratio:auto;width:78px;height:78px;border-radius:14px;margin:0;flex:none}
+.hero.sm .mot{left:0;right:0;bottom:auto;top:50%;transform:translateY(-50%);text-align:center;font-size:34px;letter-spacing:0}
+.hero.sm .sun{display:none}
+.tcard{position:relative;margin:-30px 12px 10px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px 14px;box-shadow:0 8px 22px rgba(0,0,0,.07)}
+.tcard h1{font-size:22px;margin:0}
+.tcard .fl{font-size:12px;color:var(--acc);letter-spacing:2px;font-weight:500}
+.tr{display:flex;gap:12px;align-items:center}
+.tr .tx{flex:1;min-width:0}
+.it .ic.dk{width:42px;height:42px;border-radius:12px;background:var(--soft);overflow:hidden}
+.it .ic.dk img{width:100%;height:100%;object-fit:contain;padding:3px}
+.duck{display:block;margin:0 auto 6px;width:120px;height:120px;object-fit:contain}
+.wiki{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 12px;margin-bottom:12px}
+.wiki summary{cursor:pointer;font-weight:700;list-style:none;display:flex;align-items:center;gap:8px}
+.wiki summary::-webkit-details-marker{display:none}
+.wiki summary img{width:38px;height:38px;object-fit:contain}
+.wiki summary .sub{font-weight:400;margin-left:auto}
+.wiki .wr{margin-top:10px}.wiki .wr>span{font-size:12px;color:var(--sub);display:block;margin-bottom:4px}
+.wiki .wc{display:flex;flex-wrap:wrap;gap:6px}
+.wiki .wc button{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:4px 10px;font-size:13.5px}
+.wiki .wc button.have{background:var(--soft);border-color:var(--soft);color:var(--acc)}
+.cvp{display:flex;gap:10px;align-items:center;margin-bottom:12px}
+.cvp .hero{width:120px;flex:none;margin:0;border-radius:12px}
+.cvp .hero .mot{font-size:20px;letter-spacing:2px}
+
+#sheet{position:fixed;inset:0;z-index:50;display:none}
+#sheet.on{display:block}
+#sheet .bk{position:absolute;inset:0;background:rgba(0,0,0,.35)}
+#sheet .pn{position:absolute;left:0;right:0;bottom:0;margin:0 auto;max-width:560px;max-height:90vh;overflow:auto;background:var(--bg);border-radius:20px 20px 0 0;padding:16px 16px calc(18px + env(safe-area-inset-bottom))}
+#sheet h3{margin:0 0 12px;font-size:18px}
+#sheet .back{position:sticky;top:-16px;z-index:2;margin:-16px -16px 6px;padding:12px 16px 6px;background:var(--bg)}
+#sheet .back button{border:0;background:none;color:var(--acc);font-size:16px;font-weight:500;padding:4px 0}
+.f{display:block;margin-bottom:12px}.f>span{display:block;font-size:13px;color:var(--sub);margin-bottom:4px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.types{display:flex;flex-wrap:wrap;gap:6px}
+.types button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:5px 12px;font-size:14px}
+.types button.on{background:var(--acc);border-color:var(--acc);color:var(--on)}
+.li{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 6px 6px 12px;margin-bottom:6px}
+.li>span{flex:1;min-width:0;overflow-wrap:anywhere}.li small{display:block;color:var(--sub);font-size:12px}
+.foot{display:flex;gap:8px;justify-content:space-between;margin-top:14px}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:60;background:var(--ink);color:var(--bg);border-radius:12px;padding:9px 14px;font-size:14px;display:none;align-items:center;gap:12px;max-width:calc(100% - 32px);box-shadow:0 6px 20px rgba(0,0,0,.25)}
+#toast.on{display:flex}
+#toast button{border:0;background:none;color:var(--acc);font-weight:700;padding:0;white-space:nowrap}
+</style>
+<link rel="stylesheet" href="look.css">
+<script src="look.js"></script>
+</head>
+<body>
+<div id="auth" data-title="旅遊行程" data-only="admin"></div>
+<div id="app"></div><div id="sheet"></div><div id="toast"></div>
+<input type="file" id="impf" accept="application/json,.json" style="display:none">
+<script type="module" src="auth.js"></script>
+<script type="text/plain" id="app-src">
+const E=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const $=id=>document.getElementById(id);
+const nid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3);
+const arr=a=>Array.isArray(a)?a:[];
+const KEY='trip-v1',KT='trip-t';
+const TYPES=[['景點','📍'],['美食','🍜'],['交通','🚆'],['住宿','🏨'],['購物','🛍️'],['其他','📝']];
+const ICON=Object.fromEntries(TYPES);
+const PACK=['護照／身分證','機票／車票','住宿確認信','錢包、信用卡','外幣','手機充電器','行動電源','轉接頭','網卡／eSIM','換洗衣物','盥洗用品','常備藥','雨傘'];
+const MAXDAYS=60;
+
+// ---------- 日期 ----------
+const z=n=>String(n).padStart(2,'0');
+const ymd=d=>d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate());
+const today=()=>ymd(new Date());
+const pd=s=>{const p=String(s||'').split('-').map(Number);return p.length===3&&p[0]?new Date(p[0],p[1]-1,p[2]):null};
+const isD=s=>/^\d{4}-\d{2}-\d{2}$/.test(s||'')&&!!pd(s);
+const addD=(s,n)=>{const d=pd(s);d.setDate(d.getDate()+n);return ymd(d)};
+const diff=(a,b)=>Math.round((pd(b)-pd(a))/864e5);
+const WK='日一二三四五六';
+const md=s=>{const d=pd(s);return d?(d.getMonth()+1)+'/'+d.getDate()+'（'+WK[d.getDay()]+'）':''};
+const mds=s=>{const d=pd(s);return d?(d.getMonth()+1)+'/'+d.getDate():''};
+function days(t){if(!isD(t.start))return [];const n=Math.min(MAXDAYS,Math.max(1,(isD(t.end)?diff(t.start,t.end):0)+1));return Array.from({length:n},(_,i)=>addD(t.start,i))}
+const range=t=>isD(t.start)?(md(t.start)+(isD(t.end)&&t.end!==t.start?' – '+md(t.end):''))+' · '+days(t).length+' 天':'還沒排日期';
+function phase(t){
+ const td=today();
+ if(!isD(t.start))return {k:'plan',txt:'還沒排日期'};
+ const end=isD(t.end)?t.end:t.start;
+ if(td<t.start){const n=diff(td,t.start);return {k:'soon',txt:n===1?'明天出發':'還有 '+n+' 天'}}
+ if(td>end)return {k:'past',txt:'去過了'};
+ return {k:'now',txt:'旅行中・第 '+(diff(t.start,td)+1)+' 天'};
+}
+const money=n=>'$'+Math.round(+n||0).toLocaleString();
+const num=v=>v===''||v==null||isNaN(+v)?'':+v;
+
+// ---------- 資料 ----------
+function fixTrip(t){
+ let start=isD(t.start)?t.start:'',end=isD(t.end)?t.end:'';
+ if(start&&end&&end<start)[start,end]=[end,start];
+ if(start&&end&&diff(start,end)>=MAXDAYS)end=addD(start,MAXDAYS-1);
+ return {id:t.id||nid(),name:String(t.name||'旅行'),dest:t.dest||'',start,end,budget:num(t.budget),memo:t.memo||'',
+  items:arr(t.items).filter(i=>i&&i.title).map(i=>({id:i.id||nid(),d:isD(i.d)?i.d:'',tm:/^\d{2}:\d{2}$/.test(i.tm||'')?i.tm:'',type:ICON[i.type]?i.type:'其他',
+   title:String(i.title),place:i.place||'',cost:num(i.cost),note:i.note||'',done:!!i.done})),
+  pack:arr(t.pack).filter(p=>p&&p.n).map(p=>({id:p.id||nid(),n:String(p.n),on:!!p.on,...(p.t?{t:String(p.t)}:{})})),
+  theme:/^[a-z]{2}$/.test(t.theme||'')?t.theme:'',cv:+t.cv||0,u:+t.u||Date.now()};
+}
+function fix(o){if(!o||!Array.isArray(o.trips))throw new Error('bad');o.trips=o.trips.filter(Boolean).map(fixTrip);o.imp=arr(o.imp).map(String);o.tpl=Array.isArray(o.tpl)?o.tpl.map(x=>String(x).trim()).filter(Boolean):PACK.slice();return o}
+let S=null,T=0;
+try{S=fix(JSON.parse(localStorage.getItem(KEY)));T=+localStorage.getItem(KT)||0}catch(e){S=null}
+if(!S){S={trips:[],imp:[],tpl:PACK.slice()};T=0}
+const trip=id=>S.trips.find(t=>t.id===id);
+const VIEW=()=>{const m=location.hash.match(/^#t=(.+)$/);return m&&trip(decodeURIComponent(m[1]))||null};
+let TAB='plan';try{TAB=localStorage.getItem('trip-tab')||'plan'}catch(e){}
+// 同一天的行程：有時間的照時間排，沒填時間的放最後（照加入的順序）
+function dayItems(t,d){const xs=t.items.filter(i=>i.d===d);return xs.map((x,k)=>[x,k]).sort((a,b)=>(a[0].tm||'99')<(b[0].tm||'99')?-1:(a[0].tm||'99')>(b[0].tm||'99')?1:a[1]-b[1]).map(a=>a[0])}
+// 不在旅行日期內的（還沒排、或改日期後超出範圍）都放在「口袋名單」
+function pocket(t){const ds=new Set(days(t));return t.items.filter(i=>!ds.has(i.d))}
+const spent=t=>t.items.reduce((s,i)=>s+(+i.cost||0),0);
+
+// ---------- 儲存：先存手機，再存到自己的私人雲端（data/users/{uid}/trip，只有自己看得到）----------
+const CL={ref:null,col:null,tm:0,busy:false,again:false,dirty:false,pending:null,st:''};
+function status(t){CL.st=t;const s=$('st');if(s)s.textContent=S.trips.length+' 趟旅行 · '+t}
+function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(S));localStorage.setItem(KT,String(T))}catch(e){}}
+function commit(){T=Date.now();saveLocal();render();CL.dirty=true;status('同步中…');clearTimeout(CL.tm);CL.tm=setTimeout(cloudPush,700)}
+async function cloudPush(){
+ if(!CL.ref){status(CL.st.startsWith('⚠︎')?CL.st:'⚠︎ 沒有連到雲端，資料只存在這支手機');return}
+ if(CL.busy){CL.again=true;return}
+ CL.busy=true;CL.dirty=false;
+ try{await CL.ref.set({j:JSON.stringify(S),t:T});status('✓ 已同步')}
+ catch(e){CL.dirty=true;status('⚠︎ 還沒同步，變更先存在這支手機，連上網路會再試')}
+ CL.busy=false;
+ if(CL.again){CL.again=false;cloudPush()}
+}
+const busyUI=()=>$('sheet').classList.contains('on');
+function onCloud(d){
+ if(!d){if(!T)T=Date.now();CL.dirty=true;return cloudPush()}  // 雲端還沒有：把手機上的放上去
+ const ct=+d.t||0;
+ if(ct>T){
+  if(CL.dirty||CL.busy)return;
+  if(busyUI()){CL.pending=d;return}  // 正在編輯：關掉視窗後再更新
+  try{S=fix(JSON.parse(d.j))}catch(e){return}
+  T=ct;saveLocal();render();
+ }else if(ct<T&&!CL.busy){CL.dirty=true;return cloudPush()}
+ if(!CL.dirty)status('✓ 已同步');
+}
+function applyPending(){if(CL.pending&&!busyUI()){const d=CL.pending;CL.pending=null;onCloud(d)}}
+// 一開始的版本存在家庭空間：搬回自己的私人資料，家庭空間那份清空（家人就看不到了）
+async function moveFromFamily(){
+ try{
+  const F=await claude.use('family');if(!F)return;
+  for(const f of (await F.list()).filter(x=>x.kind!=='biz')){
+   const r=F.doc(f.id,'trip'),d=await r.get();
+   if(!d||d.moved)continue;
+   let o=null;try{o=fix(JSON.parse(d.j))}catch(e){}
+   const add=o?o.trips.filter(x=>!trip(x.id)):[];
+   if(add.length)op(()=>S.trips.push(...add));
+   await r.set({moved:1,t:Date.now()});
+  }
+ }catch(e){}
+}
+async function cloudInit(){
+ try{
+  const db=await claude.use('db'),us=await claude.use('user'),uid=us&&await us.id();
+  if(!db||!uid)return status('⚠︎ 沒有連到雲端（請重新登入），資料只存在這支手機');
+  CL.col=db.collection('data/users/'+uid);CL.ref=CL.col.doc('trip');
+  status('連線中…');
+  onCloud(await CL.ref.get());
+  importMoney();
+  await moveFromFamily();
+  monCloud();
+ }catch(e){status('⚠︎ 無法連線，先顯示這支手機上的資料')}
+}
+addEventListener('online',()=>{if(CL.dirty)cloudPush()});
+// 在別的裝置改過：回到這頁時再抓一次
+document.addEventListener('visibilitychange',()=>{if(document.hidden||!CL.ref)return;CL.ref.get().then(onCloud).catch(()=>{});monCloud()});
+
+// ---------- 跟「記帳」連動：讀記帳的資料算這趟實際花了多少（只讀，不會改到記帳）----------
+// 記帳的「旅行」裡，每趟行程會自動有一筆同名、同日期的旅行（plan＝這裡的旅行 id），記帳打開時自動建立
+let MON=null;
+try{const o=JSON.parse(localStorage.getItem('money-v1')||'null');if(o&&Array.isArray(o.tx))MON={o,t:+localStorage.getItem('money-t')||0}}catch(e){}
+async function monCloud(){
+ if(!CL.col)return;
+ try{
+  const s=await CL.col.get(),o={tx:[]};let t=0;
+  s.docs.forEach(d=>{if(!d.id.startsWith('m_'))return;const v=d.data();if(d.id==='m__meta'){t=+v.t||0;return}
+   try{const x=JSON.parse(v.j),k=d.id.slice(2);if(k.startsWith('tx_'))o.tx.push(...x);else o[k]=x}catch(e){}});
+  if(t&&(!MON||t>MON.t)){MON={o,t};importMoney();if(VIEW()&&TAB==='cost'&&!busyUI())render()}
+ }catch(e){}
+}
+// 跟記帳的算法一樣：出發到回家這幾天的支出，加上指定到這次旅行的（出發前買的機票、訂房）；
+// 不算幫別人代墊的部分、獨立帳本、固定收支自動記的、在記帳裡按「不算」的
+function actual(t){
+ if(!MON)return null;
+ const o=MON.o,MT=arr(o.trips).find(x=>x.plan===t.id),from=MT?MT.from:t.start,to=MT?MT.to:(t.end||t.start);
+ if(!from)return null;
+ const ex=MT?arr(MT.ex):[],id=MT?MT.id:null,acc={},lent={};
+ arr(o.accts).forEach(a=>{acc[a.id]=a});
+ arr(o.iou).forEach(x=>{if(x.tx&&x.dir==='in')lent[x.tx]=(lent[x.tx]||0)+(+x.amt||0)});
+ const my=x=>{const a=acc[x.acct];return a&&a.type!=='card'&&(a.book||a.excl)?0:Math.max(0,(+x.amt||0)-(lent[x.id]||0))};
+ const xs=o.tx.filter(x=>x&&x.type==='out'&&my(x)>0&&((id&&x.trip===id)||(!x.trip&&x.d>=from&&x.d<=to&&!x.bill&&!ex.includes(x.id))));
+ const by={};xs.forEach(x=>{const c=x.cat||'其他';by[c]=(by[c]||0)+my(x)});
+ return {tot:xs.reduce((s,x)=>s+my(x),0),n:xs.length,by};
+}
+// 在記帳裡新增的旅行，這裡也自動有一趟（id 用記帳那邊的，記帳打開時會連起來，不會重複）
+// 已經搬過來的記在 S.imp：在這裡刪掉，也不會又搬回來
+function importMoney(){
+ if(!MON)return;
+ const seen=new Set(S.imp),have=new Set(S.trips.map(t=>t.id)),add=[];
+ arr(MON.o.trips).forEach(m=>{
+  if(!m||!m.id||m.plan||have.has(m.id)||seen.has(m.id)||!isD(m.from))return;
+  const to=isD(m.to)&&m.to>=m.from?m.to:m.from;
+  // 這裡已經有同樣日期的旅行（還沒連起來）：不要多一趟
+  if(S.trips.some(t=>t.start===m.from&&(t.end||t.start)===to))return;
+  add.push(fixTrip({id:m.id,name:m.name||'旅行',start:m.from,end:to,budget:+m.budget>0?+m.budget:'',memo:m.note||'',pack:S.tpl.map(x=>({n:x,t:x}))}));
+ });
+ if(!add.length)return;
+ op(()=>{S.trips.push(...add);S.imp=[...S.imp,...add.map(t=>t.id)]});
+ toast('從記帳帶進 '+add.length+' 趟旅行');
+}
+// 行程類型 → 記帳分類（記帳裡沒有這個分類就讓記帳自己猜）
+const MCAT={美食:'餐飲',交通:'交通',購物:'購物',景點:'娛樂'};
+function goMoney(kind,q){location.href='money.html#'+kind+'='+encodeURIComponent(JSON.stringify(q))}
+
+// 每次變更都可以「復原」
+function op(fn,msg){const prev=JSON.stringify(S);fn();commit();if(msg)toast(msg,()=>{S=fix(JSON.parse(prev));commit();toast('已復原')})}
+let TT=0;
+function toast(msg,undo){
+ const t=$('toast');t.innerHTML=E(msg)+(undo?'<button>復原</button>':'');t.classList.add('on');
+ if(undo)t.querySelector('button').onclick=()=>{t.classList.remove('on');undo()};
+ clearTimeout(TT);TT=setTimeout(()=>t.classList.remove('on'),undo?5000:2200);
+}
+
+// ---------- 各國主題：封面插畫、顏色、城市小百科（建築、飲食、衣著、交通）----------
+// 依「目的地」或旅行名稱自動判斷，也可以在「⋯ 編輯旅行」自己選。有插畫的國家用插畫當封面，其他用顏色和圖示畫一張。
+const ART='travel-art/',DUCK=n=>ART+'ducks/'+n+'.webp';
+const W=(a,f,c,t)=>({建築:a,飲食:f,衣著:c,交通:t});
+const THEMES={
+ hk:{n:'香港',flag:'🇭🇰',k:/香港|hong\s*kong|九龍|尖沙咀|旺角|銅鑼灣|中環|大嶼山|\bhk\b/i,img:ART+'hk.webp',acc:'#B65A43',soft:'#F6E2DB',bg:'#F8F2EF',sky:['#F3D2C9','#FBF1EC'],mot:'🏙️⛴️🚋',
+  w:W([['🏙️','維港天際線'],['🏮','唐樓霓虹招牌'],['🛕','天壇大佛'],['🌃','太平山頂夜景']],[['🥟','點心'],['🍍','菠蘿油'],['🧋','絲襪奶茶'],['🥧','蛋撻'],['🍜','雲吞麵'],['🍢','咖哩魚蛋']],[['👗','旗袍'],['🧥','長衫']],[['🚋','叮叮車'],['⛴️','天星小輪'],['🚐','紅色小巴'],['🚠','山頂纜車']])},
+ mo:{n:'澳門',flag:'🇲🇴',k:/澳門|macau|macao|氹仔|路環/i,acc:'#2F7D74',soft:'#DDEFEA',bg:'#F1F7F5',sky:['#CDE8E1','#F3FAF7'],mot:'⛪🎰🥧',
+  w:W([['⛪','大三巴牌坊'],['🏛️','議事亭前地'],['🗼','澳門塔']],[['🥧','葡式蛋撻'],['🍔','豬扒包'],['🍪','杏仁餅'],['🍮','木糠布甸']],[['👗','土生葡人服飾']],[['🚌','免費接駁巴士'],['⛴️','港澳噴射船']])},
+ jp:{n:'日本',flag:'🇯🇵',k:/日本|japan|東京|大阪|京都|奈良|北海道|札幌|沖繩|福岡|名古屋|神戶|橫濱|箱根|九州|東北|輕井澤|富士/i,acc:'#B8475A',soft:'#F7E1E6',bg:'#FAF3F4',sky:['#F5D5DD','#FCF2F4'],mot:'🗼⛩️🗻',
+  w:W([['⛩️','神社鳥居'],['🏯','城堡天守閣'],['🗼','東京鐵塔'],['🗻','富士山']],[['🍣','壽司'],['🍜','拉麵'],['🍡','糰子'],['🍵','抹茶'],['🍱','鐵路便當'],['🍢','關東煮']],[['👘','和服'],['👘','夏天的浴衣']],[['🚄','新幹線'],['🚃','路面電車'],['🚌','觀光巴士']])},
+ kr:{n:'韓國',flag:'🇰🇷',k:/韓國|korea|首爾|釜山|濟州|大邱|仁川|江原/i,acc:'#3D5FA0',soft:'#DFE7F5',bg:'#F2F5FB',sky:['#D3DEF2','#F2F6FC'],mot:'🏯🗼🍲',
+  w:W([['🏯','景福宮'],['🗼','N首爾塔'],['🏘️','北村韓屋村']],[['🍗','韓式炸雞'],['🍲','部隊鍋'],['🥘','石鍋拌飯'],['🍢','辣炒年糕'],['🍶','燒酒']],[['👗','韓服']],[['🚇','首爾地鐵'],['🚄','KTX 高鐵']])},
+ tw:{n:'台灣',flag:'🇹🇼',k:/台灣|臺灣|taiwan|台北|臺北|台中|臺中|台南|臺南|高雄|花蓮|台東|臺東|九份|墾丁|宜蘭|阿里山|日月潭|澎湖|金門|馬祖/i,acc:'#3F7F5A',soft:'#DFEFE5',bg:'#F2F8F4',sky:['#D3EBDD','#F3FAF6'],mot:'🏙️🏮🧋',
+  w:W([['🏙️','台北 101'],['🏮','九份老街'],['🛕','廟宇']],[['🧋','珍珠奶茶'],['🥟','小籠包'],['🍢','夜市小吃'],['🥭','芒果冰'],['🍜','牛肉麵']],[['👕','原住民傳統服飾']],[['🚄','高鐵'],['🚞','阿里山小火車'],['🛵','機車']])},
+ th:{n:'泰國',flag:'🇹🇭',k:/泰國|thailand|曼谷|清邁|普吉|芭達雅|華欣|蘇美|喀比/i,acc:'#C27A1E',soft:'#F7EAD3',bg:'#FBF6EE',sky:['#F5DFB8','#FCF5EA'],mot:'🛕🐘🥭',
+  w:W([['🛕','大皇宮與寺廟'],['🏝️','海島'],['🛶','水上市場']],[['🍜','泰式炒河粉'],['🥭','芒果糯米飯'],['🍲','冬蔭功'],['🥥','椰子冰淇淋']],[['👗','泰服']],[['🛺','嘟嘟車'],['🛶','長尾船'],['🚝','BTS 空鐵']])},
+ sg:{n:'新加坡',flag:'🇸🇬',k:/新加坡|singapore|聖淘沙/i,acc:'#B23A48',soft:'#F5DEE1',bg:'#FAF3F4',sky:['#F2D5D9','#FCF3F4'],mot:'🦁🌳🏙️',
+  w:W([['🦁','魚尾獅'],['🌳','濱海灣花園'],['🏨','濱海灣金沙']],[['🍗','海南雞飯'],['🦀','辣椒螃蟹'],['🍜','叻沙'],['🍞','咖椰吐司']],[['👗','娘惹服飾']],[['🚇','地鐵'],['🚡','聖淘沙纜車']])},
+ vn:{n:'越南',flag:'🇻🇳',k:/越南|vietnam|河內|胡志明|峴港|會安|芽莊|下龍灣|富國島/i,acc:'#B8473A',soft:'#F6E0DC',bg:'#FAF4F2',sky:['#F2D6CF','#FBF3F0'],mot:'🏮🛵🍜',
+  w:W([['🏮','會安古城燈籠'],['⛰️','下龍灣']],[['🍜','越南河粉'],['🥖','法國麵包'],['☕','滴漏咖啡'],['🥗','生春捲']],[['👘','奧黛'],['👒','斗笠']],[['🛵','機車'],['🚲','人力三輪車']])},
+ fr:{n:'法國',flag:'🇫🇷',k:/法國|france|巴黎|paris|尼斯|里昂|普羅旺斯|馬賽/i,acc:'#3B5B92',soft:'#E0E7F3',bg:'#F4F6FA',sky:['#D8E1F0','#F4F7FB'],mot:'🗼🥐🍷',
+  w:W([['🗼','艾菲爾鐵塔'],['🏛️','羅浮宮'],['🏰','城堡']],[['🥐','可頌'],['🧀','起司'],['🍷','葡萄酒'],['🍮','烤布蕾'],['🥖','長棍麵包']],[['👒','貝雷帽與條紋衫']],[['🚇','巴黎地鐵'],['🚄','TGV 高鐵']])},
+ it:{n:'義大利',flag:'🇮🇹',k:/義大利|意大利|italy|羅馬|米蘭|威尼斯|佛羅倫斯|拿坡里|托斯卡尼/i,acc:'#3C7A4A',soft:'#E0EEE3',bg:'#F4F8F4',sky:['#F1DFC4','#FBF5EC'],mot:'🏛️🍕🛶',
+  w:W([['🏛️','羅馬競技場'],['⛪','大教堂'],['🗼','比薩斜塔']],[['🍕','披薩'],['🍝','義大利麵'],['🍨','義式冰淇淋'],['☕','濃縮咖啡']],[['👞','手工皮件']],[['🛶','貢多拉'],['🛵','偉士牌']])},
+ gb:{n:'英國',flag:'🇬🇧',k:/英國|united kingdom|\buk\b|倫敦|london|愛丁堡|曼徹斯特|牛津|劍橋/i,acc:'#2E4A7D',soft:'#DEE4F0',bg:'#F3F5F9',sky:['#D6DEEC','#F3F6FA'],mot:'🏰💂🫖',
+  w:W([['🕰️','大笨鐘'],['🏰','城堡'],['🎡','倫敦眼']],[['🫖','英式下午茶'],['🐟','炸魚薯條'],['🥧','司康']],[['💂','皇家衛兵'],['🧥','風衣']],[['🚌','雙層巴士'],['🚕','黑色計程車'],['🚇','倫敦地鐵']])},
+ us:{n:'美國',flag:'🇺🇸',k:/美國|usa|united states|紐約|new york|洛杉磯|舊金山|西雅圖|拉斯維加斯|夏威夷|波士頓|芝加哥|關島/i,acc:'#B03A3A',soft:'#F4DEDE',bg:'#FAF4F4',sky:['#D8E3F1','#F4F7FB'],mot:'🗽🌉🍔',
+  w:W([['🗽','自由女神'],['🌉','金門大橋'],['🏙️','摩天大樓']],[['🍔','漢堡'],['🌭','熱狗'],['🥯','貝果'],['🥧','蘋果派']],[['🤠','牛仔帽']],[['🚕','黃色計程車'],['🚋','叮噹車']])}
+};
+const WORLD={n:'',flag:'🌏',acc:'',soft:'',bg:'',sky:['#DCEBEE','#F3F8F8'],mot:'✈️🧳🗺️',w:null};
+function themeOf(t){
+ if(t.theme&&THEMES[t.theme])return THEMES[t.theme];
+ const s=(t.dest||'')+' '+(t.name||'');
+ for(const k in THEMES)if(THEMES[k].k.test(s))return THEMES[k];
+ return WORLD;
+}
+// 季節小鴨：依出發的月份
+function seasonDuck(t){const m=isD(t.start)?pd(t.start).getMonth()+1:0;return m===0?'walk':m<=2||m===12?'winter':m<=4?'spring':m<=6?'hydrangea':m<=8?'beach':'autumn'}
+// 行程類型 → 小鴨
+const TDUCK={景點:'camera',美食:'dumpling',交通:'suitcase',住宿:'sleep',購物:'gift',其他:'map'};
+// 小百科的分類加進口袋名單時用的類型
+const WTYPE={建築:'景點',飲食:'美食',衣著:'購物',交通:'交通'};
+const dark=()=>document.documentElement.dataset.theme==='dark'||(document.documentElement.dataset.theme!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches);
+// 打開某一趟旅行時，整頁換成那個國家的顏色（深色模式維持原本的顏色）
+function applyTheme(t){
+ const r=document.documentElement.style,th=t?themeOf(t):null;
+ ['--acc','--soft','--bg'].forEach(k=>r.removeProperty(k));
+ if(th&&!dark()){if(th.acc)r.setProperty('--acc',th.acc);if(th.soft)r.setProperty('--soft',th.soft);if(th.bg)r.setProperty('--bg',th.bg)}
+}
+
+// ---------- 自己的封面圖片：雲端存在 p_tc_{旅行 id}，手機上快取在 IndexedDB ----------
+const COVER={};
+const IDB=(()=>{let p;const db=()=>p||(p=new Promise((ok,no)=>{const r=indexedDB.open('trip-covers',1);r.onupgradeneeded=()=>r.result.createObjectStore('c');r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)}));
+ const tx=(m,f)=>db().then(d=>new Promise((ok,no)=>{const x=d.transaction('c',m),q=f(x.objectStore('c'));x.oncomplete=()=>ok(q&&q.result);x.onerror=()=>no(x.error)}));
+ return{get:k=>tx('readonly',s=>s.get(k)),set:(k,v)=>tx('readwrite',s=>s.put(v,k)),del:k=>tx('readwrite',s=>s.delete(k))}})();
+const loading={};
+async function loadCover(t){
+ if(!t.cv||(COVER[t.id]&&COVER[t.id].cv===t.cv)||loading[t.id]===t.cv)return;
+ loading[t.id]=t.cv;
+ try{
+  let c=await IDB.get(t.id).catch(()=>null);
+  if(!c||c.cv!==t.cv){const d=CL.col?await CL.col.doc('p_tc_'+t.id).get():null;if(d&&d.d){c={cv:t.cv,d:d.d};IDB.set(t.id,c).catch(()=>{})}}
+  if(c&&c.d){COVER[t.id]=c;if(!busyUI())render()}
+ }catch(e){}
+ delete loading[t.id];
+}
+const coverOf=t=>t.cv&&COVER[t.id]&&COVER[t.id].cv===t.cv?COVER[t.id].d:'';
+// 照片縮小成 1600 像素寬的 JPEG，一張不超過約 0.9 百萬位元組（雲端一個文件的上限）
+async function shrinkImg(file){
+ const bm=await createImageBitmap(file);
+ for(const [w,q] of [[1600,.82],[1280,.75],[1000,.7]]){
+  const k=Math.min(1,w/bm.width),c=document.createElement('canvas');c.width=Math.round(bm.width*k);c.height=Math.round(bm.height*k);
+  c.getContext('2d').drawImage(bm,0,0,c.width,c.height);const d=c.toDataURL('image/jpeg',q);if(d.length<900000)return d;
+ }
+ throw new Error('too big');
+}
+
+// 封面：自己的圖片 > 國家插畫 > 用顏色和圖示畫一張
+function hero(t,small){
+ const th=themeOf(t),src=coverOf(t)||th.img;
+ if(src)return `<div class="hero${small?' sm':''}"><img class="cv" src="${E(src)}" alt=""></div>`;
+ return `<div class="hero gen${small?' sm':''}" style="--s1:${th.sky[0]};--s2:${th.sky[1]}"><span class="sun"></span>
+  <svg class="hills" viewBox="0 0 400 120" preserveAspectRatio="none"><path d="M0 70 C60 30 120 40 180 62 S300 40 400 58 V120 H0Z" fill="${th.acc||'#3D7A86'}" opacity=".18"/><path d="M0 92 C80 70 150 88 230 80 S340 70 400 86 V120 H0Z" fill="${th.acc||'#3D7A86'}" opacity=".28"/></svg>
+  ${small?`<span class="mot">${th.flag}</span>`:`<span class="mot">${th.mot}</span><img class="sd" src="${DUCK(seasonDuck(t))}" alt="">`}</div>`;
+}
+
+// ---------- 畫面 ----------
+function render(){
+ const t=VIEW();
+ applyTheme(t);
+ $('app').innerHTML=t?tripPage(t):listPage();
+ (t?[t]:S.trips).forEach(loadCover);
+ status(CL.st||'連線中…');
+}
+function listPage(){
+ const g={now:[],soon:[],plan:[],past:[]};
+ S.trips.forEach(t=>g[phase(t).k].push(t));
+ g.soon.sort((a,b)=>a.start<b.start?-1:1);g.past.sort((a,b)=>a.start>b.start?-1:1);g.plan.sort((a,b)=>b.u-a.u);
+ const card=t=>{const p=phase(t),n=t.items.length;
+  return `<button class="tr ${p.k==='past'?'past':''}" data-a="open" data-id="${t.id}">${hero(t,1)}<div class="tx"><div class="hd"><b>${E(t.name)}</b><span class="tag ${p.k==='past'||p.k==='plan'?'g':''}">${E(p.txt)}</span></div>
+  <div class="ln">${t.dest?'📍 '+E(t.dest)+' · ':''}${E(range(t))}</div>
+  <div class="ln">${n?n+' 個行程':'還沒有行程'}${t.budget!==''?' · 預算 '+money(t.budget):''}</div></div></button>`};
+ const sec=(k,h)=>g[k].length?`<h2>${h}</h2>`+g[k].map(card).join(''):'';
+ return `<div class="top"><div><a class="home" href="./">‹ 首頁</a><h1>旅遊行程</h1></div><div class="row"><button class="bt" data-a="set" aria-label="設定">⋯</button></div></div>
+ <div id="st"></div>
+ <button class="go" data-a="newtrip" style="width:100%">＋ 規劃新的旅行</button>
+ <button class="tplbtn" data-a="tpl"><img src="${DUCK('backpack')}" alt=""><span><b>行李清單公定版</b><small>${S.tpl.length} 項・新的旅行會先複製一份，之後各自編輯</small></span><span class="sub">編輯 ›</span></button>
+ ${S.trips.length?sec('now','旅行中')+sec('soon','即將出發')+sec('plan','還在想')+sec('past','去過的地方'):`<div class="empty"><img class="duck" src="${DUCK('read')}" alt="">還沒有旅行<br>按上面的按鈕，開始規劃第一趟吧</div>`}`;
+}
+const TABS=[['plan','行程'],['pack','準備清單'],['cost','花費']];
+function tripPage(t){
+ const p=phase(t),th=themeOf(t);
+ return `<div class="top" style="align-items:center"><a class="home" href="#" data-a="back">‹ 全部旅行</a><div class="row"><button class="bt" data-a="pay" aria-label="記帳">💰 記帳</button><button class="bt" data-a="trip" aria-label="編輯旅行">⋯</button></div></div>
+ ${hero(t)}
+ <div class="tcard">${th.n?`<div class="fl">${th.flag} ${E(th.n)}</div>`:''}<h1>${E(t.name)}</h1>
+ <div class="sub" style="margin-top:2px">${t.dest?'📍 '+E(t.dest)+' · ':''}${E(range(t))} · <span class="tag ${p.k==='past'||p.k==='plan'?'g':''}">${E(p.txt)}</span></div>${/東京|tokyo/i.test((t.dest||'')+' '+t.name)?'<a class="bt" href="tokyo.html" style="display:inline-block;margin-top:8px;text-decoration:none">📖 打開東京旅行手帳</a>':''}</div>
+ <div id="st"></div>
+ <div class="tabs">${TABS.map(([k,n])=>`<button data-a="tab" data-k="${k}" class="${TAB===k?'on':''}">${n}</button>`).join('')}</div>
+ ${TAB==='pack'?packTab(t):TAB==='cost'?costTab(t):planTab(t)}`;
+}
+function itemHTML(i){
+ const map=i.place?`<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(i.place)}" target="_blank" rel="noopener" data-stop>🗺 ${E(i.place)}</a>`:'';
+ return `<button class="it ${i.done?'done':''}" data-a="item" data-id="${i.id}"><span class="tm">${E(i.tm)}</span><span class="ic dk"><img src="${DUCK(TDUCK[i.type])}" alt="${E(i.type)}" loading="lazy"></span>
+  <span class="bd"><b>${E(i.title)}</b>${map?`<div class="ln">${map}</div>`:''}${i.note?`<div class="nt">${E(i.note)}</div>`:''}</span>
+  ${i.cost!==''?`<span class="co">${money(i.cost)}</span>`:''}</button>`;
+}
+// 城市小百科：當地的建築、飲食、衣著、交通，點一下加進口袋名單
+function wikiHTML(t){
+ const th=themeOf(t);if(!th.w)return '';
+ const have=new Set(t.items.map(i=>i.title));
+ return `<details class="wiki"${t.items.length?'':' open'}><summary><img src="${DUCK('flag')}" alt="">${E(th.n)}小百科<span class="sub">點一下加進口袋名單</span></summary>
+ ${Object.entries(th.w).map(([k,xs])=>`<div class="wr"><span>${k}</span><div class="wc">${xs.map(([ic,n])=>`<button data-a="wiki" data-k="${k}" data-n="${E(n)}" class="${have.has(n)?'have':''}">${ic} ${E(n)}${have.has(n)?' ✓':''}</button>`).join('')}</div></div>`).join('')}</details>`;
+}
+function planTab(t){
+ const ds=days(t),pk=pocket(t),td=today();
+ const chips=ds.length>1?`<div class="chips">${ds.map((d,k)=>`<button data-a="jump" data-d="${d}" class="${d===td?'on':''}">D${k+1} ${mds(d)}</button>`).join('')}<button data-a="jump" data-d="pocket">口袋名單${pk.length?' '+pk.length:''}</button></div>`:'';
+ const dayHTML=(d,k)=>{const xs=dayItems(t,d),c=xs.reduce((s,i)=>s+(+i.cost||0),0);
+  return `<div class="day ${d===td?'today':''}" id="d-${d}"><div class="dh"><b>第 ${k+1} 天 · ${md(d)}</b><span class="sub">${d===td?'今天':''}${c?' '+money(c):''}</span></div>
+  ${xs.map(itemHTML).join('')||'<div class="sub" style="padding:6px 0">還沒有安排</div>'}
+  <button class="dadd" data-a="additem" data-d="${d}">＋ 加行程</button></div>`};
+ return (ds.length?'':`<div class="card sub">還沒有設定日期。按右上角「⋯」填出發、回程日，就會分成每一天。</div>`)
+  +chips+wikiHTML(t)+ds.map(dayHTML).join('')
+  +`<div class="day" id="d-pocket"><div class="dh"><b>口袋名單</b><span class="sub">想去但還沒排進哪一天</span></div>
+  ${pk.map(itemHTML).join('')||`<div class="sub" style="padding:6px 0;display:flex;align-items:center;gap:10px"><img src="${DUCK('map')}" alt="" style="width:56px;height:56px">想去的景點、餐廳先記在這裡</div>`}
+  <button class="dadd" data-a="additem" data-d="">＋ 加到口袋名單</button></div>`
+  +(t.memo?`<h2>備註</h2><div class="card" style="white-space:pre-wrap;overflow-wrap:anywhere">${E(t.memo)}</div>`:'');
+}
+function packTab(t){
+ const on=t.pack.filter(p=>p.on).length,n=t.pack.length,have=new Set(t.pack.flatMap(p=>[p.n,p.t])),miss=S.tpl.filter(x=>!have.has(x)).length;
+ return `<div class="card"><div class="row" style="justify-content:space-between"><b>準備好了 ${on} / ${n}</b>${on?'<button class="bt" data-a="packreset" style="padding:4px 10px;font-size:13px">全部取消勾選</button>':''}</div>
+  <div class="bar"><i style="width:${n?on/n*100:0}%"></i></div></div>
+ <div class="add"><input id="pin" placeholder="要帶的東西、出發前要做的事" autocomplete="off" enterkeyhint="done"><button class="go" data-a="packadd">加入</button></div>
+ ${t.pack.map(p=>`<div class="ck ${p.on?'on':''}"><label><input type="checkbox" data-pk="${p.id}" ${p.on?'checked':''}><span>${E(p.n)}</span></label><button data-a="packren" data-id="${p.id}" aria-label="改名">✎</button><button data-a="packdel" data-id="${p.id}" aria-label="刪除">✕</button></div>`).join('')||'<div class="empty">清單是空的</div>'}
+ <div class="card sub" style="margin-top:14px">這份清單只屬於這趟旅行，改了不會影響公定版和其他旅行。
+  <div class="row" style="margin-top:8px"><button class="bt" data-a="packfill" ${miss?'':'disabled style="opacity:.5"'}>從公定版補上缺少的${miss?'（'+miss+' 項）':''}</button><button class="bt" data-a="packsave">把這份存成公定版</button><button class="bt" data-a="tpl">看公定版</button></div></div>`;
+}
+function costTab(t){
+ const est=spent(t),b=+t.budget||0,ds=days(t),ac=actual(t),real=ac?ac.tot:0;
+ const by=TYPES.map(([k,ic])=>[k,ic,t.items.filter(i=>i.type===k).reduce((s,i)=>s+(+i.cost||0),0)]).filter(x=>x[2]);
+ const perDay=ds.map((d,k)=>[k,d,dayItems(t,d).reduce((s,i)=>s+(+i.cost||0),0)]).filter(x=>x[2]);
+ const pk=pocket(t).reduce((s,i)=>s+(+i.cost||0),0);
+ const bar=v=>b?`<div class="bar ${v>b?'over':''}"><i style="width:${Math.min(100,v/b*100)}%"></i></div>`:'';
+ const ac2=ac?Object.keys(ac.by).map(k=>[k,ac.by[k]]).sort((x,y)=>y[1]-x[1]):[];
+ return `<div class="card"><div class="sum"><div><b>${money(real)}</b><span>實際花了</span></div><div><b>${money(est)}</b><span>預估</span></div>
+  <div><b class="${b&&real>b?'bad':''}">${t.budget===''?'—':money(b-real)}</b><span>${t.budget===''?'預算':b&&real>b?'超出預算':'預算剩下'}</span></div></div>
+  ${bar(real)}
+  <div class="sub" style="margin-top:8px">${ac?`「實際花了」是記帳裡這趟旅行的花費（${ac.n} 筆）：${isD(t.start)?md(t.start)+' 到 '+md(t.end||t.start)+' 記的帳都會算進去，':''}出發前買的機票、訂房，到記帳那邊按「加入出發前的花費」。`:'這支手機還沒打開過記帳，打開一次記帳後這裡就會顯示實際花了多少。'}${t.budget===''?'按右上角「⋯」可以設定預算。':''}</div>
+  <div class="row" style="margin-top:10px"><button class="go" data-a="pay">💰 記一筆</button><button class="bt" data-a="mdetail">在記帳看明細</button></div></div>
+ ${ac2.length?`<h2>實際花在哪</h2><div class="card">${ac2.map(([k,v])=>`<div class="kv"><span>${E(k)}</span><b>${money(v)}</b></div>`).join('')}</div>`:''}
+ ${by.length?`<h2>預估：分類</h2><div class="card">${by.map(([k,ic,v])=>`<div class="kv"><span>${ic} ${k}</span><b>${money(v)}</b></div>`).join('')}</div>`:''}
+ ${perDay.length||pk?`<h2>預估：每天</h2><div class="card">${perDay.map(([k,d,v])=>`<div class="kv"><span>第 ${k+1} 天 · ${md(d)}</span><b>${money(v)}</b></div>`).join('')}${pk?`<div class="kv"><span>口袋名單（還沒排）</span><b>${money(pk)}</b></div>`:''}</div>`:''}
+ ${est?'':'<div class="empty">每個行程可以填「預估花費」，這裡會幫你加總</div>'}`;
+}
+
+// ---------- 彈出視窗 ----------
+// 視窗最上面有「‹ 返回」；手機的返回手勢、瀏覽器的上一頁也會關掉視窗
+function sheet(html,bind){
+ const s=$('sheet');
+ if(!s.classList.contains('on'))try{history.pushState({sheet:1},'',location.href)}catch(e){}
+ s.innerHTML=`<div class="bk"></div><div class="pn"><div class="back"><button data-x>‹ 返回</button></div>${html}</div>`;s.classList.add('on');
+ s.querySelector('.bk').onclick=closeSheet;
+ s.querySelectorAll('[data-x]').forEach(b=>b.onclick=closeSheet);
+ if(bind)bind(s.querySelector('.pn'));
+}
+function hideSheet(){const s=$('sheet');if(!s.classList.contains('on'))return;s.classList.remove('on');s.innerHTML='';applyPending()}
+function closeSheet(){if(history.state&&history.state.sheet)history.back();else hideSheet()}
+addEventListener('popstate',()=>{hideSheet();render()});
+const enter=(el,fn)=>{el.onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();fn()}}};
+const val=(p,id)=>p.querySelector('#'+id).value.trim();
+
+function tripSheet(id){
+ const t=id?trip(id):null;
+ sheet(`<h3>${t?'編輯旅行':'規劃新的旅行'}</h3>
+  <label class="f"><span>旅行名稱</span><input id="tn" value="${E(t?t.name:'')}" placeholder="例如：京都賞楓 5 天"></label>
+  <label class="f"><span>目的地</span><input id="td" value="${E(t?t.dest:'')}" placeholder="例如：日本京都"></label>
+  <div class="two"><label class="f"><span>出發日</span><input id="ts" type="date" value="${E(t?t.start:'')}"></label><label class="f"><span>回程日</span><input id="te" type="date" value="${E(t?t.end:'')}"></label></div>
+  <label class="f"><span>預算（元）</span><input id="tb" type="number" inputmode="decimal" min="0" value="${E(t?t.budget:'')}" placeholder="可以不填"></label>
+  <label class="f"><span>國家主題（封面、顏色、城市小百科）</span><select id="tth"><option value="">自動（看目的地）</option>${Object.entries(THEMES).map(([k,x])=>`<option value="${k}" ${t&&t.theme===k?'selected':''}>${x.flag} ${x.n}</option>`).join('')}</select></label>
+  ${t?`<div class="f"><span class="sub" style="display:block;margin-bottom:4px">封面圖片</span><div class="cvp">${hero(t)}<div class="row"><button class="bt" id="tcv">換成自己的圖片</button>${t.cv?'<button class="bt" id="tcvx">用預設的</button>':''}</div></div></div>`:''}
+  <label class="f"><span>備註</span><textarea id="tm" placeholder="航班、訂房代號、同行的人…">${E(t?t.memo:'')}</textarea></label>
+  <div id="tmsg" class="sub bad" style="min-height:18px"></div>
+  ${t?`<div class="row" style="margin-bottom:6px"><button class="bt" id="tcp">複製成文字（貼到 LINE）</button><button class="bt" id="tdup">複製一份</button></div>`:''}
+  <div class="foot">${t?'<button class="bt bad" id="tdel">刪除這趟旅行</button>':'<span></span>'}<button class="go" id="tok">${t?'儲存':'建立'}</button></div>`,p=>{
+  const ts=p.querySelector('#ts'),te=p.querySelector('#te');
+  ts.onchange=()=>{if(ts.value&&(!te.value||te.value<ts.value))te.value=ts.value};
+  p.querySelector('#tok').onclick=()=>{
+   const name=val(p,'tn')||val(p,'td');
+   if(!name){p.querySelector('#tmsg').textContent='請填旅行名稱或目的地';return}
+   let s=ts.value,e=te.value;
+   if(s&&e&&diff(s,e)>=MAXDAYS){p.querySelector('#tmsg').textContent='一趟旅行最多 '+MAXDAYS+' 天';return}
+   const o={name,dest:val(p,'td'),start:s,end:e||s,budget:num(val(p,'tb')),memo:p.querySelector('#tm').value.trim(),theme:p.querySelector('#tth').value};
+   if(t){
+    // 改了出發日：原本排好的行程跟著一起移動，維持在第幾天
+    const sh=t.start&&o.start&&t.start!==o.start?diff(t.start,o.start):0;
+    op(()=>{const x=trip(t.id);if(sh)x.items.forEach(i=>{if(i.d)i.d=addD(i.d,sh)});Object.assign(x,o,{u:Date.now()});Object.assign(x,fixTrip(x))},'已儲存');
+    closeSheet();
+   }else{
+    const n=fixTrip({...o,id:nid(),pack:S.tpl.map(x=>({n:x,t:x}))});
+    op(()=>S.trips.push(n));TAB='plan';
+    goTrip(n.id);
+   }
+  };
+  if(!t)return;
+  // 自己的封面：縮小後存到雲端（只有自己看得到），這支手機也留一份
+  p.querySelector('#tcv').onclick=()=>{
+   const f=document.createElement('input');f.type='file';f.accept='image/*';
+   f.onchange=async()=>{
+    const file=f.files[0];if(!file)return;
+    let d;try{d=await shrinkImg(file)}catch(e){return alert('這張圖片太大或讀不出來，換一張試試。')}
+    const cv=Date.now();COVER[t.id]={cv,d};IDB.set(t.id,{cv,d}).catch(()=>{});
+    if(CL.col)CL.col.doc('p_tc_'+t.id).set({d,at:cv}).catch(()=>toast('封面還沒存到雲端，等一下會再試'));
+    op(()=>{trip(t.id).cv=cv},'已換封面');closeSheet();
+   };
+   f.click();
+  };
+  const cx=p.querySelector('#tcvx');
+  if(cx)cx.onclick=()=>{delete COVER[t.id];IDB.del(t.id).catch(()=>{});if(CL.col)CL.col.doc('p_tc_'+t.id).set({d:'',at:Date.now()}).catch(()=>{});op(()=>{trip(t.id).cv=0},'已改回預設封面');closeSheet()};
+  p.querySelector('#tdel').onclick=()=>{
+   if(!confirm('刪除「'+t.name+'」和裡面所有行程？'))return;
+   op(()=>{S.trips=S.trips.filter(x=>x.id!==t.id)},'已刪除「'+t.name+'」');goTrip('');
+  };
+  p.querySelector('#tdup').onclick=()=>{
+   const n=fixTrip({...JSON.parse(JSON.stringify(t)),id:nid(),name:t.name+'（複製）',u:Date.now()});
+   n.items.forEach(i=>{i.id=nid();i.done=false});n.pack.forEach(x=>{x.id=nid();x.on=false});
+   op(()=>S.trips.push(n),'已複製一份');goTrip(n.id);
+  };
+  p.querySelector('#tcp').onclick=async()=>{
+   const L=[t.name+(t.dest?'｜'+t.dest:''),range(t)];
+   days(t).forEach((d,k)=>{const xs=dayItems(t,d);L.push('','【第 '+(k+1)+' 天 '+md(d)+'】');if(!xs.length)L.push('（還沒安排）');xs.forEach(i=>L.push((i.tm?i.tm+' ':'')+ICON[i.type]+' '+i.title+(i.place&&i.place!==i.title?'（'+i.place+'）':'')))});
+   const pk=pocket(t);if(pk.length){L.push('','【口袋名單】');pk.forEach(i=>L.push(ICON[i.type]+' '+i.title))}
+   if(t.memo)L.push('','備註：'+t.memo);
+   const txt=L.join('\n');
+   try{await navigator.clipboard.writeText(txt);toast('已複製，可以貼到 LINE 了')}catch(e){prompt('複製下面的文字：',txt)}
+  };
+ });
+}
+
+function itemSheet(t,id,d){
+ const i=id?t.items.find(x=>x.id===id):null;
+ let type=i?i.type:'景點';
+ const ds=days(t),cur=i?i.d:d;
+ sheet(`<h3>${i?'編輯行程':'加行程'}</h3>
+  <div class="f"><span class="sub" style="display:block;margin-bottom:4px">類型</span><div class="types" id="ity">${TYPES.map(([k,ic])=>`<button data-ty="${k}" class="${type===k?'on':''}">${ic} ${k}</button>`).join('')}</div></div>
+  <label class="f"><span>名稱</span><input id="ititle" value="${E(i?i.title:'')}" placeholder="例如：清水寺、搭新幹線到大阪"></label>
+  <div class="two"><label class="f"><span>哪一天</span><select id="iday">${ds.map((x,k)=>`<option value="${x}" ${x===cur?'selected':''}>第 ${k+1} 天 · ${md(x)}</option>`).join('')}<option value="" ${ds.includes(cur)?'':'selected'}>口袋名單（還沒排）</option></select></label>
+  <label class="f"><span>時間</span><input id="itm" type="time" value="${E(i?i.tm:'')}"></label></div>
+  <label class="f"><span>地點／地址（會連到 Google 地圖）</span><input id="ipl" value="${E(i?i.place:'')}" placeholder="可以不填"></label>
+  <label class="f"><span>預估花費（元）</span><input id="ico" type="number" inputmode="decimal" min="0" value="${E(i?i.cost:'')}" placeholder="可以不填"></label>
+  <label class="f"><span>備註</span><textarea id="ino" placeholder="訂位代號、營業時間、必點…">${E(i?i.note:'')}</textarea></label>
+  ${i?`<label class="row" style="margin-bottom:6px"><input type="checkbox" id="idone" style="width:20px;height:20px;accent-color:var(--acc)" ${i.done?'checked':''}> 已經去過／完成</label>`:''}
+  <div id="imsg" class="sub bad" style="min-height:18px"></div>
+  ${i?'<button class="bt" id="ipay" style="width:100%;margin-bottom:6px">💰 付錢了，記到記帳</button>':''}
+  <div class="foot">${i?'<button class="bt bad" id="idel">刪除</button>':'<span></span>'}<button class="go" id="iok">${i?'儲存':'加入'}</button></div>`,p=>{
+  p.querySelectorAll('[data-ty]').forEach(b=>b.onclick=()=>{type=b.dataset.ty;p.querySelectorAll('[data-ty]').forEach(x=>x.classList.toggle('on',x===b))});
+  const ok=()=>{
+   const title=val(p,'ititle');
+   if(!title){p.querySelector('#imsg').textContent='請填名稱';return}
+   const o={type,title,d:p.querySelector('#iday').value,tm:p.querySelector('#itm').value,place:val(p,'ipl'),cost:num(val(p,'ico')),note:p.querySelector('#ino').value.trim()};
+   if(i)o.done=p.querySelector('#idone').checked;
+   op(()=>{const x=trip(t.id);if(i)Object.assign(x.items.find(y=>y.id===i.id)||{},o);else x.items.push({id:nid(),done:false,...o});x.u=Date.now()},i?'已儲存':'已加入「'+title+'」');
+   closeSheet();
+  };
+  p.querySelector('#iok').onclick=ok;enter(p.querySelector('#ititle'),ok);
+  if(i)p.querySelector('#ipay').onclick=()=>{
+   const q={plan:t.id,d:i.d&&i.d<=today()?i.d:today(),note:i.title};if(i.cost!=='')q.amt=i.cost;if(MCAT[i.type])q.cat=MCAT[i.type];
+   goMoney('add',q);
+  };
+  if(i)p.querySelector('#idel').onclick=()=>{closeSheet();op(()=>{const x=trip(t.id);x.items=x.items.filter(y=>y.id!==i.id)},'已刪除「'+i.title+'」')};
+  if(!i)setTimeout(()=>p.querySelector('#ititle').focus(),50);
+ });
+}
+
+// 行李清單公定版：在這裡統一修改；新的旅行會複製一份，之後各自編輯，不再連動
+function tplSheet(){
+ const pn=document.querySelector('#sheet .pn'),y=pn?pn.scrollTop:0;
+ sheet(`<h3>行李清單公定版</h3>
+  <div class="sub" style="margin-bottom:10px">新的旅行會先複製這份清單，複製之後就各自獨立：在旅行裡改，不會改到這裡；這裡改了，也不會改到已經建立的旅行（可以在旅行裡按「從公定版補上缺少的」）。</div>
+  <div class="add" style="margin-top:0"><input id="tpin" placeholder="新增項目，例如：泳衣" autocomplete="off" enterkeyhint="done"><button class="go" id="tpadd">加入</button></div>
+  ${S.tpl.map((n,i)=>`<div class="ck tp"><input class="tpn" data-i="${i}" value="${E(n)}" aria-label="項目名稱"><button data-up="${i}" aria-label="往上移" ${i?'':'disabled style="opacity:.3"'}>↑</button><button data-tx="${i}" aria-label="刪除">✕</button></div>`).join('')||'<div class="empty">公定版是空的</div>'}
+  <div class="foot"><button class="bt" id="tpreset">恢復預設清單</button><button class="go" data-x>完成</button></div>`,p=>{
+  const again=()=>tplSheet();
+  const add=()=>{const v=p.querySelector('#tpin').value.trim();if(!v)return;if(S.tpl.includes(v))return toast('「'+v+'」已經在清單裡了');op(()=>S.tpl.push(v));again();setTimeout(()=>{const x=document.querySelector('#tpin');if(x)x.focus()},0)};
+  p.querySelector('#tpadd').onclick=add;enter(p.querySelector('#tpin'),add);
+  p.querySelectorAll('.tpn').forEach(inp=>inp.onchange=()=>{const i=+inp.dataset.i,v=inp.value.trim();if(!v){inp.value=S.tpl[i];return}if(v!==S.tpl[i])op(()=>{S.tpl[i]=v})});
+  p.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>{const i=+b.dataset.up;if(!i)return;op(()=>{[S.tpl[i-1],S.tpl[i]]=[S.tpl[i],S.tpl[i-1]]});again()});
+  p.querySelectorAll('[data-tx]').forEach(b=>b.onclick=()=>{const i=+b.dataset.tx,n=S.tpl[i];op(()=>{S.tpl.splice(i,1)},'已從公定版刪除「'+n+'」');again()});
+  p.querySelector('#tpreset').onclick=()=>{if(!confirm('把公定版恢復成一開始的預設清單？'))return;op(()=>{S.tpl=PACK.slice()},'已恢復預設');again()};
+ });
+ const p2=document.querySelector('#sheet .pn');if(p2)p2.scrollTop=y;
+}
+function setSheet(){
+ sheet(`<h3>設定</h3>
+  <div class="card sub" style="margin-bottom:14px">旅遊行程只有你自己看得到，存在你的帳號裡，手機和電腦會同步。<br>每趟旅行在「記帳 → 更多 → 旅行」會自動有一筆，旅行期間記的帳都會算進去。</div>
+  <div class="sub" style="margin-bottom:6px">備份</div>
+  <div class="row" style="margin-bottom:14px"><button class="bt" id="exp">下載備份檔</button><button class="bt" id="imp">從備份檔還原</button></div>
+  <div class="foot">${window.fbLogout?'<button class="bt" id="lo">登出</button>':'<span></span>'}<button class="go" data-x>完成</button></div>`,p=>{
+  p.querySelector('#exp').onclick=()=>{
+   const d=new Date(),a=document.createElement('a');
+   a.href=URL.createObjectURL(new Blob([JSON.stringify(S,null,1)],{type:'application/json'}));a.download='旅遊行程-'+ymd(d)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+  };
+  p.querySelector('#imp').onclick=()=>$('impf').click();
+  const lo=p.querySelector('#lo');if(lo)lo.onclick=()=>window.fbLogout();
+ });
+}
+$('impf').onchange=async e=>{
+ const f=e.target.files[0];e.target.value='';if(!f)return;
+ let o;try{o=fix(JSON.parse(await f.text()))}catch(x){return alert('這不是「旅遊行程」的備份檔。')}
+ if(!confirm('用備份檔取代現在的資料？（還原後可以按「復原」）'))return;
+ closeSheet();op(()=>{S=o},'已從備份還原');
+};
+
+function onClick(e){
+ if(e.target.closest('[data-stop]'))return;  // 點地圖連結：直接打開地圖，不要打開編輯
+ const b=e.target.closest('[data-a]');if(!b)return;
+ const a=b.dataset.a,t=VIEW();
+ if(a==='open')return goTrip(b.dataset.id);
+ if(a==='back'){e.preventDefault();return goTrip('')}
+ if(a==='newtrip')return tripSheet();
+ if(a==='set')return setSheet();
+ if(a==='tpl')return tplSheet();
+ if(!t)return;
+ if(a==='trip')return tripSheet(t.id);
+ if(a==='pay')return goMoney('add',{plan:t.id,d:today()});
+ if(a==='mdetail')return goMoney('trip',{plan:t.id});
+ if(a==='tab'){TAB=b.dataset.k;try{localStorage.setItem('trip-tab',TAB)}catch(x){}return render()}
+ if(a==='jump'){const el=$('d-'+b.dataset.d);if(el)el.scrollIntoView({behavior:'smooth',block:'start'});return}
+ if(a==='additem')return itemSheet(t,null,b.dataset.d);
+ if(a==='wiki'){const n=b.dataset.n;if(t.items.some(i=>i.title===n))return toast('「'+n+'」已經在行程裡了');return op(()=>trip(t.id).items.push({id:nid(),d:'',tm:'',type:WTYPE[b.dataset.k]||'其他',title:n,place:'',cost:'',note:'',done:false}),'已把「'+n+'」加進口袋名單')}
+ if(a==='item')return itemSheet(t,b.dataset.id);
+ if(a==='packadd'){const v=$('pin').value.trim();if(!v)return;op(()=>trip(t.id).pack.push({id:nid(),n:v,on:false}));setTimeout(()=>{const x=$('pin');if(x)x.focus()},0);return}
+ if(a==='packdel'){const x=t.pack.find(y=>y.id===b.dataset.id);return op(()=>{const tt=trip(t.id);tt.pack=tt.pack.filter(y=>y.id!==x.id)},'已刪除「'+x.n+'」')}
+ if(a==='packren'){const x=t.pack.find(y=>y.id===b.dataset.id);if(!x)return;const n=prompt('改成什麼？',x.n);if(n==null||!n.trim()||n.trim()===x.n)return;return op(()=>{const y=trip(t.id).pack.find(z=>z.id===x.id);if(y)y.n=n.trim()},'已改成「'+n.trim()+'」')}
+ if(a==='packfill'){const have=new Set(t.pack.flatMap(p=>[p.n,p.t])),add=S.tpl.filter(x=>!have.has(x));if(!add.length)return toast('公定版的項目都有了');return op(()=>trip(t.id).pack.push(...add.map(n=>({id:nid(),n,t:n,on:false}))),'已補上 '+add.length+' 項')}
+ if(a==='packsave'){if(!confirm('用這趟的清單（'+t.pack.length+' 項）取代公定版？之後新的旅行會用這份。已經建立的旅行不會改變。'))return;return op(()=>{S.tpl=[...new Set(trip(t.id).pack.map(p=>p.n))]},'已存成公定版')}
+ if(a==='packreset')return op(()=>trip(t.id).pack.forEach(x=>x.on=false),'已全部取消勾選');
+}
+$('app').addEventListener('click',onClick);
+$('app').addEventListener('change',e=>{
+ const c=e.target.closest('[data-pk]'),t=VIEW();if(!c||!t)return;
+ op(()=>{const x=trip(t.id).pack.find(y=>y.id===c.dataset.pk);if(x)x.on=c.checked});
+});
+$('app').addEventListener('keydown',e=>{if(e.target.id==='pin'&&e.key==='Enter'&&!e.isComposing){e.preventDefault();const b=document.querySelector('[data-a="packadd"]');if(b)b.click()}});
+// 換頁（全部旅行 ⇄ 某一趟）：網址加上 #t=id，手機的返回手勢可以回到上一頁
+function shown(){hideSheet();render();scrollTo(0,0);if(VIEW()&&TAB==='plan')setTimeout(()=>{const el=$('d-'+today());if(el)el.scrollIntoView({block:'start'})},30)}
+function goTrip(id){
+ const u=id?'#t='+encodeURIComponent(id):location.pathname+location.search;
+ // 從彈出視窗換頁：取代視窗那一筆紀錄，按返回才不會多停一次
+ if(history.state&&history.state.sheet)history.replaceState(null,'',u);else history.pushState(null,'',u);
+ shown();
+}
+addEventListener('hashchange',shown);
+
+render();
+cloudInit();
+</script>
+</body>
+</html>

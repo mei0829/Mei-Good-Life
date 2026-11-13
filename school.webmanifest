@@ -1,0 +1,13 @@
+{
+  "name": "作業與成績",
+  "short_name": "作業成績",
+  "start_url": "./school.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#EEF1F5",
+  "theme_color": "#EEF1F5",
+  "lang": "zh-Hant",
+  "icons": [
+    { "src": "school.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

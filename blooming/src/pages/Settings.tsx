@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
-import { Download, Upload, Trash2, ShieldCheck } from 'lucide-react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { Download, Upload, Trash2, ShieldCheck, Cloud, RefreshCw } from 'lucide-react';
+import { cloud } from '../data/cloud';
 import { useApp, STAGE_LABEL } from '../app';
 import { data } from '../data/repo';
 import { TABLES, TABLE_LABEL, type Stage, type TableName } from '../data/types';
 import { ConfirmPregnancy } from '../components/Stage';
-import { Note, PageHeader, Section, cx, useToast } from '../components/ui';
+import { PageHeader, Section, cx, useToast } from '../components/ui';
 import { today as todayStr } from '../lib/dates';
 import { THEMES, THEME_IDS, type ThemeId } from '../lib/theme';
 import { Brand } from '../components/Brand';
@@ -53,7 +54,7 @@ export default function SettingsPage() {
   };
   const persist = async () => { const ok = await navigator.storage?.persist?.(); setPersisted(!!ok); toast(ok ? '瀏覽器已同意保留資料' : '瀏覽器沒有同意，請定期備份'); };
   const wipe = async () => {
-    const t = prompt('這會刪除這個瀏覽器裡「幸孕女子」的全部資料，無法復原。\n請輸入「刪除」確認：');
+    const t = prompt('這會刪除「幸孕女子」的全部資料（這支手機和雲端都會刪掉，其他裝置同步後也會刪掉），無法復原。\n請輸入「刪除」確認：');
     if (t !== '刪除') return;
     await data.clearAll(); toast('已刪除全部資料');
   };
@@ -92,8 +93,10 @@ export default function SettingsPage() {
         </div>
 
         <div>
+          <CloudCard />
+
           <Section title="備份與還原">
-            <div className="mb-4"><Note tone="rose">資料只存在<b>這個瀏覽器</b>，不會上傳到任何伺服器。清除瀏覽器資料、使用無痕模式、換手機或換瀏覽器，資料都可能消失，也不會在手機和電腦之間同步。請定期下載備份檔，放在安全的地方。</Note></div>
+            <p className="text-[12.5px] text-mute mb-3">雲端已經會幫你保存；想多一份保險，也可以下載備份檔，放在安全的地方。</p>
             <div className="flex flex-wrap gap-2">
               <button className="btn-primary" onClick={backup}><Download size={15} strokeWidth={1.5} />下載完整備份檔</button>
               <button className="btn-ghost" onClick={() => restoreInp.current?.click()}><Upload size={15} strokeWidth={1.5} />從備份還原</button>
@@ -112,9 +115,9 @@ export default function SettingsPage() {
 
           <Section title="隱私與儲存">
             <ul className="text-[13px] leading-relaxed space-y-1.5 text-ink/85">
-              <li>・不需要登入，健康資料不會傳送到外部服務，也不會出現在網址裡。</li>
-              <li>・資料存在瀏覽器內建的資料庫；這不是加密保險箱，能使用這台裝置的人就可能看到。</li>
-              <li>・附件與照片也存在本機，會包含在完整備份裡。</li>
+              <li>・資料先存在這支手機，再同步到你自己的私人雲端（跟記帳同一個帳號），只有你登入後看得到，不會分享給家人或其他人。</li>
+              <li>・健康資料不會出現在網址裡。手機上的資料不是加密保險箱，能使用這台裝置的人就可能看到。</li>
+              <li>・照片與附件也會同步（照片太大會縮小後再上傳，手機上的原檔不變），也包含在完整備份裡。</li>
             </ul>
             <div className="flex flex-wrap items-center gap-3 mt-4 text-[13px]">
               <span className="text-mute">已使用 {usage || '—'}</span>
@@ -124,7 +127,7 @@ export default function SettingsPage() {
           </Section>
 
           <Section title="刪除資料">
-            <button className="btn-ghost text-alert" onClick={wipe}><Trash2 size={15} strokeWidth={1.5} />刪除這個瀏覽器的全部資料</button>
+            <button className="btn-ghost text-alert" onClick={wipe}><Trash2 size={15} strokeWidth={1.5} />刪除全部資料（手機和雲端）</button>
           </Section>
         </div>
       </div>
@@ -133,6 +136,41 @@ export default function SettingsPage() {
   );
 }
 const confirm_ = (m: string) => window.confirm(m);
+
+const fmtTime = (t?: number) => { if (!t) return ''; const d = new Date(t); return `${d.getMonth() + 1} 月 ${d.getDate()} 日 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+
+/** 雲端同步：狀態、立刻同步；還沒登入就在這裡登入 */
+function CloudCard() {
+  const st = useSyncExternalStore(cloud.subscribe, cloud.get);
+  const [email, setEmail] = useState(''), [pw, setPw] = useState(''), [err, setErr] = useState(''), [busy, setBusy] = useState(false);
+  const login = async (e: React.FormEvent) => {
+    e.preventDefault(); setBusy(true); setErr('');
+    const m = await cloud.login(email, pw); setBusy(false); if (m) setErr(m); else setPw('');
+  };
+  const text = st.phase === 'ok' ? `已同步${st.last ? '（' + fmtTime(st.last) + '）' : ''}` : st.phase === 'syncing' ? '同步中…'
+    : st.phase === 'starting' ? '連線中…' : st.phase === 'login' ? '還沒登入，資料只存在這支手機' : st.msg || '';
+  return (
+    <Section title="雲端同步">
+      <div className="flex items-center gap-2 text-[14px]">
+        <Cloud size={17} strokeWidth={1.5} className={st.phase === 'ok' ? 'text-forest' : st.phase === 'error' || st.phase === 'local' ? 'text-alert' : 'text-mute'} />
+        <span>{text}</span>
+      </div>
+      {st.email && <p className="text-[12.5px] text-mute mt-1">帳號：{st.email}</p>}
+      <p className="text-[12.5px] text-mute mt-2 leading-relaxed">登入後，資料會同步到你自己的私人雲端：換手機不會不見，手機和電腦也會同步。沒有網路時照樣可以記，連上網路會自動補上。</p>
+      {!!st.tooBig && <p className="text-[12.5px] text-alert mt-2">有 {st.tooBig} 個附件太大（超過約 1 百萬位元組，又不是照片沒辦法縮小），只存在這支手機，記得用備份檔保存。</p>}
+      {(st.phase === 'ok' || st.phase === 'error') && st.email && <button className="btn-ghost mt-3" onClick={() => cloud.syncNow()}><RefreshCw size={15} strokeWidth={1.5} />立刻同步</button>}
+      {st.phase === 'login' && (
+        <form onSubmit={login} className="mt-3 space-y-2">
+          <p className="text-[12.5px] text-mute">用跟記帳一樣的帳號登入（在記帳登入過，這裡也會自動登入）：</p>
+          <input className="field" type="email" autoComplete="username" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
+          <input className="field" type="password" autoComplete="current-password" placeholder="密碼" value={pw} onChange={e => setPw(e.target.value)} required />
+          {err && <p className="text-[12.5px] text-alert">{err}</p>}
+          <button className="btn-primary" disabled={busy}>{busy ? '登入中…' : '登入並開始同步'}</button>
+        </form>
+      )}
+    </Section>
+  );
+}
 
 /** 主題卡片：主題自己的顏色畫一個小小的畫面預覽 */
 function ThemeCard({ id, on, onPick }: { id: ThemeId; on: boolean; onPick: () => void }) {

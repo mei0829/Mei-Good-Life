@@ -39,6 +39,12 @@ a.tile:active{transform:scale(.97)}
 .hd{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
 .lk{display:flex;align-items:center;gap:5px;margin-top:2px;border:1px solid var(--line);background:var(--card);color:var(--acc);border-radius:999px;padding:6px 13px 6px 10px;font:inherit;font-size:13px;cursor:pointer}
 .lk svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tile{position:relative}
+.cp{position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--sub);display:grid;place-items:center;padding:0;cursor:pointer}
+.cp svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.cp.ok{color:var(--acc);border-color:var(--acc)}
+#toast{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);font-size:13px;padding:9px 16px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .2s;white-space:nowrap;z-index:20}
+#toast.on{opacity:.92}
 footer{text-align:center;font-size:11px;color:var(--sub);margin-top:36px;opacity:.8}
 </style>
 <link rel="stylesheet" href="look.css">
@@ -60,6 +66,11 @@ footer{text-align:center;font-size:11px;color:var(--sub);margin-top:36px;opacity
   <div><b>行事曆</b><p>課表、跟進、生日、保固</p></div>
   <span class="tag">私人</span>
  </a>
+ <a class="tile k4" id="trip" href="trip.html" hidden>
+  <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0C18.5 15.4 12 21 12 21z"/><circle cx="12" cy="10" r="2.3"/></svg></div>
+  <div><b>旅遊行程</b><p>每天的行程、準備清單、跟記帳連動</p></div>
+  <span class="tag">私人</span>
+ </a>
  <a class="tile k3" id="roster" href="https://mei0829.github.io/Uultra/" hidden>
   <div class="ic"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 11l2 2 4-4"/></svg></div>
   <div><b>新人名單</b><p>新人資訊、跟進、課表、組織</p></div>
@@ -68,7 +79,7 @@ footer{text-align:center;font-size:11px;color:var(--sub);margin-top:36px;opacity
  <a class="tile k3" id="bloom" href="blooming/" hidden>
   <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 21V10"/><path d="M12 15c-2.5-.4-4.4-2.2-4.8-5 2.8.2 4.5 2 4.8 5zM12 13c2.5-.4 4.4-2.2 4.8-5-2.8.2-4.5 2-4.8 5z"/><circle cx="12" cy="7" r="2.3"/></svg></div>
   <div><b>幸孕女子</b><p>備孕、孕期紀錄、產檢、花費與保險</p></div>
-  <span class="tag">只存在這支手機</span>
+  <span class="tag">私人</span>
  </a>
  <a class="tile k2" href="cabinet.html">
   <div class="ic"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M5 9h14M5 15h14M11 6h2M11 12h2M11 18h2"/></svg></div>
@@ -89,20 +100,27 @@ footer{text-align:center;font-size:11px;color:var(--sub);margin-top:36px;opacity
   <div><b>衣服穿搭</b><p>衣櫃清單、搭配紀錄</p></div>
   <span class="tag">私人</span>
  </div>
- <div class="tile k4 soon">
-  <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0C18.5 15.4 12 21 12 21z"/><circle cx="12" cy="10" r="2.3"/></svg></div>
-  <div><b>旅遊紀錄</b><p>去過的地方、行程、照片</p></div>
-  <span class="tag">家人共用</span>
- </div>
 </div>
 
 <footer>© 2026 mei0829 版權所有</footer>
 </main>
 <script>
 // 記帳只在管理員登入過的手機上顯示
-try{if(localStorage.getItem('mgl-role')==='admin'){document.getElementById('money').hidden=false;document.getElementById('cal').hidden=false;document.getElementById('roster').hidden=false;document.getElementById('bloom').hidden=false}}catch(e){}
+try{if(localStorage.getItem('mgl-role')==='admin'){document.getElementById('money').hidden=false;document.getElementById('cal').hidden=false;document.getElementById('roster').hidden=false;document.getElementById('bloom').hidden=false;document.getElementById('trip').hidden=false}}catch(e){}
 // 創業頁只給管理員和被邀請的夥伴看到
 try{if(localStorage.getItem('mgl-role')==='admin'||localStorage.getItem('mgl-biz')==='1')document.getElementById('biz').hidden=false}catch(e){}
+// 每張卡片右上角的「複製連結」：貼到 Safari 打開，就能用「加入主畫面」
+const ICON='<svg viewBox="0 0 24 24"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg>';
+const CHECK='<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+function toast(t){let el=document.getElementById('toast');if(!el){el=document.createElement('div');el.id='toast';document.body.appendChild(el)}el.textContent=t;el.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('on'),2200)}
+async function copy(t){try{await navigator.clipboard.writeText(t);return true}catch(e){const a=document.createElement('textarea');a.value=t;a.setAttribute('readonly','');a.style.cssText='position:fixed;top:0;opacity:0';document.body.appendChild(a);a.select();a.setSelectionRange(0,t.length);let ok=false;try{ok=document.execCommand('copy')}catch(x){}a.remove();return ok}}
+document.querySelectorAll('a.tile').forEach(t=>{
+ const b=document.createElement('button');b.type='button';b.className='cp';b.innerHTML=ICON;
+ const name=t.querySelector('b').textContent;b.setAttribute('aria-label','複製「'+name+'」的連結');
+ b.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();
+  if(await copy(t.href)){b.classList.add('ok');b.innerHTML=CHECK;toast('已複製「'+name+'」的連結，貼到 Safari 網址列');setTimeout(()=>{b.classList.remove('ok');b.innerHTML=ICON},1800)}
+  else prompt('複製這個連結：',t.href)});
+ t.appendChild(b)});
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 const d=new Date(),h=d.getHours();
 document.getElementById('hi').textContent=(h<11?'早安':h<18?'午安':'晚安')+'・'+(d.getMonth()+1)+'/'+d.getDate()+'（'+'日一二三四五六'[d.getDay()]+'）';
