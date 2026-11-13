@@ -220,6 +220,13 @@ textarea{min-height:64px;resize:vertical}
 .cbp{margin-top:6px}
 .pick.sm button{padding:5px 12px;font-size:14px}
 .pick button.new{border-style:dashed;color:var(--sub)}
+/* 回條：全班座號大按鈕 */
+.slg{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px;margin-top:10px}
+.slb{border:1px solid var(--line);background:var(--card);border-radius:14px;padding:8px 2px 6px;text-align:center;line-height:1.2;min-height:72px}
+.slb b{display:block;font-size:22px}.slb span{display:block;font-size:12px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.slb small{display:block;font-size:11px;min-height:13px}
+.slb.on{background:var(--oks);border-color:transparent;color:var(--ok)}.slb.on span{color:var(--ok)}
+.slb.x{opacity:.45}
 /* 班費 */
 .bar2{height:10px;border-radius:99px;background:var(--tile);overflow:hidden;margin-top:12px}.bar2 i{display:block;height:100%;background:var(--blue);border-radius:99px}
 .catr{display:flex;gap:10px;align-items:center;padding:7px 0}.catr span{width:48px;flex:none}.catr b{min-width:70px;text-align:right}
@@ -312,14 +319,14 @@ function fixRec(r){
  if(r.f===1||r.f===2)o.f=r.f;
  if(o.f&&r.p)o.p=String(r.p);
  if(o.f===2&&DT.test(r.fa))o.fa=r.fa;
- if(r.b)o.b=1;if(r.n)o.n=String(r.n);
+ if(r.b)o.b=1;if(r.n)o.n=String(r.n);if(o.s===1&&r.o)o.o=String(r.o);
  return o;
 }
 function fixTasks(a){
  return arr(a).filter(t=>t&&(t.cat||t.title)).map(t=>{
   const r={};Object.keys(t.r&&typeof t.r==='object'?t.r:{}).forEach(k=>{const x=fixRec(t.r[k]);if(Object.keys(x).length)r[k]=x});
   return {id:t.id||nid(),sub:String(t.sub||'其他'),cat:String(t.cat||''),title:String(t.title||''),d:DT.test(t.d)?t.d:today(),due:DT.test(t.due)?t.due:'',
-   g:t.g?1:0,full:+t.full>0?+t.full:100,note:t.note||'',m:t.m?1:0,r,t:+t.t||Date.now(),u:+t.u||Date.now()};
+   g:t.g?1:0,full:+t.full>0?+t.full:100,note:t.note||'',m:t.m?1:0,sl:t.sl?1:0,op:arr(t.op).map(String).filter(Boolean).slice(0,6),r,t:+t.t||Date.now(),u:+t.u||Date.now()};
  });
 }
 let S=fixMeta({classes:[]}),TK={};
@@ -497,6 +504,7 @@ const IC={
  check:SV('<path d="M2.5 13l4 4 8-9M10.5 15.5 12 17l9.5-10"/>'),
  dl:SV('<path d="M12 4v11M7 10.5l5 5 5-5M4 19.5h16"/>'),
  cbk:SV('<path d="M6 3.5h11a1.5 1.5 0 0 1 1.5 1.5v14.5H7.5A2.5 2.5 0 0 1 5 17V4.5a1 1 0 0 1 1-1z"/><path d="M5 17a2.5 2.5 0 0 1 2.5-2.5h11M9 8h6M9 11h4"/>'),
+ slip:SV('<path d="M4 7.5l8 5 8-5"/><rect x="4" y="5.5" width="16" height="13" rx="2"/>'),
  miss:SV('<rect x="4" y="3.5" width="16" height="17" rx="2.5"/><path d="M9 9l6 6M15 9l-6 6"/>'),
  exam:SV('<path d="M7 3.5h7l4 4v13H7z"/><path d="M14 3.5v4h4M9.5 12h6M9.5 15.5h4"/>'),
  coin:SV('<circle cx="12" cy="12" r="8.5"/><path d="M14.6 9.3c-.5-.9-1.5-1.4-2.6-1.4-1.5 0-2.6.8-2.6 2 0 2.8 5.4 1.5 5.4 4.3 0 1.2-1.2 2-2.8 2-1.2 0-2.3-.6-2.8-1.6M12 6.3v1.6M12 16.2v1.6"/>'),
@@ -526,7 +534,7 @@ function render(){
  CID=c.id;
  const v=PG.v;
  document.body.classList.toggle('pjm',v==='proj');
- app.innerHTML=v==='exam'?examView():v==='forgot'?forgotView():v==='money'?moneyView():v==='proj'?projView():v==='todo'?todoView():v==='tt'?ttView():v==='cb'?cbView():v==='stus'?stusView():v==='stu'?stuView(PG.id):v==='day'?dayView():v==='tasks'?tasksView():v==='task'?taskView(PG.id):v==='grade'?gradeView():v==='fix'?fixView():v==='export'?exportView():homeView();
+ app.innerHTML=v==='slips'?slipsView():v==='slip'?slipView(PG.id):v==='exam'?examView():v==='forgot'?forgotView():v==='money'?moneyView():v==='proj'?projView():v==='todo'?todoView():v==='tt'?ttView():v==='cb'?cbView():v==='stus'?stusView():v==='stu'?stuView(PG.id):v==='day'?dayView():v==='tasks'?tasksView():v==='task'?taskView(PG.id):v==='grade'?gradeView():v==='fix'?fixView():v==='export'?exportView():homeView();
  bindPage();
  status(CL.st||'連線中…');
 }
@@ -536,6 +544,7 @@ function bindPage(){
  const tn_=$('ttnote');if(tn_)tn_.onchange=()=>{const v=tn_.value.trim();pop(()=>{const e=PV.d.ex[TTD]||(PV.d.ex[TTD]={cells:{},note:''});e.note=v})};
  const cd_=$('cbdi');if(cd_)cd_.onchange=()=>{if(DT.test(cd_.value)){CBD=cd_.value;render()}};
  ['am','hw','br'].forEach(k=>{const i=$('cb'+k);enter(i,()=>cbAdd(k))});
+ const sd_=$('sld');if(sd_)sd_.onchange=()=>{if(DT.test(sd_.value))SLD=sd_.value};
  const bd=$('bdi');if(bd)bd.onchange=()=>{if(DT.test(bd.value)){BD=bd.value;render()}};
  const gf=$('gf'),gt=$('gt');
  if(gf)gf.onchange=()=>{if(DT.test(gf.value)){GF.from=gf.value;render()}};
@@ -552,9 +561,9 @@ function homeView(){
  const F=[['day','每日繳交追蹤','今天誰沒交','day'],['cb','聯絡簿','早自修、作業、投影','cbk'],['forgot','沒帶紀錄','聯絡簿、作業沒帶','miss'],
   ['exam','考試','出題、影印、考試日','exam'],['todo','我的待辦','學校要做的事','todo'],['tt','課表','調課、外出','cal'],
   ['stus','學生個人檔案','每個人的紀錄','stu'],['tasks','各科作業','習作、考卷、甲本','book'],['grade','成績管理','登記分數','chart'],
-  ['fix','訂正進度','頁數、課次','check'],['export','成績匯出','依日期、科目下載','dl'],['money','班費與經費','班費、學扶花費','coin']];
+  ['fix','訂正進度','頁數、課次','check'],['export','成績匯出','依日期、科目下載','dl'],['money','班費與經費','班費、學扶花費','coin'],['slips','回條','提早交也能記','slip']];
  // 今天要批改：每個班今天要交的（早自修、昨天聯絡簿上的作業…）
- const grade=S.classes.map(x=>({c:x,ts:(TK[x.id]||[]).filter(t=>t.due===d).sort((a,b)=>(b.m||0)-(a.m||0)||a.t-b.t)})).filter(x=>x.ts.length);
+ const grade=S.classes.map(x=>({c:x,ts:(TK[x.id]||[]).filter(t=>t.due===d&&!t.sl).sort((a,b)=>(b.m||0)-(a.m||0)||a.t-b.t)})).filter(x=>x.ts.length);
  const owe=ss.map(s=>({s,o:tasks().filter(t=>missing(t,s.id))})).filter(x=>x.o.length);
  const ex=PV.d.exams.filter(e=>e.d>=d).sort((a,b)=>a.d<b.d?-1:1).slice(0,3);
  return `<div class="top"><h1>作業與成績</h1><button class="ib" data-a="set" aria-label="設定">⋯</button></div><div id="st" class="ps"></div>
@@ -567,6 +576,7 @@ function homeView(){
    return `<button class="lr" data-a="gtask" data-c="${x.id}" data-id="${t.id}"><span class="lt">${E(tName(t))}<small>${t.m?'早自修':t.d<d?md(t.d)+' 出的作業':'今天出的'}${t.g?' · 要打分數':''}</small></span>${n===ss2.length?pill('ok','都登記了'):pill(n?'warn':'','已登記 '+n+'/'+ss2.length)}<span class="ch">›</span></button>`}).join('')}</div>`).join('')
    :'<div class="ps">今天沒有要批改的。在「聯絡簿」寫早自修和作業，就會自動出現在這裡。</div>'}
  </div>
+ ${slipBox()}
  <div class="box">
   <div class="h2 row sp"><span>⚠️ 未繳交紀錄 · ${E(c.name)}</span><button class="bt sm" data-a="go" data-v="forgot">沒帶紀錄 ›</button></div>
   ${owe.length?`<div class="list">${owe.slice(0,8).map(({s,o})=>`<button class="lr" data-a="stu" data-s="${s.id}"><span class="nb">${z2(s.no)}</span><span class="lt">${E(s.name)}<small>${E(o.map(t=>tName(t)+'（'+md(t.due)+'）').join('、'))}</small></span><span class="pl bad">${o.length}</span></button>`).join('')}</div>
@@ -848,7 +858,7 @@ function cbLines(cid,d,am){
 }
 // 幾號什麼東西還沒交、還沒訂正（只顯示座號）
 function owesByNo(cid,d){
- const c=S.classes.find(x=>x.id===cid),ss=stus(c),ts=(TK[cid]||[]).slice().sort((a,b)=>tDate(a)<tDate(b)?-1:1);
+ const c=S.classes.find(x=>x.id===cid),ss=stus(c),ts=(TK[cid]||[]).filter(t=>!t.sl).slice().sort((a,b)=>tDate(a)<tDate(b)?-1:1);
  return ss.map(s=>({s,items:ts.filter(t=>missing(t,s.id,d)||fixing(t,s.id)).map(t=>({t,miss:missing(t,s.id,d),fix:fixing(t,s.id)}))})).filter(x=>x.items.length);
 }
 const noLabel=s=>s.no!==''?s.no+' 號':s.name;
@@ -1061,7 +1071,7 @@ function projView(){
     <h2>📒 今天的作業</h2>${hw.length?`<ol>${hw.map(x=>`<li>${E(x.x)}</li>`).join('')}</ol>`:'<p class="pje">今天沒有作業</p>'}
     ${b.br.length?`<h2>🎒 記得帶</h2><ul>${b.br.map(x=>`<li>${E(x.x)}</li>`).join('')}</ul>`:''}
     ${soon.length||exs.length?`<h2>📅 快要考試</h2><ul>${exs.map(e=>`<li>${mdw(e.d)}　${E(e.n)}${e.x?'（'+E(e.x)+'）':''}</li>`).join('')}${soon.map(t=>`<li>${mdw(t.due)}　${E(tName(t))}</li>`).join('')}</ul>`:''}</section>
-   <section><h2>⚠️ 還沒交、還沒訂正</h2>${o.length?`<div class="pjo">${o.map(({s,items})=>`<div><b>${E(noLabel(s))}</b><span>${items.map(({t,miss})=>`<button class="pji${miss?'':' fx'}" data-a="${miss?'pjin':'pjfx'}" data-t="${t.id}" data-s="${s.id}" data-c="${c.id}">${E(tName(t))}${miss?'':'（訂正）'}</button>`).join('')}</span></div>`).join('')}</div>`:'<p class="pje">大家都交了，很棒！🎉</p>'}</section>
+   <section>${slipProj(c.id,d)}<h2>⚠️ 還沒交、還沒訂正</h2>${o.length?`<div class="pjo">${o.map(({s,items})=>`<div><b>${E(noLabel(s))}</b><span>${items.map(({t,miss})=>`<button class="pji${miss?'':' fx'}" data-a="${miss?'pjin':'pjfx'}" data-t="${t.id}" data-s="${s.id}" data-c="${c.id}">${E(tName(t))}${miss?'':'（訂正）'}</button>`).join('')}</span></div>`).join('')}</div>`:'<p class="pje">大家都交了，很棒！🎉</p>'}</section>
   </div>
   <div class="pjf">老師：點上面的項目可以標成「交了／訂正好了」</div>
  </div>`;
@@ -1111,6 +1121,81 @@ function cbAddTasksFree(k,text){
  const now=Date.now();
  op(()=>items.forEach((x,i)=>(TK[c.id]||(TK[c.id]=[])).push({id:nid(),sub:guessSub(x),cat:x,title:'',d:CBD,due:k==='am'?CBD:nextDay(CBD),g:/考|測驗|小考/.test(x)?1:0,full:100,note:'',m:k==='am'?1:0,r:{},t:now+i,u:now})),
   items.length>1?'已加入 '+items.length+' 項':'已加入「'+items[0]+'」');
+}
+
+// ---------- 回條：一種作業（sl=1），學生什麼時候交都可以點一下記下來；可以有選項（參加／不參加…）----------
+const SL_NAMES=['戶外教學同意書','家長會回條','營養午餐調查','團體保險','校外教學繳費單','問卷調查'];
+const SL_OPTS=[['','不用選'],['同意,不同意','同意／不同意'],['參加,不參加','參加／不參加'],['要,不要','要／不要']];
+let SLD=today(),SLO='';
+const slips=()=>tasks().filter(t=>t.sl);
+const slipOpen=(t,ss)=>ss.some(s=>!isIn(R(t,s.id)));
+function slipsView(){
+ const ss=stus(cls()),L=slips().sort((a,b)=>(a.due||'9')<(b.due||'9')?-1:1);
+ const open=L.filter(t=>slipOpen(t,ss)),done=L.filter(t=>!slipOpen(t,ss)).reverse();
+ const row=t=>{const n=ss.filter(s=>isIn(R(t,s.id))).length,late=t.due&&t.due<today()&&n<ss.length;
+  return `<button class="lr" data-a="slip" data-id="${t.id}"><span class="dt2"><b>${t.due?md(t.due):'—'}</b><small>${t.due?'截止':'沒截止日'}</small></span><span class="lt">${E(t.title||t.cat)}<small>${md(t.d)} 發下${t.due&&t.due>=today()?' · 還有 '+dayN(t.due)+' 天':''}</small></span>${n===ss.length?pill('ok','都收齊了'):pill(late?'bad':'warn','已收 '+n+'/'+ss.length)}<span class="ch">›</span></button>`};
+ return head('回條',E(cls().name),`<button class="go sm" data-a="slnew">＋ 新增回條</button>`)+
+  `<div class="ps" style="margin-top:6px">學生提早交也沒關係，收到就點他的座號，會記下收到的日期。截止日前不會算遲交。</div>
+  ${open.length?`<div class="h3">還在收</div><div class="box list">${open.map(row).join('')}</div>`:'<div class="box empty">目前沒有在收的回條<br><br><button class="go" data-a="slnew">＋ 新增回條</button></div>'}
+  ${done.length?`<div class="h3">收齊了</div><div class="box list">${done.slice(0,20).map(row).join('')}</div>`:''}`;
+}
+function slipView(id){
+ const t=task(id);if(!t)return head('找不到這張回條','',0,1);
+ const ss=stus(cls()),inn=ss.filter(s=>isIn(R(t,s.id))),miss=ss.filter(s=>!isIn(R(t,s.id)));
+ if(t.op.length&&!t.op.includes(SLO))SLO=t.op[0];if(!t.op.length)SLO='';
+ const cnt=o=>ss.filter(s=>R(t,s.id).s===1&&R(t,s.id).o===o).length;
+ return head(E(t.title||t.cat),`${md(t.d)} 發下 · ${t.due?'截止 '+mdw(t.due)+(t.due>=today()?'（還有 '+dayN(t.due)+' 天）':''):'沒設定截止日'}${t.note?'<br>📝 '+E(t.note):''}`,`<button class="bt sm" data-a="sledit" data-id="${id}">編輯</button>`,1)+
+ `<div class="box">
+  <div class="stats"><button class="st1"><b>${inn.length}<small style="font-size:16px">/${ss.length}</small></b><span>已收</span></button><button class="st2"><b>${miss.length}</b><span>還沒交</span></button>
+   ${t.op.length?`<button class="st3" style="background:var(--tile)"><span style="display:block;font-size:14px;color:var(--ink);line-height:1.6">${t.op.map(o=>E(o)+' <b style="font-size:18px;display:inline">'+cnt(o)+'</b>').join('<br>')}</span></button>`:`<button class="st3" style="background:var(--oks)"><b style="color:var(--ok)">${ss.length?Math.round(inn.length/ss.length*100):0}%</b><span>收齊</span></button>`}</div>
+  ${t.op.length?`<div class="f" style="margin:14px 0 6px"><span>先選學生勾的是哪一個，再點座號</span><div class="seg">${t.op.map(o=>`<button data-a="slo" data-v="${E(o)}" class="${SLO===o?'on':''}">${E(o)}</button>`).join('')}</div></div>`:''}
+  <div class="row sp" style="margin-top:12px"><b>點座號 = 收到了</b><label class="row" style="gap:6px"><span class="ps">收到日期</span><input type="date" id="sld" value="${SLD}" style="width:auto;padding:5px 8px"></label></div>
+  <div class="slg">${ss.map(s=>{const r=R(t,s.id),on=r.s===1,x=r.s===2;return `<button class="slb${on?' on':''}${x?' x':''}" data-a="sltg" data-id="${id}" data-s="${s.id}"><b>${s.no!==''?s.no:'·'}</b><span>${E(s.name)}</span><small>${on?(r.o?E(r.o)+' ':'')+md(r.a):x?'免交':''}</small></button>`}).join('')}</div>
+  ${miss.length?`<div class="hr"></div><div class="row sp"><span>還沒交：<b class="bad">${E(miss.map(s=>s.no!==''?s.no:s.name).join('、'))}</b> 號</span><button class="bt sm" data-a="slcopy" data-id="${id}">📋 複製</button></div>`:'<div class="okmsg">✓ 都收齊了</div>'}
+ </div>
+ <div class="ps">點錯了再點一次就取消。有學生不用交（例如請長假），到 <a href="#" data-a="task" data-id="${id}">全班名單</a> 點他的名字設「免交」。</div>`;
+}
+function slipSheet(id){
+ const old=id?task(id):null;
+ const D=old?{name:old.title||old.cat,d:old.d,due:old.due,op:old.op.join(','),note:old.note}:{name:'',d:today(),due:addD(today(),3),op:'',note:''};
+ const st={cs:[cls().id]};
+ const pull=p=>{D.name=p.querySelector('#sn').value.trim();D.d=p.querySelector('#sdd').value||today();D.due=p.querySelector('#sdu').value;D.note=p.querySelector('#snt').value.trim();const c=p.querySelector('#sop');if(c)D.op=c.value.split(/[,，、\/／]/).map(x=>x.trim()).filter(Boolean).join(',')};
+ const draw=()=>sheet(`<h3>${old?'修改回條':'新增回條'}</h3><div style="height:8px"></div>
+  ${!old&&S.classes.length>1?`<div class="f"><span>班級（可以一次發給好幾個班）</span><div class="pick">${S.classes.map(c=>`<button data-pc="${c.id}" class="${st.cs.includes(c.id)?'on':''}">${E(c.name)}</button>`).join('')}</div></div>`:''}
+  <div class="pick sm" style="margin-bottom:8px">${SL_NAMES.map(n=>`<button data-n="${n}" class="${D.name===n?'on':''}">${n}</button>`).join('')}</div>
+  <label class="f"><span>回條名稱</span><input id="sn" value="${E(D.name)}" placeholder="例如：戶外教學同意書" autocomplete="off"></label>
+  <div class="two"><label class="f"><span>發下去的日期</span><input id="sdd" type="date" value="${E(D.d)}"></label><label class="f"><span>截止日</span><input id="sdu" type="date" value="${E(D.due)}"></label></div>
+  <div class="quick" style="margin:-6px 0 12px">${[['明天',1],['3 天後',3],['下週一',(8-pd(today()).getDay())%7||7],['一週後',7]].map(([n,v])=>`<button data-dd="${v}">${n}</button>`).join('')}</div>
+  <div class="f"><span>學生要勾選嗎</span><div class="pick">${SL_OPTS.map(([v,n])=>`<button data-op="${v}" class="${D.op===v?'on':''}">${n}</button>`).join('')}</div>
+   <input id="sop" style="margin-top:8px" value="${E(D.op)}" placeholder="或自己打，用逗號分開，例如：葷食,素食" autocomplete="off"></div>
+  <label class="f"><span>備註</span><input id="snt" value="${E(D.note)}" placeholder="例如：要家長簽名、附 200 元" autocomplete="off"></label>
+  <div class="foot">${old?'<button class="bt" id="sdl" style="color:var(--bad)">刪除</button>':'<span></span>'}<button class="go" id="ssv">${old?'儲存':'新增'}</button></div>`,p=>{
+  p.querySelectorAll('[data-pc]').forEach(b=>b.onclick=()=>{pull(p);const c=b.dataset.pc;st.cs=st.cs.includes(c)?st.cs.filter(x=>x!==c):[...st.cs,c];refresh(draw)});
+  p.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>{pull(p);D.name=b.dataset.n;refresh(draw)});
+  p.querySelectorAll('[data-dd]').forEach(b=>b.onclick=()=>{pull(p);D.due=addD(today(),+b.dataset.dd);refresh(draw)});
+  p.querySelectorAll('[data-op]').forEach(b=>b.onclick=()=>{pull(p);D.op=b.dataset.op;refresh(draw)});
+  p.querySelector('#ssv').onclick=()=>{
+   pull(p);if(!D.name)return toast('請填回條名稱');if(!st.cs.length)return toast('請選班級');
+   const op_=D.op?D.op.split(','):[],now=Date.now();
+   if(old){op(()=>{const x=task(id);Object.assign(x,{title:D.name,d:D.d,due:D.due,op:op_,note:D.note,u:now})},'已儲存');return back()}
+   op(()=>st.cs.forEach(c=>(TK[c]||(TK[c]=[])).push({id:nid(),sub:S.subs.includes('其他')?'其他':S.subs[0],cat:'回條',title:D.name,d:D.d,due:D.due,g:0,full:100,note:D.note,m:0,sl:1,op:op_,r:{},t:now,u:now})),'已新增「'+D.name+'」');
+   back();
+  };
+  const dl_=p.querySelector('#sdl');if(dl_)dl_.onclick=()=>{if(!confirm('刪除「'+D.name+'」和收件紀錄？'))return;op(()=>{TK[cls().id]=tasks().filter(x=>x.id!==id)},'已刪除');closeAll(()=>{if(PG.v==='slip')goBack()})};
+ });
+ draw();
+}
+// 首頁、投影：還在收的回條
+function slipBox(){
+ const ss=stus(cls()),open=slips().filter(t=>slipOpen(t,ss)).sort((a,b)=>(a.due||'9')<(b.due||'9')?-1:1);
+ if(!open.length)return '';
+ return `<div class="box"><div class="h2 row sp"><span>📮 回條</span><button class="bt sm" data-a="go" data-v="slips">全部 ›</button></div><div class="list">${open.slice(0,4).map(t=>{const m=ss.filter(s=>!isIn(R(t,s.id))),late=t.due&&t.due<today();
+  return `<button class="lr" data-a="slip" data-id="${t.id}"><span class="lt">${E(t.title)}<small class="${late?'bad':''}">${t.due?(late?'已經過了截止日 '+md(t.due):'截止 '+dl(t.due)):''} · 還沒交：${E(m.slice(0,8).map(s=>s.no!==''?s.no:s.name).join('、'))}${m.length>8?'…':''}</small></span>${pill(late?'bad':'warn',(ss.length-m.length)+'/'+ss.length)}<span class="ch">›</span></button>`}).join('')}</div></div>`;
+}
+function slipProj(cid,d){
+ const c=S.classes.find(x=>x.id===cid),ss=stus(c),open=(TK[cid]||[]).filter(t=>t.sl&&t.d<=d&&ss.some(s=>!isIn(R(t,s.id))));
+ if(!open.length)return '';
+ return `<h2>📮 回條還沒交</h2><ul>${open.map(t=>`<li>${E(t.title)}${t.due?'（'+mdw(t.due)+' 截止）':''}：<b class="bad">${E(ss.filter(s=>!isIn(R(t,s.id))).map(s=>s.no!==''?s.no:s.name).join('、'))}</b> 號</li>`).join('')}</ul>`;
 }
 
 // 考試：期中考、期末考…出題（提早三週）、考卷影印
@@ -1813,6 +1898,13 @@ function onClick(e){
  if(a==='back')return goBack();
  if(a==='home'){if(DEPTH>0)history.go(-DEPTH);else{PG={v:'home'};render()}return}
  if(a==='proj'){PJC='';return go({v:'proj',d:ds.d||today()})}
+ if(a==='slnew')return openS(()=>slipSheet(null));
+ if(a==='sledit')return openS(()=>slipSheet(ds.id));
+ if(a==='slip'){SLD=today();return go({v:'slip',id:ds.id})}
+ if(a==='slo'){SLO=ds.v;return render()}
+ if(a==='sltg'){const t=task(ds.id),s=stu(ds.s);if(!t||!s)return;const r=R(t,s.id),same=r.s===1&&(!t.op.length||r.o===SLO);
+  op(()=>setR(t,s.id,same?{s:0,o:''}:{s:1,a:SLD,o:t.op.length?SLO:''}),same?sLabel(s)+' 改回還沒交':null);return}
+ if(a==='slcopy'){const t=task(ds.id),ss=stus(cls()),m=ss.filter(x=>!isIn(R(t,x.id)));return openS(()=>textSheet('回條還沒交',`${cls().name}　${t.title}${t.due?'（'+mdw(t.due)+' 截止）':''}\n還沒交：${m.map(x=>x.no!==''?x.no+' 號':x.name).join('、')}`))}
  if(a==='gtask'){CID=ds.c;try{localStorage.setItem('sch-cls',CID)}catch(x){}return go({v:'task',id:ds.id})}
  if(a==='exnew')return openS(()=>examSheet(null));
  if(a==='exed')return openS(()=>examSheet(ds.id));
