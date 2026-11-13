@@ -519,7 +519,7 @@ function cabSheet(id){
   <label class="f"><span>放在哪個地點</span><select id="cr">${S.rooms.map(r=>`<option value="${r.id}"${r.id===room?' selected':''}>${E(r.name)}</option>`).join('')}</select></label>
   ${c&&c.layout?`<div class="f"><span>格子</span><div class="sub">這個櫃子是自訂形狀（共 ${c.cells.length} 格）。點任何一格，就能再切割或合併。</div></div>`:`<div class="f"><span>格子：幾層（直的）× 每層幾格（橫的）</span><div class="two"><input id="cy" type="number" inputmode="numeric" min="1" max="20" value="${c?c.rows:6}"><input id="cx" type="number" inputmode="numeric" min="1" max="6" value="${c?c.cols:1}"></div></div><div class="sub" style="margin:-6px 0 12px">格子大小不一樣？先建立，再點格子「切割」。</div>`}
   <div class="f"><span>顏色</span><div class="sw">${COLORS.map(k=>`<label class="c-${k}"><input type="radio" name="cc" value="${k}"${k===color?' checked':''}><span></span></label>`).join('')}</div></div>
-  ${c?`<div class="row" style="margin-bottom:4px"><button class="bt" id="cl">← 往左移</button><button class="bt" id="cr2">往右移 →</button></div>`:''}
+  ${c?`<div class="row" style="margin-bottom:4px"><button class="bt" id="cl">← 往左移</button><button class="bt" id="cr2">往右移 →</button><button class="bt bad" id="cclr" style="margin-left:auto">清空這個櫃子</button></div>`:''}
   <div class="foot">${c?'<button class="bt bad" id="cdel">刪除櫃子</button>':'<span></span>'}<div class="row"><button class="bt" data-x>取消</button><button class="go" id="cok">${c?'儲存':'建立'}</button></div></div>`,p=>{
   const v=s=>p.querySelector(s).value;
   p.querySelector('#cok').onclick=()=>{
@@ -540,6 +540,11 @@ function cabSheet(id){
   const shift=dir=>{const sib=S.cabs.filter(x=>x.room===c.room),k=sib.indexOf(c),o=sib[k+dir];if(!o)return;
    op(()=>{const a=S.cabs.indexOf(c),b=S.cabs.indexOf(o);S.cabs[a]=o;S.cabs[b]=c})};
   p.querySelector('#cl').onclick=()=>shift(-1);p.querySelector('#cr2').onclick=()=>shift(1);
+  p.querySelector('#cclr').onclick=()=>{
+   const n=cabFill(c);if(!n.l&&!n.k)return alert('「'+c.name+'」已經是空的了。');
+   if(!confirm('清空「'+c.name+'」？\n\n'+n.l+' 個格子名稱、'+n.k+' 樣東西（含保固）會清掉，櫃子和格子形狀留著。'))return;
+   op(()=>clearCab(c),'已清空「'+c.name+'」');closeSheet();
+  };
   p.querySelector('#cdel').onclick=()=>{
    const k=c.cells.reduce((a,x)=>a+x.it.length,0);
    if(!confirm('確定要刪除「'+c.name+'」？'+(k?'\n裡面的 '+k+' 樣東西也會一起刪除。':'')))return;
@@ -609,13 +614,27 @@ function sortable(box,done){
   addEventListener('pointermove',mv);addEventListener('pointerup',up);addEventListener('pointercancel',up);
  });
 }
+// 清空櫃子：格子名稱和東西都拿掉，櫃子名稱和格子形狀留著
+function clearCab(c){c.cells.forEach(x=>{x.l='';x.it=[]})}
+const cabFill=c=>({l:c.cells.filter(x=>x.l).length,k:c.cells.reduce((a,x)=>a+x.it.length,0)});
+function roomClearSheet(id){
+ const r=S.rooms.find(x=>x.id===id),cs=S.cabs.filter(c=>c.room===id),l=cs.reduce((a,c)=>a+cabFill(c).l,0),k=cs.reduce((a,c)=>a+cabFill(c).k,0);
+ sheet(`<h3>清空「${E(r.name)}」</h3>
+  <div class="sub" style="margin-bottom:12px">這裡有 ${cs.length} 個櫃子（${cs.map(c=>E(c.name)).join('、')}），${l} 個格子名稱、${k} 樣東西。清空後可以按「復原」。</div>
+  <button class="bt" id="rcc" style="display:block;width:100%;text-align:left;margin-bottom:8px;padding:10px 12px"><b>清空格子名稱和東西</b><div class="sub">${cs.length} 個櫃子和格子形狀留著</div></button>
+  <button class="bt" id="rcd" style="display:block;width:100%;text-align:left;margin-bottom:8px;padding:10px 12px"><b class="bad">刪掉這裡的 ${cs.length} 個櫃子</b><div class="sub">櫃子整座刪掉，地點「${E(r.name)}」留著</div></button>
+  <div class="foot"><span></span><button class="go" data-x>取消</button></div>`,p=>{
+  p.querySelector('#rcc').onclick=()=>{op(()=>cs.forEach(clearCab),'已清空「'+r.name+'」的櫃子');closeSheet()};
+  p.querySelector('#rcd').onclick=()=>{if(!confirm('確定刪掉「'+r.name+'」的 '+cs.length+' 個櫃子？'))return;op(()=>{S.cabs=S.cabs.filter(c=>c.room!==id)},'已刪掉「'+r.name+'」的櫃子');closeSheet()};
+ });
+}
 function setSheet(){
  sheet(`<h3>設定</h3>
   <div class="sub" style="margin-bottom:6px">風格</div>
   <div class="row" style="margin-bottom:14px"><button class="bt" onclick="MGL_LOOK.open()">換主色和主題圖案</button></div>
   ${famHTML()}
   <div class="sub" style="margin-bottom:6px">地點（例如：書房、客廳、主臥）· 按住 ≡ 上下拖曳可以排順序</div>
-  <div id="rl">${S.rooms.map(r=>`<div class="li" data-id="${r.id}"><span class="hd" data-h aria-label="拖曳排序">≡</span><span><input data-rn="${r.id}" value="${E(r.name)}" style="border:0;padding:4px 0;background:none"></span><small class="sub">${S.cabs.filter(c=>c.room===r.id).length} 個櫃子</small><button data-rd="${r.id}" aria-label="刪除地點">✕</button></div>`).join('')}</div>
+  <div id="rl">${S.rooms.map(r=>`<div class="li" data-id="${r.id}"><span class="hd" data-h aria-label="拖曳排序">≡</span><span><input data-rn="${r.id}" value="${E(r.name)}" style="border:0;padding:4px 0;background:none"></span><small class="sub">${S.cabs.filter(c=>c.room===r.id).length} 個櫃子</small>${S.cabs.some(c=>c.room===r.id)?`<button data-rc="${r.id}" style="color:var(--bad)">清空</button>`:''}<button data-rd="${r.id}" aria-label="刪除地點">✕</button></div>`).join('')}</div>
   <div class="add"><input id="rn" placeholder="新增地點"><button class="go" id="rnb">加入</button></div>
   <div class="sub" style="margin-bottom:4px">最近移動</div>
   <div class="card">${S.log.length?'<ul class="log">'+S.log.slice(0,15).map(l=>`<li><b>${E(l.n)}</b>：${E(l.f)} → ${E(l.to)}<div class="sub">${fmt(l.t)}</div></li>`).join('')+'</ul>':'<div class="sub">還沒有移動紀錄</div>'}</div>
@@ -627,6 +646,7 @@ function setSheet(){
   famBind(p);
   sortable(p.querySelector('#rl'),ids=>{if(ids.join()!==S.rooms.map(r=>r.id).join())op(()=>{S.rooms=ids.map(id=>S.rooms.find(r=>r.id===id))})});
   p.querySelectorAll('[data-rn]').forEach(i=>i.onchange=()=>{const r=S.rooms.find(x=>x.id===i.dataset.rn),n=i.value.trim();if(n&&r.name!==n)op(()=>{r.name=n})});
+  p.querySelectorAll('[data-rc]').forEach(b=>b.onclick=()=>roomClearSheet(b.dataset.rc));
   p.querySelectorAll('[data-rd]').forEach(b=>b.onclick=()=>{
    if(S.rooms.length<2)return alert('至少要留一個地點。');
    const r=S.rooms.find(x=>x.id===b.dataset.rd),rest=S.rooms.filter(x=>x!==r),k=S.cabs.filter(c=>c.room===r.id).length;
