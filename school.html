@@ -207,7 +207,6 @@ textarea{min-height:64px;resize:vertical}
 .ttc.on{border:0;background:var(--blues);color:var(--ink)}
 .ttc b{display:block;font-size:14px}.ttc small{display:block;font-size:11px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:64px;margin:0 auto}
 /* 首頁：待辦放大、功能按鈕縮小 */
-.box.big{border:2px solid var(--acc)}
 .box.big .tdt span{font-size:18px;font-weight:500}
 .box.big .ck{width:30px;height:30px}
 .fns.sm{grid-template-columns:repeat(3,1fr);gap:8px}
@@ -245,6 +244,7 @@ textarea{min-height:64px;resize:vertical}
 .cbinline{background:var(--tile);border-radius:14px;padding:8px 10px;margin-top:8px}
 .cbinline .pick button{background:var(--card)}
 .cbinline .pick button.on{background:var(--acc)}
+.sbn.sm{min-width:36px;height:32px;font-size:14px;border-radius:8px}
 /* 班費 */
 .bar2{height:10px;border-radius:99px;background:var(--tile);overflow:hidden;margin-top:12px}.bar2 i{display:block;height:100%;background:var(--blue);border-radius:99px}
 .catr{display:flex;gap:10px;align-items:center;padding:7px 0}.catr span{width:48px;flex:none}.catr b{min-width:70px;text-align:right}
@@ -578,12 +578,14 @@ let CBOPEN='';
 function homeCB(){
  const c=cls(),d=today();CBD=d;
  const am=cbLines(c.id,d,1),hw=cbLines(c.id,d),b=cbPeek(c.id,d);
- const chips=L=>L.length?`<div class="cbchips">${L.map(x=>`<span class="cbc${x.hid?' hid':''}">${E(x.x.replace(/（.*?交）$/,''))}${x.t&&!Object.keys(x.t.r).length?`<button data-a="cbtdel" data-id="${x.id}" aria-label="刪除">✕</button>`:x.t?'':`<button data-a="cbdel" data-k="hw" data-id="${x.id}" aria-label="刪除">✕</button>`}</span>`).join('')}</div>`:'<span class="ps">還沒有</span>';
+ const chips=L=>L.length?`<div class="cbchips">${L.map(x=>`<span class="cbc${x.hid?' hid':''}">${E(x.x.replace(/（.*?交）$/,'').replace(/\p{Extended_Pictographic}\uFE0F?/gu,'').trim())}${x.t&&!Object.keys(x.t.r).length?`<button data-a="cbtdel" data-id="${x.id}" aria-label="刪除">✕</button>`:x.t?'':`<button data-a="cbdel" data-k="hw" data-id="${x.id}" aria-label="刪除">✕</button>`}</span>`).join('')}</div>`:'<span class="ps">還沒有</span>';
  return `<div class="hr" style="margin:14px 0 10px"></div>
-  <div class="row sp"><b>📒 今天的聯絡簿${S.classes.length>1?' · '+E(c.name):''}</b><button class="bt sm" data-a="go" data-v="cb">完整聯絡簿 ›</button></div>
-  <div class="cbsec"><span class="cbl2">🌅 早自修<small>今天批改</small></span>${chips(am)}</div>
-  <div class="cbsec"><span class="cbl2">📒 作業<small>${md(nextDay(d))} 批改</small></span>${chips(hw)}</div>
-  ${b.br.length?`<div class="cbsec"><span class="cbl2">🎒 記得帶</span><div class="cbchips">${b.br.map(x=>`<span class="cbc">${E(x.x)}</span>`).join('')}</div></div>`:''}
+  <div class="row sp"><b>今天的聯絡簿${S.classes.length>1?' · '+E(c.name):''}</b><button class="bt sm" data-a="go" data-v="cb">完整聯絡簿 ›</button></div>
+  ${(()=>{const ss=stus(c),F=(FG[c.id]||[]).filter(f=>f.d===d&&f.x==='聯絡簿'),no=ss.filter(s=>F.some(f=>f.sid===s.id));
+   return ss.length?`<div class="cbsec"><span class="cbl2">聯絡簿繳交<small>${no.length?'沒交 '+no.length+' 人':'點沒交的座號'}</small></span><div class="cbchips">${ss.map(s=>`<button class="sbn sm${F.some(f=>f.sid===s.id)?' on':''}" data-a="fgcb" data-s="${s.id}" data-d="${d}">${s.no!==''?s.no:E(s.name)}</button>`).join('')}</div></div>`:''})()}
+  <div class="cbsec"><span class="cbl2">早自修<small>今天批改</small></span>${chips(am)}</div>
+  <div class="cbsec"><span class="cbl2">作業<small>${md(nextDay(d))} 批改</small></span>${chips(hw)}</div>
+  ${b.br.length?`<div class="cbsec"><span class="cbl2">記得帶</span><div class="cbchips">${b.br.map(x=>`<span class="cbc">${E(x.x)}</span>`).join('')}</div></div>`:''}
   <div class="row" style="margin-top:8px"><button class="bt sm${CBOPEN==='am'?' on':''}" data-a="cbopen" data-k="am">＋ 早自修</button><button class="bt sm${CBOPEN==='hw'?' on':''}" data-a="cbopen" data-k="hw">＋ 作業</button><button class="bt sm${CBOPEN==='br'?' on':''}" data-a="cbopen" data-k="br">＋ 記得帶</button></div>
   ${CBOPEN==='am'||CBOPEN==='hw'?`<div class="cbinline">${cbPicker(CBOPEN)}</div>`:CBOPEN==='br'?`<div class="cbinline"><div class="add"><input id="cbbr" placeholder="例如：3號 帶同意書、全班帶彩色筆" autocomplete="off"><button class="go" data-a="cbadd" data-k="br">加入</button></div></div>`:''}`;
 }
@@ -603,7 +605,7 @@ function homeView(){
  <div class="box" style="padding:12px 16px">${nowCard()}</div>
  <div class="box big">${myToday()}</div>
  <div class="box">
-  <div class="h2 row sp"><span>✏️ 今天要批改</span><button class="bt sm" data-a="proj">📺 投影</button></div>
+  <div class="h2 row sp"><span>今天要批改</span><button class="bt sm" data-a="proj">投影</button></div>
   ${grade.length?grade.map(({c:x,ts})=>`${S.classes.length>1?`<div class="ps" style="margin:8px 0 2px">${E(x.name)}</div>`:''}<div class="list">${ts.map(t=>{const ss2=stus(x),n=ss2.filter(s=>isIn(R(t,s.id))).length;
    return `<button class="lr" data-a="gtask" data-c="${x.id}" data-id="${t.id}"><span class="lt">${E(tName(t))}<small>${t.m?'早自修':t.d<d?md(t.d)+' 出的作業':'今天出的'}${t.g?' · 要打分數':''}</small></span>${n===ss2.length?pill('ok','都登記了'):pill(n?'warn':'','已登記 '+n+'/'+ss2.length)}<span class="ch">›</span></button>`}).join('')}</div>`).join('')
    :'<div class="ps">今天沒有要批改的。</div>'}
