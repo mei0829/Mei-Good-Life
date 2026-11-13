@@ -1,0 +1,13 @@
+{
+  "name": "Mei 的遊戲室",
+  "short_name": "遊戲室",
+  "start_url": "./games.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F4F1EC",
+  "theme_color": "#F4F1EC",
+  "lang": "zh-Hant",
+  "icons": [
+    { "src": "games.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

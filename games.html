@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#F4F1EC">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="遊戲室">
+<link rel="manifest" href="games.webmanifest">
+<link rel="icon" href="games.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="games.svg">
+<title>Mei 的遊戲室</title>
+<style>
+:root{--bg:#F4F1EC;--card:#fff;--ink:#2B2A27;--sub:#7A766E;--line:#E4DFD6;--acc:#5E7A6A;--soft:#EEEAE3;--bad:#C2524D;--ok:#4E8A62;
+ --t1:#E1E7EF;--i1:#4F6F8C;--t2:#E3E9DF;--i2:#5E7A6A;--t3:#F3E2E1;--i3:#A8625F;--t4:#F0E7DA;--i4:#9A7440;--t5:#E9E3F0;--i5:#76619A;--t6:#F6E6D8;--i6:#A85A30}
+@media (prefers-color-scheme:dark){:root{--bg:#171614;--card:#22211E;--ink:#EDEAE4;--sub:#A29D94;--line:#34322E;--acc:#9DC0AC;--soft:#2C2A26;--bad:#F07070;--ok:#7CC49A;
+ --t1:#29303A;--i1:#8DB0D0;--t2:#2C3329;--i2:#9DC0AC;--t3:#3A2B2A;--i3:#E0A09C;--t4:#36301F;--i4:#D9B47A;--t5:#322C3A;--i5:#B9A5DA;--t6:#3A2C22;--i6:#E8A57C}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{overscroll-behavior:none}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Noto Sans TC","PingFang TC",-apple-system,"Microsoft JhengHei",sans-serif;-webkit-user-select:none;user-select:none}
+main{max-width:560px;margin:0 auto;padding:calc(20px + env(safe-area-inset-top)) 14px calc(30px + env(safe-area-inset-bottom))}
+button{font:inherit;color:inherit;cursor:pointer}
+.top{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.top a,.top .back{width:38px;height:38px;border-radius:12px;border:1px solid var(--line);background:var(--card);display:grid;place-items:center;text-decoration:none;color:var(--ink);font-size:20px;flex:none}
+.top h1{font-size:22px;margin:0;flex:1;font-weight:700}
+.top .best{font-size:12px;color:var(--sub);text-align:right;line-height:1.3}
+.hi{font-size:13px;color:var(--sub);margin:-8px 0 16px 46px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tile{display:flex;flex-direction:column;gap:8px;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;min-height:140px;transition:transform .12s;--t:var(--soft);--i:var(--ink)}
+.tile:active{transform:scale(.97)}
+.tile .ic{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:var(--t);font-size:26px}
+.tile b{font-size:17px;display:block}
+.tile p{margin:2px 0 0;font-size:13px;color:var(--sub);line-height:1.45}
+.tile .tag{margin-top:auto;align-self:flex-start;font-size:12px;border-radius:999px;padding:2px 9px;background:var(--t);color:var(--i)}
+.k1{--t:var(--t1);--i:var(--i1)}.k2{--t:var(--t2);--i:var(--i2)}.k3{--t:var(--t3);--i:var(--i3)}.k4{--t:var(--t4);--i:var(--i4)}.k5{--t:var(--t5);--i:var(--i5)}.k6{--t:var(--t6);--i:var(--i6)}
+.note{font-size:12px;color:var(--sub);text-align:center;margin-top:22px}
+/* 遊戲共用 */
+.bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.seg{display:inline-flex;background:var(--soft);border-radius:12px;padding:3px}
+.seg button{border:0;background:none;padding:5px 12px;border-radius:9px;font-size:13px;color:var(--sub)}
+.seg button.on{background:var(--card);color:var(--ink);font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.stat{margin-left:auto;display:flex;gap:12px;font-size:13px;color:var(--sub)}
+.stat b{color:var(--ink);font-variant-numeric:tabular-nums}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:8px 14px;font-size:14px}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--bg);font-weight:700}
+.btn.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.stage{position:relative}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.35);display:grid;place-items:center;z-index:9;padding:20px;animation:fade .2s}
+.ov .box{background:var(--card);border-radius:22px;padding:22px 20px;text-align:center;max-width:320px;width:100%}
+.ov .big{font-size:46px;line-height:1.1}
+.ov h3{margin:8px 0 4px;font-size:20px}
+.ov p{margin:0 0 16px;color:var(--sub);font-size:14px;white-space:pre-line}
+@keyframes fade{from{opacity:0}}
+@keyframes pop{0%{transform:scale(.6)}70%{transform:scale(1.08)}100%{transform:scale(1)}}
+/* 翻翻樂 */
+.mem{display:grid;gap:8px}
+.card{aspect-ratio:3/4;border-radius:14px;border:0;padding:0;perspective:600px;background:none}
+.card i{display:block;position:relative;width:100%;height:100%;transition:transform .3s;transform-style:preserve-3d}
+.card.up i,.card.ok i{transform:rotateY(180deg)}
+.card s,.card u{position:absolute;inset:0;border-radius:14px;display:grid;place-items:center;backface-visibility:hidden;-webkit-backface-visibility:hidden;text-decoration:none}
+.card s{background:var(--i3);background-image:radial-gradient(circle at 50% 50%,rgba(255,255,255,.25) 0 18%,transparent 19%);}
+.card u{background:var(--card);border:1px solid var(--line);transform:rotateY(180deg);font-size:min(9vw,40px)}
+.card.ok u{background:var(--t2);border-color:transparent}
+/* 數獨 */
+.sdk{display:grid;grid-template-columns:repeat(9,1fr);border:2px solid var(--ink);border-radius:10px;overflow:hidden;background:var(--card);touch-action:manipulation}
+.sdk>div{aspect-ratio:1;display:grid;place-items:center;font-size:min(5.6vw,24px);border-right:1px solid var(--line);border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;position:relative}
+.sdk>div:nth-child(9n){border-right:0}
+.sdk>div:nth-child(9n+3),.sdk>div:nth-child(9n+6){border-right:2px solid var(--ink)}
+.sdk>div:nth-child(n+19):nth-child(-n+27),.sdk>div:nth-child(n+46):nth-child(-n+54){border-bottom:2px solid var(--ink)}
+.sdk>div:nth-child(n+73){border-bottom:0}
+.sdk .g{font-weight:700}
+.sdk .u{color:var(--i1)}
+.sdk .hl{background:var(--soft)}
+.sdk .same{background:var(--t1)}
+.sdk .sel{background:var(--t4)}
+.sdk .bad{color:var(--bad)}
+.sdk .nt{display:grid;grid-template-columns:repeat(3,1fr);width:100%;height:100%;font-size:min(2.3vw,10px);color:var(--sub);line-height:1;padding:1px}
+.sdk .nt span{display:grid;place-items:center}
+.pad{display:grid;grid-template-columns:repeat(9,1fr);gap:5px;margin-top:12px}
+.pad button{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:10px 0;font-size:20px;font-weight:500}
+.pad button:disabled{opacity:.25}
+/* 貪吃蛇 */
+canvas{display:block;width:100%;touch-action:none;border-radius:16px;background:var(--card);border:1px solid var(--line)}
+.dpad{display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(2,52px);gap:6px;justify-content:center;margin-top:12px}
+.dpad button{border:1px solid var(--line);background:var(--card);border-radius:14px;font-size:22px}
+.dpad .u{grid-column:2}.dpad .l{grid-column:1;grid-row:2}.dpad .d{grid-column:2;grid-row:2}.dpad .r{grid-column:3;grid-row:2}
+.hint{font-size:12px;color:var(--sub);text-align:center;margin-top:8px}
+/* 掃雷 */
+.mine{display:grid;gap:3px;touch-action:manipulation}
+.mine button{aspect-ratio:1;border:0;border-radius:7px;background:var(--t2);padding:0;font-size:min(4.6vw,19px);font-weight:700;display:grid;place-items:center}
+.mine button.o{background:var(--card);box-shadow:inset 0 0 0 1px var(--line)}
+.mine button.x{background:var(--bad)}
+.n1{color:#3D6FB4}.n2{color:#3F8A55}.n3{color:#C2524D}.n4{color:#6A4C9C}.n5{color:#A0522D}.n6{color:#2C8C8C}.n7{color:var(--ink)}.n8{color:var(--sub)}
+/* 打地鼠 */
+.holes{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:6px}
+.hole{aspect-ratio:1;border-radius:50%;border:0;background:var(--t4);box-shadow:inset 0 -10px 0 rgba(0,0,0,.12);display:grid;place-items:center;font-size:min(14vw,58px);padding:0;overflow:hidden}
+.hole span{animation:pop .18s}
+.hole.hit{background:var(--t2)}
+.hole.ouch{background:var(--t3)}
+.timebar{height:8px;background:var(--soft);border-radius:9px;overflow:hidden;margin-bottom:12px}
+.timebar i{display:block;height:100%;background:var(--acc);width:100%;transition:width .2s linear}
+/* 猜數字 */
+.slots{display:flex;gap:8px;justify-content:center;margin:6px 0 12px}
+.slots span{width:54px;height:62px;border-radius:14px;background:var(--card);border:2px solid var(--line);display:grid;place-items:center;font-size:30px;font-weight:700}
+.slots span.cur{border-color:var(--acc)}
+.keys{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.keys button{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:11px 0;font-size:20px}
+.keys button:disabled{opacity:.25}
+.hist{margin-top:14px;display:flex;flex-direction:column;gap:6px}
+.hist div{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:7px 12px}
+.hist .num{font-size:20px;letter-spacing:6px;font-weight:700;font-variant-numeric:tabular-nums}
+.hist .ab{margin-left:auto;font-size:14px}
+.hist .ab b{display:inline-block;min-width:44px;text-align:center;border-radius:8px;padding:1px 6px;margin-left:4px}
+.hist .a{background:var(--t2);color:var(--i2)}.hist .bb{background:var(--t4);color:var(--i4)}
+.hist .i{color:var(--sub);font-size:12px;width:18px}
+.rule{font-size:13px;color:var(--sub);background:var(--soft);border-radius:12px;padding:8px 12px;margin-bottom:10px}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script>
+'use strict';
+const $ = (s, el = document) => el.querySelector(s);
+const h = (html) => { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstChild; };
+const rnd = (n) => Math.floor(Math.random() * n);
+const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const fmt = (s) => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('mgl-game-' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('mgl-game-' + k, JSON.stringify(v)); } catch (e) {} },
+  del(k) { try { localStorage.removeItem('mgl-game-' + k); } catch (e) {} },
+};
+// 紀錄：low=true 代表越小越好（步數、秒數）
+function record(k, v, low) {
+  const old = store.get('best-' + k, null);
+  if (old == null || (low ? v < old : v > old)) { store.set('best-' + k, v); return true; }
+  return false;
+}
+const vib = (ms) => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
+
+function overlay(big, title, msg, btns) {
+  const o = h(`<div class="ov"><div class="box"><div class="big">${big}</div><h3>${title}</h3><p>${msg}</p><div class="row"></div></div></div>`);
+  btns.forEach(([t, fn, pri]) => {
+    const b = h(`<button class="btn ${pri ? 'pri' : ''}">${t}</button>`);
+    b.onclick = () => { o.remove(); fn && fn(); };
+    $('.row', o).append(b);
+  });
+  document.body.append(o);
+  return o;
+}
+
+const GAMES = [
+  { id: 'memory', name: '翻翻樂', ic: '🍓', k: 'k3', desc: '翻兩張，找出一樣的水果', fn: memory },
+  { id: 'sudoku', name: '數獨', ic: '🔢', k: 'k1', desc: '每行、每列、每宮填 1–9', fn: sudoku },
+  { id: 'snake', name: '貪吃蛇', ic: '🐍', k: 'k2', desc: '吃東西會變長，別撞到自己', fn: snake },
+  { id: 'mines', name: '掃雷', ic: '💣', k: 'k6', desc: '靠數字推理，避開所有地雷', fn: mines },
+  { id: 'gomoku', name: '五子棋', ic: '⚫', k: 'k4', desc: '跟電腦下，先連成五顆贏', fn: gomoku },
+  { id: 'whack', name: '打地鼠', ic: '🐹', k: 'k5', desc: '30 秒內打越多越好，小心炸彈', fn: whack },
+  { id: 'guess', name: '猜數字', ic: '🎯', k: 'k1', desc: '1A2B，猜出 4 個不同的數字', fn: guess },
+];
+
+let cleanup = null;
+function route() {
+  if (cleanup) { try { cleanup(); } catch (e) {} cleanup = null; }
+  document.querySelectorAll('.ov').forEach(o => o.remove());
+  const app = $('#app');
+  app.innerHTML = '';
+  window.scrollTo(0, 0);
+  const g = GAMES.find(g => g.id === location.hash.slice(1));
+  if (!g) return home(app);
+  const top = h(`<div class="top"><button class="back" aria-label="回遊戲室">‹</button><h1>${g.ic} ${g.name}</h1><div class="best" id="best"></div></div>`);
+  top.firstChild.onclick = () => { if (history.length > 1 && history.state === 'game') history.back(); else location.hash = ''; };
+  app.append(top);
+  const stage = h('<div class="stage"></div>');
+  app.append(stage);
+  cleanup = g.fn(stage, (t) => { $('#best').innerHTML = t; }) || null;
+}
+function home(app) {
+  app.append(h(`<div class="top"><a href="./" aria-label="回首頁">‹</a><h1>遊戲室</h1></div>`));
+  app.append(h(`<p class="hi">沒有網路也能玩 🎮</p>`));
+  const grid = h('<div class="grid"></div>');
+  GAMES.forEach(g => {
+    const t = h(`<button class="tile ${g.k}"><div class="ic">${g.ic}</div><div><b>${g.name}</b><p>${g.desc}</p></div><span class="tag"></span></button>`);
+    const b = bestText(g.id);
+    $('.tag', t).textContent = b || '還沒玩過';
+    t.onclick = () => { history.pushState('game', '', '#' + g.id); route(); };
+    grid.append(t);
+  });
+  app.append(grid);
+  app.append(h(`<p class="note">紀錄存在這台手機裡</p>`));
+}
+function bestText(id) {
+  const B = (k) => store.get('best-' + k, null);
+  if (id === 'memory') { const v = [0, 1, 2].map(i => B('memory' + i)).filter(x => x != null); return v.length ? '最少 ' + Math.min(...v) + ' 步' : ''; }
+  if (id === 'sudoku') { const v = [0, 1, 2].map(i => B('sudoku' + i)).filter(x => x != null); return v.length ? '最快 ' + fmt(Math.min(...v)) : ''; }
+  if (id === 'snake') { const v = B('snake'); return v != null ? '最高 ' + v + ' 分' : ''; }
+  if (id === 'mines') { const v = [0, 1, 2].map(i => B('mines' + i)).filter(x => x != null); return v.length ? '最快 ' + fmt(Math.min(...v)) : ''; }
+  if (id === 'gomoku') { const w = store.get('gomoku-w', 0), l = store.get('gomoku-l', 0); return w + l ? w + ' 勝 ' + l + ' 敗' : ''; }
+  if (id === 'whack') { const v = B('whack'); return v != null ? '最高 ' + v + ' 分' : ''; }
+  if (id === 'guess') { const v = B('guess'); return v != null ? '最少 ' + v + ' 次' : ''; }
+  return '';
+}
+function seg(labels, cur, onPick) {
+  const s = h('<div class="seg"></div>');
+  labels.forEach((l, i) => {
+    const b = h(`<button class="${i === cur ? 'on' : ''}">${l}</button>`);
+    b.onclick = () => { s.querySelectorAll('button').forEach(x => x.classList.remove('on')); b.classList.add('on'); onPick(i); };
+    s.append(b);
+  });
+  return s;
+}
+
+/* ───────── 翻翻樂 ───────── */
+function memory(st, setBest) {
+  const EM = ['🍓', '🍋', '🍇', '🍑', '🥝', '🍒', '🍍', '🥥', '🍉', '🫐', '🍊', '🍌', '🍎', '🥭', '🍐'];
+  const LV = [{ c: 4, r: 4, n: '簡單' }, { c: 4, r: 5, n: '普通' }, { c: 5, r: 6, n: '困難' }];
+  let lv = store.get('memory-lv', 0), timer = null;
+  const showBest = () => { const b = store.get('best-memory' + lv, null); setBest(b != null ? '最少<br><b>' + b + ' 步</b>' : ''); };
+  function start() {
+    clearInterval(timer); timer = null;
+    st.innerHTML = '';
+    showBest();
+    const L = LV[lv], pairs = L.c * L.r / 2;
+    const deck = shuffle(shuffle(EM.slice()).slice(0, pairs).flatMap(e => [e, e]));
+    let open = [], moves = 0, found = 0, sec = 0, lock = false;
+    const bar = h('<div class="bar"></div>');
+    bar.append(seg(LV.map(l => l.n), lv, (i) => { lv = i; store.set('memory-lv', i); start(); }));
+    const stat = h('<div class="stat"><span>步數 <b id="mv">0</b></span><span>時間 <b id="tm">0:00</b></span></div>');
+    bar.append(stat);
+    st.append(bar);
+    const grid = h(`<div class="mem" style="grid-template-columns:repeat(${L.c},1fr)"></div>`);
+    if (L.c === 5) grid.style.maxWidth = '420px';
+    grid.style.margin = '0 auto';
+    deck.forEach((e, i) => {
+      const c = h(`<button class="card" aria-label="牌"><i><s></s><u>${e}</u></i></button>`);
+      c.onclick = () => {
+        if (lock || c.classList.contains('up') || c.classList.contains('ok')) return;
+        if (!timer) timer = setInterval(() => { sec++; $('#tm', stat).textContent = fmt(sec); }, 1000);
+        c.classList.add('up'); open.push(c);
+        if (open.length < 2) return;
+        moves++; $('#mv', stat).textContent = moves;
+        const [a, b] = open; open = [];
+        if ($('u', a).textContent === $('u', b).textContent) {
+          setTimeout(() => { a.classList.add('ok'); b.classList.add('ok'); }, 250);
+          found++;
+          if (found === pairs) {
+            clearInterval(timer);
+            const nb = record('memory' + lv, moves, true);
+            setTimeout(() => overlay('🎉', nb ? '新紀錄！' : '全部找到了', `${moves} 步・${fmt(sec)}`, [['再玩一次', start, 1]]), 600);
+            showBest();
+          }
+        } else {
+          lock = true;
+          setTimeout(() => { a.classList.remove('up'); b.classList.remove('up'); lock = false; }, 800);
+        }
+      };
+      grid.append(c);
+    });
+    st.append(grid);
+    const row = h('<div class="row"><button class="btn">重新洗牌</button></div>');
+    row.firstChild.onclick = start;
+    st.append(row);
+  }
+  start();
+  return () => clearInterval(timer);
+}
+
+/* ───────── 數獨 ───────── */
+function sdkOk(g, i, n) {
+  const r = (i / 9) | 0, c = i % 9, br = r - r % 3, bc = c - c % 3;
+  for (let k = 0; k < 9; k++) {
+    if (g[r * 9 + k] === n || g[k * 9 + c] === n || g[(br + ((k / 3) | 0)) * 9 + bc + k % 3] === n) return false;
+  }
+  return true;
+}
+function sdkFill(g) {
+  const i = g.indexOf(0);
+  if (i < 0) return true;
+  for (const n of shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9])) {
+    if (sdkOk(g, i, n)) { g[i] = n; if (sdkFill(g)) return true; g[i] = 0; }
+  }
+  return false;
+}
+// 算有幾個解（最多算到 limit），每次挑選擇最少的空格
+function sdkCount(g, limit) {
+  let best = -1, bestC = null;
+  for (let i = 0; i < 81; i++) {
+    if (g[i]) continue;
+    const c = [];
+    for (let n = 1; n <= 9; n++) if (sdkOk(g, i, n)) c.push(n);
+    if (!c.length) return 0;
+    if (!bestC || c.length < bestC.length) { best = i; bestC = c; if (c.length === 1) break; }
+  }
+  if (best < 0) return 1;
+  let cnt = 0;
+  for (const n of bestC) { g[best] = n; cnt += sdkCount(g, limit - cnt); g[best] = 0; if (cnt >= limit) break; }
+  return cnt;
+}
+function sdkMake(givens) {
+  const sol = new Array(81).fill(0);
+  sdkFill(sol);
+  const p = sol.slice();
+  let left = 81;
+  for (const i of shuffle([...Array(81).keys()])) {
+    if (left <= givens) break;
+    const v = p[i]; p[i] = 0;
+    if (sdkCount(p.slice(), 2) !== 1) p[i] = v; else left--;
+  }
+  return { sol, p };
+}
+function sudoku(st, setBest) {
+  const LV = [{ n: '簡單', g: 40 }, { n: '普通', g: 32 }, { n: '困難', g: 26 }];
+  let S = store.get('sudoku-save', null), timer = null, sel = -1, noteMode = false;
+  const showBest = () => { const b = store.get('best-sudoku' + (S ? S.lv : 0), null); setBest(b != null ? '最快<br><b>' + fmt(b) + '</b>' : ''); };
+  function newGame(lv) {
+    const { sol, p } = sdkMake(LV[lv].g);
+    S = { lv, sol, p, v: p.slice(), notes: Array.from({ length: 81 }, () => []), sec: 0, err: 0, done: false };
+    sel = -1; save(); draw();
+  }
+  const save = () => store.set('sudoku-save', S);
+  function draw() {
+    clearInterval(timer);
+    st.innerHTML = '';
+    showBest();
+    const bar = h('<div class="bar"></div>');
+    bar.append(seg(LV.map(l => l.n), S.lv, (i) => { st.querySelector('.sdk').style.opacity = .4; setTimeout(() => newGame(i), 30); }));
+    bar.append(h(`<div class="stat"><span>錯誤 <b id="er">${S.err}</b></span><span>時間 <b id="tm">${fmt(S.sec)}</b></span></div>`));
+    st.append(bar);
+    const g = h('<div class="sdk"></div>');
+    for (let i = 0; i < 81; i++) {
+      const d = document.createElement('div');
+      d.onclick = () => { sel = i; paint(); };
+      g.append(d);
+    }
+    st.append(g);
+    const pad = h('<div class="pad"></div>');
+    for (let n = 1; n <= 9; n++) { const b = h(`<button>${n}</button>`); b.onclick = () => put(n); pad.append(b); }
+    st.append(pad);
+    const row = h('<div class="row"><button class="btn" id="nt">✏️ 筆記</button><button class="btn" id="er2">擦掉</button><button class="btn" id="ng">新的一題</button></div>');
+    $('#nt', row).onclick = () => { noteMode = !noteMode; $('#nt', row).classList.toggle('on', noteMode); };
+    $('#er2', row).onclick = () => put(0);
+    $('#ng', row).onclick = () => { g.style.opacity = .4; setTimeout(() => newGame(S.lv), 30); };
+    st.append(row);
+    paint();
+    if (!S.done) timer = setInterval(() => { if (document.hidden) return; S.sec++; $('#tm', st).textContent = fmt(S.sec); if (S.sec % 5 === 0) save(); }, 1000);
+  }
+  function paint() {
+    const cells = st.querySelectorAll('.sdk>div');
+    const sv = sel >= 0 ? S.v[sel] : 0, sr = (sel / 9) | 0, sc = sel % 9;
+    const cnt = Array(10).fill(0);
+    S.v.forEach((v, i) => { if (v && v === S.sol[i]) cnt[v]++; });
+    cells.forEach((d, i) => {
+      const r = (i / 9) | 0, c = i % 9, v = S.v[i];
+      let cls = S.p[i] ? 'g' : 'u';
+      if (sel >= 0) {
+        if (i === sel) cls += ' sel';
+        else if (sv && v === sv) cls += ' same';
+        else if (r === sr || c === sc || ((r / 3 | 0) === (sr / 3 | 0) && (c / 3 | 0) === (sc / 3 | 0))) cls += ' hl';
+      }
+      if (v && v !== S.sol[i]) cls += ' bad';
+      d.className = cls;
+      if (v) d.textContent = v;
+      else if (S.notes[i].length) d.innerHTML = '<div class="nt">' + [1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `<span>${S.notes[i].includes(n) ? n : ''}</span>`).join('') + '</div>';
+      else d.textContent = '';
+    });
+    st.querySelectorAll('.pad button').forEach((b, k) => { b.disabled = cnt[k + 1] >= 9; });
+  }
+  function put(n) {
+    if (S.done || sel < 0 || S.p[sel]) return;
+    if (noteMode && n) {
+      if (S.v[sel]) return;
+      const a = S.notes[sel], k = a.indexOf(n);
+      if (k >= 0) a.splice(k, 1); else a.push(n);
+    } else {
+      S.v[sel] = n;
+      S.notes[sel] = [];
+      if (n && n !== S.sol[sel]) { S.err++; $('#er', st).textContent = S.err; vib(60); }
+      if (n && n === S.sol[sel]) {
+        // 填對了，同一行／列／宮的筆記自動拿掉這個數字
+        const r = (sel / 9) | 0, c = sel % 9;
+        for (let i = 0; i < 81; i++) {
+          const ri = (i / 9) | 0, ci = i % 9;
+          if (ri === r || ci === c || ((ri / 3 | 0) === (r / 3 | 0) && (ci / 3 | 0) === (c / 3 | 0))) {
+            const k = S.notes[i].indexOf(n); if (k >= 0) S.notes[i].splice(k, 1);
+          }
+        }
+      }
+    }
+    paint(); save();
+    if (S.v.every((v, i) => v === S.sol[i])) {
+      S.done = true; clearInterval(timer); save();
+      const nb = record('sudoku' + S.lv, S.sec, true);
+      showBest();
+      overlay('🏆', nb ? '新紀錄！' : '完成了！', `${LV[S.lv].n}・${fmt(S.sec)}・錯 ${S.err} 次`, [['再來一題', () => newGame(S.lv), 1], ['看一下盤面', null]]);
+    }
+  }
+  const key = (e) => {
+    if (e.key >= '1' && e.key <= '9') put(+e.key);
+    else if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') put(0);
+    else if (sel >= 0 && e.key.startsWith('Arrow')) {
+      const d = { ArrowUp: -9, ArrowDown: 9, ArrowLeft: -1, ArrowRight: 1 }[e.key];
+      sel = (sel + d + 81) % 81; paint(); e.preventDefault();
+    }
+  };
+  document.addEventListener('keydown', key);
+  if (S && S.sol) draw();
+  else { st.innerHTML = '<p class="hint">出題中…</p>'; setTimeout(() => newGame(0), 30); }
+  return () => { clearInterval(timer); if (S) save(); document.removeEventListener('keydown', key); };
+}
+
+/* ───────── 貪吃蛇 ───────── */
+function snake(st, setBest) {
+  const N = 17;
+  const FOOD = ['🍎', '🍓', '🍇', '🍒', '🍑', '🍋', '🥝'];
+  const showBest = () => { const b = store.get('best-snake', null); setBest(b != null ? '最高<br><b>' + b + ' 分</b>' : ''); };
+  showBest();
+  st.append(h('<div class="bar"><div class="stat" style="margin-left:0"><span>分數 <b id="sc">0</b></span></div></div>'));
+  const cv = h('<canvas></canvas>');
+  st.append(cv);
+  const dpad = h('<div class="dpad"><button class="u">↑</button><button class="l">←</button><button class="d">↓</button><button class="r">→</button></div>');
+  st.append(dpad);
+  st.append(h('<p class="hint">在畫面上滑動、按方向鍵或下面的按鈕</p>'));
+  const ctx = cv.getContext('2d');
+  let W = 0, cs = 0;
+  function size() {
+    const dpr = window.devicePixelRatio || 1;
+    W = cv.clientWidth; cs = W / N;
+    cv.width = W * dpr; cv.height = W * dpr; cv.style.height = W + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    draw();
+  }
+  let body, dir, queue, food, foodE, score, loop = null, state = 'ready', speed;
+  function reset() {
+    body = [[8, 8], [7, 8], [6, 8]]; dir = [1, 0]; queue = []; score = 0; speed = 150;
+    $('#sc', st).textContent = 0;
+    place();
+  }
+  function place() {
+    const free = [];
+    for (let x = 0; x < N; x++) for (let y = 0; y < N; y++) if (!body.some(b => b[0] === x && b[1] === y)) free.push([x, y]);
+    food = free[rnd(free.length)]; foodE = FOOD[rnd(FOOD.length)];
+  }
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  function draw() {
+    if (!body) return;
+    ctx.clearRect(0, 0, W, W);
+    ctx.fillStyle = css('--soft');
+    for (let x = 0; x < N; x++) for (let y = 0; y < N; y++) if ((x + y) % 2) ctx.fillRect(x * cs, y * cs, cs, cs);
+    ctx.font = (cs * .85) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(foodE, food[0] * cs + cs / 2, food[1] * cs + cs / 2 + 1);
+    const c1 = css('--acc');
+    body.forEach((b, i) => {
+      ctx.fillStyle = c1; ctx.globalAlpha = i === 0 ? 1 : Math.max(.45, 1 - i * .03);
+      const p = i === 0 ? 1 : 2;
+      ctx.beginPath(); ctx.roundRect(b[0] * cs + p, b[1] * cs + p, cs - p * 2, cs - p * 2, cs * .3); ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+    const [hx, hy] = body[0];
+    ctx.fillStyle = css('--card');
+    const ex = dir[1] !== 0 ? [.3, .7] : [.5, .5], ey = dir[0] !== 0 ? [.3, .7] : [.5, .5];
+    const off = [dir[0] * .15, dir[1] * .15];
+    for (let k = 0; k < 2; k++) { ctx.beginPath(); ctx.arc((hx + ex[k] + off[0]) * cs, (hy + ey[k] + off[1]) * cs, cs * .1, 0, 7); ctx.fill(); }
+    if (state !== 'run') {
+      ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fillRect(0, 0, W, W);
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 22px sans-serif';
+      ctx.fillText(state === 'pause' ? '暫停中・點一下繼續' : '點一下開始', W / 2, W / 2);
+    }
+  }
+  function step() {
+    if (queue.length) dir = queue.shift();
+    const nx = body[0][0] + dir[0], ny = body[0][1] + dir[1];
+    const hitSelf = body.slice(0, -1).some(b => b[0] === nx && b[1] === ny);
+    if (nx < 0 || ny < 0 || nx >= N || ny >= N || hitSelf) return over();
+    body.unshift([nx, ny]);
+    if (nx === food[0] && ny === food[1]) {
+      score++; $('#sc', st).textContent = score; vib(15);
+      if (body.length === N * N) return over(true);
+      place();
+      if (speed > 70) { speed -= 3; clearInterval(loop); loop = setInterval(step, speed); }
+    } else body.pop();
+    draw();
+  }
+  function over(win) {
+    clearInterval(loop); loop = null; state = 'ready'; vib(120);
+    const nb = record('snake', score, false); showBest();
+    overlay(win ? '👑' : '💥', nb && score ? '新紀錄！' : win ? '整個吃滿了！' : '撞到了', `${score} 分`, [['再玩一次', () => { reset(); go(); }, 1], ['休息一下', () => { reset(); draw(); }]]);
+  }
+  function go() { state = 'run'; clearInterval(loop); loop = setInterval(step, speed); draw(); }
+  function pause() { if (state === 'run') { state = 'pause'; clearInterval(loop); loop = null; draw(); } }
+  function turn(d) {
+    if (state !== 'run') { if (document.querySelector('.ov')) return; go(); }
+    const last = queue.length ? queue[queue.length - 1] : dir;
+    if (last[0] === -d[0] && last[1] === -d[1]) return;
+    if (last[0] === d[0] && last[1] === d[1]) return;
+    if (queue.length < 3) queue.push(d);
+  }
+  const D = { u: [0, -1], d: [0, 1], l: [-1, 0], r: [1, 0] };
+  for (const k in D) $('.' + k, dpad).addEventListener('pointerdown', (e) => { e.preventDefault(); turn(D[k]); });
+  let sx = 0, sy = 0, moved = false;
+  cv.addEventListener('pointerdown', (e) => { sx = e.clientX; sy = e.clientY; moved = false; });
+  cv.addEventListener('pointermove', (e) => {
+    if (e.buttons === 0 && e.pointerType === 'mouse') return;
+    const dx = e.clientX - sx, dy = e.clientY - sy;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) > 22) {
+      turn(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? D.r : D.l) : (dy > 0 ? D.d : D.u));
+      sx = e.clientX; sy = e.clientY; moved = true;
+    }
+  });
+  cv.addEventListener('pointerup', () => { if (!moved) { if (state === 'run') pause(); else if (!document.querySelector('.ov')) go(); } });
+  const key = (e) => {
+    const m = { ArrowUp: 'u', ArrowDown: 'd', ArrowLeft: 'l', ArrowRight: 'r', w: 'u', s: 'd', a: 'l', d: 'r' }[e.key];
+    if (m) { e.preventDefault(); turn(D[m]); }
+    else if (e.key === ' ') { e.preventDefault(); state === 'run' ? pause() : go(); }
+  };
+  const vis = () => { if (document.hidden) pause(); };
+  document.addEventListener('keydown', key);
+  document.addEventListener('visibilitychange', vis);
+  window.addEventListener('resize', size);
+  reset(); size();
+  return () => { clearInterval(loop); document.removeEventListener('keydown', key); document.removeEventListener('visibilitychange', vis); window.removeEventListener('resize', size); };
+}
+
+/* ───────── 掃雷 ───────── */
+function mines(st, setBest) {
+  const LV = [{ n: '簡單', c: 9, r: 9, m: 10 }, { n: '普通', c: 9, r: 13, m: 20 }, { n: '困難', c: 10, r: 16, m: 32 }];
+  let lv = store.get('mines-lv', 0), timer = null;
+  const showBest = () => { const b = store.get('best-mines' + lv, null); setBest(b != null ? '最快<br><b>' + fmt(b) + '</b>' : ''); };
+  function start() {
+    clearInterval(timer); timer = null;
+    st.innerHTML = '';
+    showBest();
+    const L = LV[lv], C = L.c, R = L.r, T = C * R;
+    let mine = null, open = new Array(T).fill(false), flag = new Array(T).fill(false), adj = [], sec = 0, flagMode = false, over = false, opened = 0;
+    const nb = (i) => { const r = (i / C) | 0, c = i % C, o = []; for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { if (!dr && !dc) continue; const rr = r + dr, cc = c + dc; if (rr >= 0 && cc >= 0 && rr < R && cc < C) o.push(rr * C + cc); } return o; };
+    const bar = h('<div class="bar"></div>');
+    bar.append(seg(LV.map(l => l.n), lv, (i) => { lv = i; store.set('mines-lv', i); start(); }));
+    const stat = h(`<div class="stat"><span>🚩 <b id="fl">${L.m}</b></span><span>時間 <b id="tm">0:00</b></span></div>`);
+    bar.append(stat);
+    st.append(bar);
+    const grid = h(`<div class="mine" style="grid-template-columns:repeat(${C},1fr)"></div>`);
+    const cells = [];
+    for (let i = 0; i < T; i++) {
+      const b = document.createElement('button');
+      let pressT = null, longed = false;
+      b.addEventListener('pointerdown', () => { longed = false; pressT = setTimeout(() => { longed = true; toggleFlag(i); vib(30); }, 380); });
+      ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => b.addEventListener(ev, () => clearTimeout(pressT)));
+      b.addEventListener('contextmenu', (e) => { e.preventDefault(); if (!longed) toggleFlag(i); longed = false; });
+      b.addEventListener('click', () => { if (longed) { longed = false; return; } flagMode ? toggleFlag(i) : reveal(i); });
+      cells.push(b); grid.append(b);
+    }
+    st.append(grid);
+    const row = h('<div class="row"><button class="btn" id="fm">⛏️ 挖開模式</button><button class="btn" id="rs">重來</button></div>');
+    $('#fm', row).onclick = () => { flagMode = !flagMode; $('#fm', row).textContent = flagMode ? '🚩 插旗模式' : '⛏️ 挖開模式'; $('#fm', row).classList.toggle('on', flagMode); };
+    $('#rs', row).onclick = start;
+    st.append(row);
+    st.append(h('<p class="hint">按住格子可以插旗；點已打開的數字，旗子插夠了會自動打開旁邊</p>'));
+    function lay(first) {
+      const safe = new Set([first, ...nb(first)]);
+      const pool = shuffle([...Array(T).keys()].filter(i => !safe.has(i)));
+      mine = new Array(T).fill(false);
+      pool.slice(0, L.m).forEach(i => mine[i] = true);
+      adj = [...Array(T).keys()].map(i => nb(i).filter(j => mine[j]).length);
+      timer = setInterval(() => { sec++; $('#tm', stat).textContent = fmt(sec); }, 1000);
+    }
+    function toggleFlag(i) {
+      if (over || open[i]) return;
+      flag[i] = !flag[i]; paint(i);
+      $('#fl', stat).textContent = L.m - flag.filter(Boolean).length;
+    }
+    function reveal(i) {
+      if (over || flag[i]) return;
+      if (!mine) lay(i);
+      if (open[i]) { // 打開旁邊
+        const n = nb(i);
+        if (adj[i] && n.filter(j => flag[j]).length === adj[i]) n.forEach(j => { if (!open[j] && !flag[j]) dig(j); });
+      } else dig(i);
+      check();
+    }
+    function dig(i) {
+      if (open[i] || flag[i] || over) return;
+      if (mine[i]) return boom(i);
+      const stack = [i];
+      while (stack.length) {
+        const k = stack.pop();
+        if (open[k] || flag[k]) continue;
+        open[k] = true; opened++; paint(k);
+        if (adj[k] === 0) nb(k).forEach(j => { if (!open[j]) stack.push(j); });
+      }
+    }
+    function boom(i) {
+      over = true; clearInterval(timer); vib([80, 40, 120]);
+      for (let k = 0; k < T; k++) {
+        if (mine[k] && !flag[k]) { cells[k].textContent = '💣'; cells[k].className = 'o'; }
+        if (!mine[k] && flag[k]) cells[k].textContent = '❌';
+      }
+      cells[i].className = 'x';
+      setTimeout(() => overlay('💥', '踩到地雷了', `打開了 ${opened} / ${T - L.m} 格`, [['再玩一次', start, 1], ['看一下盤面', null]]), 500);
+    }
+    function check() {
+      if (over || opened !== T - L.m) return;
+      over = true; clearInterval(timer);
+      for (let k = 0; k < T; k++) if (mine[k]) { flag[k] = true; paint(k); }
+      $('#fl', stat).textContent = 0;
+      const nbst = record('mines' + lv, sec, true); showBest();
+      setTimeout(() => overlay('😎', nbst ? '新紀錄！' : '全部找出來了', `${L.n}・${fmt(sec)}`, [['再玩一次', start, 1]]), 300);
+    }
+    function paint(i) {
+      const b = cells[i];
+      if (open[i]) { b.className = 'o' + (adj[i] ? ' n' + adj[i] : ''); b.textContent = adj[i] || ''; }
+      else { b.className = ''; b.textContent = flag[i] ? '🚩' : ''; }
+    }
+  }
+  start();
+  return () => clearInterval(timer);
+}
+
+/* ───────── 五子棋 ───────── */
+function gomoku(st, setBest) {
+  const N = 13;
+  const showBest = () => { const w = store.get('gomoku-w', 0), l = store.get('gomoku-l', 0); setBest(w + l ? `<b>${w}</b> 勝 <b>${l}</b> 敗` : ''); };
+  let lv = store.get('gomoku-lv', 1), B, hist, over, thinking, last;
+  st.innerHTML = '';
+  showBest();
+  const bar = h('<div class="bar"></div>');
+  bar.append(seg(['輕鬆', '認真'], lv, (i) => { lv = i; store.set('gomoku-lv', i); }));
+  const stat = h('<div class="stat"><span id="who">你下黑棋，先下</span></div>');
+  bar.append(stat);
+  st.append(bar);
+  const cv = h('<canvas></canvas>');
+  st.append(cv);
+  const row = h('<div class="row"><button class="btn" id="ud">悔棋</button><button class="btn" id="rs">重新開始</button></div>');
+  st.append(row);
+  const ctx = cv.getContext('2d');
+  let W = 0, cs = 0, pad = 0, ai = null;
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  function size() {
+    const dpr = window.devicePixelRatio || 1;
+    W = cv.clientWidth; pad = W / (N + 1) * .75; cs = (W - pad * 2) / (N - 1);
+    cv.width = W * dpr; cv.height = W * dpr; cv.style.height = W + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    draw();
+  }
+  function reset() {
+    clearTimeout(ai);
+    B = Array.from({ length: N }, () => new Array(N).fill(0)); hist = []; over = false; thinking = false; last = null;
+    $('#who', stat).textContent = '你下黑棋，先下';
+    draw();
+  }
+  function draw() {
+    if (!B) return;
+    ctx.clearRect(0, 0, W, W);
+    ctx.fillStyle = css('--t4'); ctx.fillRect(0, 0, W, W);
+    ctx.strokeStyle = css('--i4'); ctx.globalAlpha = .55; ctx.lineWidth = 1;
+    for (let i = 0; i < N; i++) {
+      ctx.beginPath(); ctx.moveTo(pad, pad + i * cs); ctx.lineTo(W - pad, pad + i * cs); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(pad + i * cs, pad); ctx.lineTo(pad + i * cs, W - pad); ctx.stroke();
+    }
+    ctx.globalAlpha = 1; ctx.fillStyle = css('--i4');
+    [[3, 3], [3, 9], [9, 3], [9, 9], [6, 6]].forEach(([x, y]) => { ctx.beginPath(); ctx.arc(pad + x * cs, pad + y * cs, 3, 0, 7); ctx.fill(); });
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (B[y][x]) {
+      const cx = pad + x * cs, cy = pad + y * cs, r = cs * .43;
+      const g = ctx.createRadialGradient(cx - r * .35, cy - r * .35, r * .1, cx, cy, r);
+      if (B[y][x] === 1) { g.addColorStop(0, '#666'); g.addColorStop(1, '#111'); }
+      else { g.addColorStop(0, '#fff'); g.addColorStop(1, '#D6D2CA'); }
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.fill();
+    }
+    if (last) {
+      ctx.fillStyle = '#E25B4B';
+      ctx.beginPath(); ctx.arc(pad + last[0] * cs, pad + last[1] * cs, cs * .12, 0, 7); ctx.fill();
+    }
+    if (over && over.line) {
+      ctx.strokeStyle = '#E25B4B'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+      const [a, b] = over.line;
+      ctx.beginPath(); ctx.moveTo(pad + a[0] * cs, pad + a[1] * cs); ctx.lineTo(pad + b[0] * cs, pad + b[1] * cs); ctx.stroke();
+    }
+  }
+  const DIRS = [[1, 0], [0, 1], [1, 1], [1, -1]];
+  const inB = (x, y) => x >= 0 && y >= 0 && x < N && y < N;
+  function fiveAt(x, y) {
+    const p = B[y][x];
+    for (const [dx, dy] of DIRS) {
+      let a = 0, b = 0;
+      while (inB(x + (a + 1) * dx, y + (a + 1) * dy) && B[y + (a + 1) * dy][x + (a + 1) * dx] === p) a++;
+      while (inB(x - (b + 1) * dx, y - (b + 1) * dy) && B[y - (b + 1) * dy][x - (b + 1) * dx] === p) b++;
+      if (a + b + 1 >= 5) return [[x + a * dx, y + a * dy], [x - b * dx, y - b * dy]];
+    }
+    return null;
+  }
+  // 假設在 (x,y) 放 p，評估這步有多好
+  function evalPt(x, y, p) {
+    let s = 0;
+    for (const [dx, dy] of DIRS) {
+      let cnt = 1, open = 0, gap = 0;
+      for (const sg of [1, -1]) {
+        let k = 1;
+        while (inB(x + sg * k * dx, y + sg * k * dy) && B[y + sg * k * dy][x + sg * k * dx] === p) { cnt++; k++; }
+        const ex = x + sg * k * dx, ey = y + sg * k * dy;
+        if (inB(ex, ey) && B[ey][ex] === 0) {
+          open++;
+          // 跳一格還有自己的棋（像 ●●_●）
+          if (inB(ex + sg * dx, ey + sg * dy) && B[ey + sg * dy][ex + sg * dx] === p) gap++;
+        }
+      }
+      if (cnt >= 5) s += 1e6;
+      else if (cnt === 4) s += open === 2 ? 1e5 : open === 1 ? 1e4 : 0;
+      else if (cnt === 3) s += open === 2 ? (gap ? 2e4 : 5e3) : open === 1 ? (gap ? 3e3 : 400) : 0;
+      else if (cnt === 2) s += open === 2 ? (gap ? 2e3 : 300) : open === 1 ? (gap ? 200 : 40) : 0;
+      else s += open === 2 ? (gap ? 80 : 10) : open;
+    }
+    return s;
+  }
+  function aiMove() {
+    let best = -1, picks = [];
+    if (!hist.length) return [6, 6];
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      if (B[y][x]) continue;
+      let near = false;
+      for (let dy = -2; dy <= 2 && !near; dy++) for (let dx = -2; dx <= 2; dx++) if (inB(x + dx, y + dy) && B[y + dy][x + dx]) { near = true; break; }
+      if (!near) continue;
+      const atk = evalPt(x, y, 2), def = evalPt(x, y, 1);
+      let s = lv ? atk * 1.1 + def : atk + def * .6 + Math.random() * 400;
+      s += (6 - Math.max(Math.abs(x - 6), Math.abs(y - 6)));
+      if (s > best + 1e-6) { best = s; picks = [[x, y]]; } else if (Math.abs(s - best) < 1e-6) picks.push([x, y]);
+    }
+    return picks[rnd(picks.length)];
+  }
+  function place(x, y, p) {
+    B[y][x] = p; hist.push([x, y]); last = [x, y];
+    const line = fiveAt(x, y);
+    if (line) {
+      over = { line };
+      draw();
+      if (p === 1) store.set('gomoku-w', store.get('gomoku-w', 0) + 1); else store.set('gomoku-l', store.get('gomoku-l', 0) + 1);
+      showBest();
+      $('#who', stat).textContent = p === 1 ? '你贏了！' : '電腦贏了';
+      setTimeout(() => overlay(p === 1 ? '🥳' : '🤖', p === 1 ? '你贏了！' : '電腦贏了', p === 1 ? '連成五顆！' : '再挑戰一次吧', [['再下一盤', reset, 1], ['看一下棋盤', null]]), 400);
+      return true;
+    }
+    if (hist.length === N * N) { over = {}; $('#who', stat).textContent = '平手'; overlay('🤝', '平手', '棋盤下滿了', [['再下一盤', reset, 1]]); return true; }
+    draw();
+    return false;
+  }
+  cv.addEventListener('click', (e) => {
+    if (over || thinking) return;
+    const r = cv.getBoundingClientRect();
+    const x = Math.round((e.clientX - r.left - pad) / cs), y = Math.round((e.clientY - r.top - pad) / cs);
+    if (!inB(x, y) || B[y][x]) return;
+    if (place(x, y, 1)) return;
+    thinking = true; $('#who', stat).textContent = '電腦想一下…';
+    ai = setTimeout(() => {
+      const [ax, ay] = aiMove();
+      thinking = false;
+      if (!place(ax, ay, 2)) $('#who', stat).textContent = '換你';
+    }, 350);
+  });
+  $('#ud', row).onclick = () => {
+    if (thinking || hist.length < 2 || (over && over.line && B[last[1]][last[0]] === 1)) return;
+    for (let k = 0; k < 2; k++) { const [x, y] = hist.pop(); B[y][x] = 0; }
+    if (over && over.line) { const kk = 'gomoku-l'; store.set(kk, Math.max(0, store.get(kk, 0) - 1)); showBest(); }
+    over = false; last = hist.length ? hist[hist.length - 1] : null;
+    $('#who', stat).textContent = '換你'; draw();
+  };
+  $('#rs', row).onclick = reset;
+  window.addEventListener('resize', size);
+  reset(); size();
+  return () => { clearTimeout(ai); window.removeEventListener('resize', size); };
+}
+
+/* ───────── 打地鼠 ───────── */
+function whack(st, setBest) {
+  const TIME = 30;
+  const showBest = () => { const b = store.get('best-whack', null); setBest(b != null ? '最高<br><b>' + b + ' 分</b>' : ''); };
+  let tick = null, spawnT = null, timers = [], score = 0, left = TIME, running = false, combo = 0;
+  st.innerHTML = '';
+  showBest();
+  st.append(h('<div class="bar"><div class="stat" style="margin-left:0"><span>分數 <b id="sc">0</b></span><span>剩下 <b id="tl">30</b> 秒</span><span id="cb"></span></div></div>'));
+  st.append(h('<div class="timebar"><i></i></div>'));
+  const holes = h('<div class="holes"></div>');
+  const H = [];
+  for (let i = 0; i < 9; i++) {
+    const b = h('<button class="hole"></button>');
+    b.addEventListener('pointerdown', (e) => { e.preventDefault(); hit(i); });
+    H.push({ el: b, who: null, t: null }); holes.append(b);
+  }
+  st.append(holes);
+  st.append(h('<p class="hint">🐹 +1・🐰 +2・🌟 +5・💣 −3（連續打中有加分）</p>'));
+  const row = h('<div class="row"><button class="btn pri">開始</button></div>');
+  st.append(row);
+  row.firstChild.onclick = begin;
+  const W = [['🐹', 1, 55], ['🐰', 2, 20], ['🌟', 5, 7], ['💣', -3, 18]];
+  function pick() { let r = rnd(100); for (const w of W) { if ((r -= w[2]) < 0) return w; } return W[0]; }
+  function begin() {
+    if (running) return;
+    running = true; score = 0; left = TIME; combo = 0;
+    $('#sc', st).textContent = 0; $('#tl', st).textContent = TIME; $('#cb', st).textContent = '';
+    $('.timebar i', st).style.width = '100%';
+    row.style.visibility = 'hidden';
+    tick = setInterval(() => {
+      left--; $('#tl', st).textContent = left;
+      $('.timebar i', st).style.width = (left / TIME * 100) + '%';
+      if (left <= 0) end();
+    }, 1000);
+    spawn();
+  }
+  function spawn() {
+    if (!running) return;
+    const free = H.map((x, i) => x.who ? -1 : i).filter(i => i >= 0);
+    if (free.length) {
+      const i = free[rnd(free.length)], w = pick(), o = H[i];
+      o.who = w; o.el.className = 'hole'; o.el.innerHTML = `<span>${w[0]}</span>`;
+      const stay = Math.max(450, 1100 - (TIME - left) * 18) + rnd(250);
+      o.t = setTimeout(() => { if (o.who === w) { if (w[1] > 0) combo = 0; hide(i); } }, stay);
+      timers.push(o.t);
+    }
+    const gap = Math.max(260, 700 - (TIME - left) * 15);
+    spawnT = setTimeout(spawn, gap + rnd(200));
+  }
+  function hide(i) { const o = H[i]; o.who = null; clearTimeout(o.t); o.el.innerHTML = ''; setTimeout(() => { if (!o.who) o.el.className = 'hole'; }, 180); updCombo(); }
+  function hit(i) {
+    const o = H[i];
+    if (!running || !o.who) return;
+    const w = o.who;
+    let add = w[1];
+    if (add > 0) { combo++; if (combo >= 5) add += 1; vib(12); } else { combo = 0; vib(90); }
+    score = Math.max(0, score + add);
+    $('#sc', st).textContent = score;
+    o.el.className = 'hole ' + (w[1] > 0 ? 'hit' : 'ouch');
+    o.who = null; clearTimeout(o.t);
+    o.el.innerHTML = `<span style="font-size:.5em;font-weight:700">${add > 0 ? '+' + add : add}</span>`;
+    setTimeout(() => { if (!o.who) { o.el.innerHTML = ''; o.el.className = 'hole'; } }, 300);
+    updCombo();
+  }
+  function updCombo() { $('#cb', st).innerHTML = combo >= 3 ? `🔥 <b>${combo}</b> 連擊` : ''; }
+  function end() {
+    running = false; clearInterval(tick); clearTimeout(spawnT); timers.forEach(clearTimeout); timers = [];
+    H.forEach((o, i) => { o.who = null; o.el.innerHTML = ''; o.el.className = 'hole'; });
+    const nb = record('whack', score, false); showBest();
+    row.style.visibility = ''; row.firstChild.textContent = '再玩一次';
+    overlay(nb && score ? '🏅' : '⏰', nb && score ? '新紀錄！' : '時間到', `${score} 分`, [['再玩一次', begin, 1], ['休息一下', null]]);
+  }
+  const vis = () => { if (document.hidden && running) end(); };
+  document.addEventListener('visibilitychange', vis);
+  return () => { running = false; clearInterval(tick); clearTimeout(spawnT); timers.forEach(clearTimeout); document.removeEventListener('visibilitychange', vis); };
+}
+
+/* ───────── 猜數字 1A2B ───────── */
+function guess(st, setBest) {
+  const showBest = () => { const b = store.get('best-guess', null); setBest(b != null ? '最少<br><b>' + b + ' 次</b>' : ''); };
+  let G = store.get('guess-save', null), cur = [];
+  function newGame() {
+    G = { ans: shuffle([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).slice(0, 4).join(''), hist: [], done: false };
+    cur = []; store.set('guess-save', G); draw();
+  }
+  function draw() {
+    st.innerHTML = '';
+    showBest();
+    st.append(h('<div class="rule">電腦想了 4 個<b>不重複</b>的數字。數字和位置都對是 <b>A</b>，數字對但位置錯是 <b>B</b>。</div>'));
+    const slots = h('<div class="slots"></div>');
+    for (let i = 0; i < 4; i++) slots.append(h(`<span class="${i === cur.length ? 'cur' : ''}">${cur[i] != null ? cur[i] : ''}</span>`));
+    st.append(slots);
+    const keys = h('<div class="keys"></div>');
+    for (let n = 1; n <= 10; n++) {
+      const d = n % 10, b = h(`<button>${d}</button>`);
+      b.disabled = cur.includes(d) || cur.length >= 4 || G.done;
+      b.onclick = () => { cur.push(d); draw(); };
+      keys.append(b);
+    }
+    st.append(keys);
+    const row = h('<div class="row"><button class="btn" id="bk">⌫ 刪掉</button><button class="btn pri" id="ok">猜！</button><button class="btn" id="gv">放棄</button></div>');
+    $('#bk', row).onclick = () => { cur.pop(); draw(); };
+    $('#ok', row).disabled = cur.length !== 4;
+    $('#ok', row).style.opacity = cur.length === 4 ? 1 : .4;
+    $('#ok', row).onclick = submit;
+    $('#gv', row).onclick = () => {
+      if (G.done) return newGame();
+      overlay('🙈', '答案是', G.ans, [['再玩一次', newGame, 1]]); G.done = true; store.set('guess-save', G); draw();
+    };
+    if (G.done) $('#gv', row).textContent = '新的一局';
+    st.append(row);
+    const hist = h('<div class="hist"></div>');
+    G.hist.slice().reverse().forEach((x, k) => {
+      hist.append(h(`<div><span class="i">${G.hist.length - k}</span><span class="num">${x.g}</span><span class="ab"><b class="a">${x.a} A</b><b class="bb">${x.b} B</b></span></div>`));
+    });
+    st.append(hist);
+  }
+  function submit() {
+    if (cur.length !== 4 || G.done) return;
+    const g = cur.join('');
+    let a = 0, b = 0;
+    for (let i = 0; i < 4; i++) { if (g[i] === G.ans[i]) a++; else if (G.ans.includes(g[i])) b++; }
+    G.hist.push({ g, a, b }); cur = [];
+    if (a === 4) {
+      G.done = true;
+      const n = G.hist.length, nb = record('guess', n, true);
+      overlay('🎯', nb ? '新紀錄！' : '猜中了！', `答案 ${G.ans}・猜了 ${n} 次`, [['再玩一次', newGame, 1], ['看一下紀錄', null]]);
+    } else vib(20);
+    store.set('guess-save', G); draw();
+  }
+  const key = (e) => {
+    if (G.done) return;
+    if (e.key >= '0' && e.key <= '9' && cur.length < 4 && !cur.includes(+e.key)) { cur.push(+e.key); draw(); }
+    else if (e.key === 'Backspace') { cur.pop(); draw(); }
+    else if (e.key === 'Enter') submit();
+  };
+  document.addEventListener('keydown', key);
+  if (G && G.ans) draw(); else newGame();
+  return () => document.removeEventListener('keydown', key);
+}
+
+window.addEventListener('popstate', route);
+route();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
