@@ -227,6 +227,24 @@ textarea{min-height:64px;resize:vertical}
 .slb small{display:block;font-size:11px;min-height:13px}
 .slb.on{background:var(--oks);border-color:transparent;color:var(--ok)}.slb.on span{color:var(--ok)}
 .slb.x{opacity:.45}
+/* 做完的待辦：縮小、收起來 */
+.donebar{display:block;width:100%;text-align:left;border:0;background:var(--tile);border-radius:12px;padding:8px 12px;margin-top:10px;font-size:14px;color:var(--ok);font-weight:500}
+.tdr.sm{padding:4px 0}.tdr.sm .ck{width:22px;height:22px;border-radius:6px;font-size:12px}
+.box.big .tdr.sm .ck{width:22px;height:22px}
+.tdr.sm .tdt span,.box.big .tdr.sm .tdt span{font-size:14px;font-weight:400}.tdr.sm .tdt small{font-size:12px}
+.donelist{margin-top:2px}
+/* 首頁的聯絡簿 */
+.cbsec{display:flex;gap:10px;align-items:flex-start;margin-top:8px}
+.cbl2{flex:none;width:74px;font-size:14px;font-weight:500;line-height:1.3}.cbl2 small{display:block;font-size:11.5px;color:var(--sub);font-weight:400}
+.cbchips{display:flex;flex-wrap:wrap;gap:6px;flex:1}
+.cbc{display:inline-flex;align-items:center;gap:2px;background:var(--tile);border-radius:10px;padding:4px 4px 4px 10px;font-size:14px}
+.cbc.hid{opacity:.45}
+.cbc button{border:0;background:none;color:var(--sub);padding:0 6px;font-size:12px}
+.cbc:not(:has(button)){padding-right:10px}
+.bt.sm.on{background:var(--acc);color:var(--on);border-color:var(--acc)}
+.cbinline{background:var(--tile);border-radius:14px;padding:8px 10px;margin-top:8px}
+.cbinline .pick button{background:var(--card)}
+.cbinline .pick button.on{background:var(--acc)}
 /* 班費 */
 .bar2{height:10px;border-radius:99px;background:var(--tile);overflow:hidden;margin-top:12px}.bar2 i{display:block;height:100%;background:var(--blue);border-radius:99px}
 .catr{display:flex;gap:10px;align-items:center;padding:7px 0}.catr span{width:48px;flex:none}.catr b{min-width:70px;text-align:right}
@@ -555,6 +573,20 @@ function bindPage(){
  if(et)et.onchange=()=>{if(DT.test(et.value)){EX.to=et.value;render()}};
 }
 
+// 首頁的「今天要批改」裡面：今天的聯絡簿（早自修、作業），可以直接在這裡加
+let CBOPEN='';
+function homeCB(){
+ const c=cls(),d=today();CBD=d;
+ const am=cbLines(c.id,d,1),hw=cbLines(c.id,d),b=cbPeek(c.id,d);
+ const chips=L=>L.length?`<div class="cbchips">${L.map(x=>`<span class="cbc${x.hid?' hid':''}">${E(x.x.replace(/（.*?交）$/,''))}${x.t&&!Object.keys(x.t.r).length?`<button data-a="cbtdel" data-id="${x.id}" aria-label="刪除">✕</button>`:x.t?'':`<button data-a="cbdel" data-k="hw" data-id="${x.id}" aria-label="刪除">✕</button>`}</span>`).join('')}</div>`:'<span class="ps">還沒有</span>';
+ return `<div class="hr" style="margin:14px 0 10px"></div>
+  <div class="row sp"><b>📒 今天的聯絡簿${S.classes.length>1?' · '+E(c.name):''}</b><button class="bt sm" data-a="go" data-v="cb">完整聯絡簿 ›</button></div>
+  <div class="cbsec"><span class="cbl2">🌅 早自修<small>今天批改</small></span>${chips(am)}</div>
+  <div class="cbsec"><span class="cbl2">📒 作業<small>${md(nextDay(d))} 批改</small></span>${chips(hw)}</div>
+  ${b.br.length?`<div class="cbsec"><span class="cbl2">🎒 記得帶</span><div class="cbchips">${b.br.map(x=>`<span class="cbc">${E(x.x)}</span>`).join('')}</div></div>`:''}
+  <div class="row" style="margin-top:8px"><button class="bt sm${CBOPEN==='am'?' on':''}" data-a="cbopen" data-k="am">＋ 早自修</button><button class="bt sm${CBOPEN==='hw'?' on':''}" data-a="cbopen" data-k="hw">＋ 作業</button><button class="bt sm${CBOPEN==='br'?' on':''}" data-a="cbopen" data-k="br">＋ 記得帶</button></div>
+  ${CBOPEN==='am'||CBOPEN==='hw'?`<div class="cbinline">${cbPicker(CBOPEN)}</div>`:CBOPEN==='br'?`<div class="cbinline"><div class="add"><input id="cbbr" placeholder="例如：3號 帶同意書、全班帶彩色筆" autocomplete="off"><button class="go" data-a="cbadd" data-k="br">加入</button></div></div>`:''}`;
+}
 // 首頁：【我自己】待辦最明顯，再來是今天要批改、未繳交；班級和功能放下面
 function homeView(){
  const c=cls(),ss=stus(c),d=today();
@@ -571,10 +603,11 @@ function homeView(){
  <div class="box" style="padding:12px 16px">${nowCard()}</div>
  <div class="box big">${myToday()}</div>
  <div class="box">
-  <div class="h2 row sp"><span>✏️ 今天要批改</span><button class="bt sm" data-a="go" data-v="cb">＋ 早自修／聯絡簿</button></div>
+  <div class="h2 row sp"><span>✏️ 今天要批改</span><button class="bt sm" data-a="proj">📺 投影</button></div>
   ${grade.length?grade.map(({c:x,ts})=>`${S.classes.length>1?`<div class="ps" style="margin:8px 0 2px">${E(x.name)}</div>`:''}<div class="list">${ts.map(t=>{const ss2=stus(x),n=ss2.filter(s=>isIn(R(t,s.id))).length;
    return `<button class="lr" data-a="gtask" data-c="${x.id}" data-id="${t.id}"><span class="lt">${E(tName(t))}<small>${t.m?'早自修':t.d<d?md(t.d)+' 出的作業':'今天出的'}${t.g?' · 要打分數':''}</small></span>${n===ss2.length?pill('ok','都登記了'):pill(n?'warn':'','已登記 '+n+'/'+ss2.length)}<span class="ch">›</span></button>`}).join('')}</div>`).join('')
-   :'<div class="ps">今天沒有要批改的。在「聯絡簿」寫早自修和作業，就會自動出現在這裡。</div>'}
+   :'<div class="ps">今天沒有要批改的。</div>'}
+  ${homeCB()}
  </div>
  ${slipBox()}
  <div class="box">
@@ -732,7 +765,7 @@ function fixPV(o){
  const wk={};for(let d=1;d<=6;d++){wk[d]={};const c=(o.wk&&o.wk[d])||{};Object.keys(c).forEach(i=>{const x=fixCell(c[i]);if(x&&!x.off)wk[d][i]=x})}
  const ex={};Object.keys(o.ex||{}).forEach(d=>{if(!DT.test(d))return;const v=o.ex[d]||{},cells={};Object.keys(v.cells||{}).forEach(i=>{const x=fixCell(v.cells[i]);if(x)cells[i]=x});if(Object.keys(cells).length||v.note)ex[d]={cells,note:String(v.note||'')}});
  const todos=arr(o.todos).filter(t=>t&&t.x).map(t=>({id:t.id||nid(),x:String(t.x),d:DT.test(t.d)?t.d:'',tm:TM.test(t.tm)?t.tm:'',rep:[...new Set(arr(t.rep).map(Number).filter(n=>n>=0&&n<=6))].sort(),
-  rm:RMS.some(r=>r[0]===t.rm)?t.rm:'',p:t.p===''||t.p==null||isNaN(+t.p)?'':+t.p,done:!!t.done,dd:arr(t.dd).filter(x=>DT.test(x)).slice(-80),n:String(t.n||''),t:+t.t||Date.now()}));
+  rm:RMS.some(r=>r[0]===t.rm)?t.rm:'',p:t.p===''||t.p==null||isNaN(+t.p)?'':+t.p,done:!!t.done,dt:t.done&&+t.dt?+t.dt:0,dk:(()=>{const o={},k=t.dk&&typeof t.dk==='object'?t.dk:{};arr(t.dd).forEach(x=>{if(+k[x])o[x]=+k[x]});return o})(),dd:arr(t.dd).filter(x=>DT.test(x)).slice(-80),n:String(t.n||''),t:+t.t||Date.now()}));
  return {per:per.length?per:DEF_PER.map(p=>({...p})),wk,ex,todos,exams:fixExams(o.exams)};
 }
 const PV={t:0,d:fixPV({}),ref:null,busy:false,dirty:false,tm:0,ok:false};
@@ -888,20 +921,31 @@ function tdRow(t,d){
  const dn=isDone(t,d);
  return `<div class="tdr${dn?' dn':''}"><button class="ck${dn?' on':''}" data-a="tdck" data-id="${t.id}" data-d="${d}" aria-label="${dn?'改回沒做':'做完了'}">${dn?'✓':''}</button><button class="tdt" data-a="tded" data-id="${t.id}"><span>${E(t.x)}</span><small>${E(todoWhen(t))}${t.rm?' · 🔔 '+RMS.find(r=>r[0]===t.rm)[1]:''}${t.n?' · 📝':''}</small></button></div>`;
 }
+let DONEOPEN=false;
+// 完成的時間：一次性的看 dt；每週重複的看那天的 dk
+const doneAt=(t,d)=>t.rep.length?(t.dk&&t.dk[d])||0:t.dt||0;
+const hmOf=ms=>{const x=new Date(ms);return z(x.getHours())+':'+z(x.getMinutes())};
+function doneRow(t,d){const at=doneAt(t,d);
+ return `<div class="tdr dn sm"><button class="ck on" data-a="tdck" data-id="${t.id}" data-d="${d}" aria-label="改回沒做">✓</button><button class="tdt" data-a="tded" data-id="${t.id}"><span>${E(t.x)}</span><small>${at?(ymd(new Date(at))===today()?'今天 ':mdw(ymd(new Date(at)))+' ')+hmOf(at)+' 完成':'完成'}${t.rep.length?' · '+E(todoWhen(t)):''}</small></button></div>`}
 function myToday(){
  const d=today(),{over,day}=todosFor(d),n=nowInfo();
  const prep=n.nxt>=0?PV.d.todos.filter(t=>t.p===n.nxt&&onDay(t,d)&&!isDone(t,d)):[];
  const list=[...over,...day.filter(t=>!prep.includes(t))],exs=examTodos(d);
  return `${prep.length?`<div class="h3">下一節前要準備</div>${prep.map(t=>tdRow(t,d)).join('')}`:''}
-  <div class="h2" style="margin:2px 0 6px">📌 待辦事項${list.length+exs.length?'（'+(list.filter(t=>!isDone(t,d)).length+exs.filter(x=>x.k!=='day').length)+'）':''}</div>
-  ${exs.map(x=>exRow(x,d)).join('')}${list.length?list.slice(0,10).map(t=>tdRow(t,d)).join(''):exs.length?'':'<div class="ps" style="padding:4px 2px">今天沒有待辦 🎉</div>'}
+  <div class="h2" style="margin:2px 0 6px">📌 待辦事項${list.filter(t=>!isDone(t,d)).length+exs.filter(x=>x.k!=='day'&&!(x.k==='wr'?x.e.wrd:x.e.prd)).length?'（'+(list.filter(t=>!isDone(t,d)).length+exs.filter(x=>x.k!=='day'&&!(x.k==='wr'?x.e.wrd:x.e.prd)).length)+'）':''}</div>
+  ${(()=>{const undone=list.filter(t=>!isDone(t,d)),exU=exs.filter(x=>x.k==='day'||!(x.k==='wr'?x.e.wrd:x.e.prd));
+   // 今天做完的：今天的、過期的、還有別天但今天才做完的
+   const fin=[...new Map([...list.filter(t=>isDone(t,d)),...PV.d.todos.filter(t=>!t.rep.length&&t.done&&t.dt&&ymd(new Date(t.dt))===d)].map(t=>[t.id,t])).values()].sort((a,b)=>doneAt(b,d)-doneAt(a,d));
+   return exU.map(x=>exRow(x,d)).join('')+undone.slice(0,10).map(t=>tdRow(t,d)).join('')
+    +(!undone.length&&!exU.length?`<div class="ps" style="padding:4px 2px">${fin.length?'今天的待辦都做完了 🎉':'今天沒有待辦 🎉'}</div>`:'')
+    +(fin.length?`<button class="donebar" data-a="doneopen">✓ 今天完成 ${fin.length} 項 ${DONEOPEN?'▾':'▸'}</button>${DONEOPEN?`<div class="donelist">${fin.map(t=>doneRow(t,d)).join('')}</div>`:''}`:'');})()}
   <div class="row" style="margin-top:8px"><button class="bt sm" data-a="tdnew">＋ 待辦</button><button class="bt sm" data-a="go" data-v="todo">全部待辦 ›</button></div>`;
 }
 function todoView(){
  const d=today(),L=PV.d.todos;
- const over=L.filter(t=>!t.rep.length&&t.d&&t.d<d&&!t.done),tdy=L.filter(t=>onDay(t,d));
+ const over=L.filter(t=>!t.rep.length&&t.d&&t.d<d&&!t.done),tdy=L.filter(t=>onDay(t,d)&&!isDone(t,d));
  const later=L.filter(t=>!t.rep.length&&t.d>d&&!t.done).sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:(tdTime(a)||'99')<(tdTime(b)||'99')?-1:1);
- const nod=L.filter(t=>!t.rep.length&&!t.d&&!t.done),rep=L.filter(t=>t.rep.length),done=L.filter(t=>!t.rep.length&&t.done).sort((a,b)=>b.t-a.t).slice(0,15);
+ const nod=L.filter(t=>!t.rep.length&&!t.d&&!t.done),rep=L.filter(t=>t.rep.length),done=L.filter(t=>!t.rep.length&&t.done).sort((a,b)=>(b.dt||0)-(a.dt||0)).slice(0,60);
  const sec=(n,a,dd,cls)=>a.length?`<div class="h3${cls?' '+cls:''}">${n}</div><div class="box list" style="padding:6px 12px">${a.map(t=>tdRow(t,dd||t.d||d)).join('')}</div>`:'';
  const perm='Notification' in window?Notification.permission:'none';
  return head('我的待辦','只有你自己看得到',`<button class="go sm" data-a="tdnew">＋ 新增</button>`)+
@@ -910,7 +954,8 @@ function todoView(){
    ${L.some(t=>t.rm&&!t.done)?`<button class="bt wide" data-a="icsall">📅 把有提醒的待辦全部加到手機行事曆</button>`:''}</div>
   ${!L.length?'<div class="box empty">還沒有待辦<br><br><button class="go" data-a="tdnew">＋ 新增第一個待辦</button></div>':''}
   ${(()=>{const xs=examTodos(d);return xs.length?`<div class="h3">考試相關</div><div class="box list" style="padding:6px 12px">${xs.map(x=>exRow(x,d)).join('')}</div>`:''})()}
-  ${sec('⚠︎ 過期還沒做',over,null,'bad')}${sec('今天',tdy,d)}${sec('之後',later)}${sec('沒有日期',nod)}${sec('每週重複',rep,d)}${sec('做完了',done)}`;
+  ${sec('⚠︎ 過期還沒做',over,null,'bad')}${sec('今天',tdy,d)}${sec('之後',later)}${sec('沒有日期',nod)}${sec('每週重複',rep,d)}${done.length?`<button class="donebar" data-a="doneopen" style="margin-top:16px">✓ 做完了 ${done.length} 項 ${DONEOPEN?'▾':'▸'}</button>${DONEOPEN?(()=>{const g={};done.forEach(t=>{const k=t.dt?ymd(new Date(t.dt)):'';(g[k]=g[k]||[]).push(t)});
+   return Object.keys(g).sort().reverse().map(k=>`<div class="ps" style="margin:10px 2px 4px">${k?(k===d?'今天':mdw(k)):'以前'}完成</div><div class="box list donelist" style="padding:2px 12px;margin:0">${g[k].map(t=>doneRow(t,t.d||d)).join('')}</div>`).join('')})():''}`:''}`;
 }
 function todoSheet(id,pre){
  const old=id?PV.d.todos.find(t=>t.id===id):null;
@@ -1923,7 +1968,7 @@ function onClick(e){
  if(a==='lgcsv')return lgCSV();
  if(a==='tdnew')return openS(()=>todoSheet(null));
  if(a==='tded')return openS(()=>todoSheet(ds.id));
- if(a==='tdck'){const t=PV.d.todos.find(x=>x.id===ds.id);if(!t)return;const d=ds.d,dn=isDone(t,d);pop(()=>{const x=PV.d.todos.find(y=>y.id===ds.id);if(x.rep.length)x.dd=dn?x.dd.filter(y=>y!==d):[...x.dd,d];else x.done=!dn},dn?'改回還沒做':'做完了 ✓');return rs()}
+ if(a==='tdck'){const t=PV.d.todos.find(x=>x.id===ds.id);if(!t)return;const d=ds.d,dn=isDone(t,d);pop(()=>{const x=PV.d.todos.find(y=>y.id===ds.id);const now=Date.now();if(x.rep.length){x.dd=dn?x.dd.filter(y=>y!==d):[...x.dd,d];x.dk=x.dk||{};if(dn)delete x.dk[d];else x.dk[d]=now}else{x.done=!dn;x.dt=dn?0:now}},dn?'改回還沒做':'做完了 ✓');return rs()}
  if(a==='ntf'){if('Notification' in window)Notification.requestPermission().then(p=>{render();if(p==='granted')toast('已開啟通知')});return}
  if(a==='icsall'){icsDl(PV.d.todos.filter(t=>t.rm&&!t.done),'todos.ics');return}
  if(a==='ttm'){TTM=ds.v;return render()}
@@ -1934,6 +1979,8 @@ function onClick(e){
  if(a==='pered')return openS(perSheet);
  if(a==='cbd'){CBD=ds.v==='0'?today():addD(CBD,+ds.v);return render()}
  if(a==='cbadd')return cbAdd(ds.k);
+ if(a==='cbopen'){CBOPEN=CBOPEN===ds.k?'':ds.k;render();setTimeout(()=>{const i=$('cb'+ds.k);if(i&&CBOPEN)i.focus()},40);return}
+ if(a==='doneopen'){DONEOPEN=!DONEOPEN;return render()}
  if(a==='cbps'||a==='cbpk'){const k=ds.k,P=CBP[k],i=$('cb'+k);if(i)CBV[k]=i.value;if(a==='cbps'){if(P.sub===ds.v){P.sub='';P.cat=''}else{P.sub=ds.v;P.cat=''}}else P.cat=P.cat===ds.v?'':ds.v;cbpSave();render();setTimeout(()=>{const j=$('cb'+k);if(j&&a==='cbpk'&&P.cat)j.focus()},30);return}
  if(a==='cbpnew'){const k=ds.k,P=CBP[k],i=$('cb'+k);if(i)CBV[k]=i.value;const n=(prompt('新項目的名稱（'+P.sub+'），例如：成語、日記、閱讀單')||'').trim();if(!n)return;
   if(!S.cats.some(c=>c.n===n))op(()=>S.cats.push({n,s:P.sub,g:/考|測驗/.test(n)?1:0}),'已加入項目「'+n+'」');P.cat=n;cbpSave();render();return}
