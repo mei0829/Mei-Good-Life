@@ -48,7 +48,7 @@ textarea{min-height:64px;resize:vertical}
 .clsb span{font-size:14px;color:var(--sub);margin-left:2px}
 .badge{font-size:13px;color:var(--ok);background:var(--oks);border-radius:999px;padding:3px 12px;white-space:nowrap}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.stats button{border:0;border-radius:18px;padding:14px 14px 12px;text-align:left}
+.stats button{border:0;border-radius:18px;padding:14px 12px 12px;text-align:left;min-width:0;overflow:hidden}
 .stats b{display:block;font-size:34px;line-height:1.1;font-weight:700}
 .stats span{font-size:14px;color:var(--sub)}
 .st1{background:var(--blues)}.st1 b{color:var(--blue)}
@@ -206,6 +206,9 @@ textarea{min-height:64px;resize:vertical}
 .ttc{width:100%;min-width:52px;min-height:46px;border:1px dashed var(--line);background:none;border-radius:10px;color:var(--sub);font-size:13px;line-height:1.25;padding:3px}
 .ttc.on{border:0;background:var(--blues);color:var(--ink)}
 .ttc b{display:block;font-size:14px}.ttc small{display:block;font-size:11px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:64px;margin:0 auto}
+/* 班費 */
+.bar2{height:10px;border-radius:99px;background:var(--tile);overflow:hidden;margin-top:12px}.bar2 i{display:block;height:100%;background:var(--blue);border-radius:99px}
+.catr{display:flex;gap:10px;align-items:center;padding:7px 0}.catr span{width:48px;flex:none}.catr b{min-width:70px;text-align:right}
 /* 聯絡簿 */
 .cbl{display:flex;gap:10px;align-items:center;padding:7px 0;border-top:1px solid var(--line)}
 .h3+.cbl{border-top:0}
@@ -280,7 +283,7 @@ const scCls=p=>p==null?'':p>=90?'ok':p<60?'bad':'';
 // 每個人的紀錄 r[學生id]：s 1已交 2免交（沒有=未交）、a 交的日期、c 分數、f 1要訂正 2訂正完成、p 訂正哪裡、fa 訂正完成日、b 已寫聯絡簿、n 備註
 function fixMeta(o){
  if(!o||typeof o!=='object'||!Array.isArray(o.classes))throw new Error('bad');
- const classes=o.classes.filter(c=>c&&c.name).map(c=>({id:c.id||nid(),name:String(c.name),stus:arr(c.stus).filter(s=>s&&s.name).map(s=>({id:s.id||nid(),no:numOr(s.no),name:String(s.name)}))}));
+ const classes=o.classes.filter(c=>c&&c.name).map(c=>({id:c.id||nid(),name:String(c.name),kind:c.kind==='sup'?'sup':'',stus:arr(c.stus).filter(s=>s&&s.name).map(s=>({id:s.id||nid(),no:numOr(s.no),name:String(s.name)}))}));
  let subs=[...new Set(arr(o.subs).map(s=>String(s).trim()).filter(Boolean))];if(!subs.length)subs=DEF_SUBS.slice();
  const seen=new Set();
  let cats=arr(o.cats).filter(c=>c&&c.n&&!seen.has(c.n)&&seen.add(c.n)).map(c=>({n:String(c.n),s:String(c.s||'其他'),g:c.g?1:0}));
@@ -311,11 +314,12 @@ const unit=k=>U[k]||(U[k]={t:0,last:'',dirty:false,busy:false,again:false,ref:nu
 const EMPTY='{"tasks":[]}';
 const uKeys=()=>['m',...S.classes.map(c=>'c_'+c.id)];
 const docName=k=>k==='m'?'school':'school_'+k;
-const uData=k=>k==='m'?S:{tasks:TK[k.slice(2)]||[],cb:CB[k.slice(2)]||{}};
+const uData=k=>k==='m'?S:{tasks:TK[k.slice(2)]||[],cb:CB[k.slice(2)]||{},lg:LG[k.slice(2)]||{bud:0,it:[],col:[]}};
 let CB={};  // 聯絡簿：CB[班級id][日期]
+let LG={};  // 班費、學習扶助花費：LG[班級id]
 function loadLocal(){
  try{const x=JSON.parse(localStorage.getItem('sch2-m'));S=fixMeta(JSON.parse(x.j));const u=unit('m');u.t=+x.t||0;u.last=JSON.stringify(S)}catch(e){S=fixMeta({classes:[]})}
- S.classes.forEach(c=>{const k='c_'+c.id,u=unit(k);try{const x=JSON.parse(localStorage.getItem('sch2-'+k));const o_=JSON.parse(x.j);TK[c.id]=fixTasks(o_.tasks);CB[c.id]=fixCB(o_.cb);u.t=+x.t||0;u.last=JSON.stringify(uData(k))}catch(e){TK[c.id]=[]}});
+ S.classes.forEach(c=>{const k='c_'+c.id,u=unit(k);try{const x=JSON.parse(localStorage.getItem('sch2-'+k));const o_=JSON.parse(x.j);TK[c.id]=fixTasks(o_.tasks);CB[c.id]=fixCB(o_.cb);LG[c.id]=fixLG(o_.lg);u.t=+x.t||0;u.last=JSON.stringify(uData(k))}catch(e){TK[c.id]=[]}});
 }
 const saveLocal=k=>{try{localStorage.setItem('sch2-'+k,JSON.stringify({j:U[k].last,t:U[k].t}))}catch(e){status('⚠︎ 手機的空間不夠，請盡快同步')}};
 loadLocal();
@@ -404,7 +408,7 @@ function onCloud(k,d){
   if(u.dirty||u.busy)return;
   if(blocked()){u.pending=d;return}
   let o;try{o=JSON.parse(d.j)}catch(e){return}
-  try{if(k==='m')S=fixMeta(o);else{TK[k.slice(2)]=fixTasks(o.tasks);CB[k.slice(2)]=fixCB(o.cb)}}catch(e){return}
+  try{if(k==='m')S=fixMeta(o);else{TK[k.slice(2)]=fixTasks(o.tasks);CB[k.slice(2)]=fixCB(o.cb);LG[k.slice(2)]=fixLG(o.lg)}}catch(e){return}
   u.t=ct;u.last=JSON.stringify(uData(k));saveLocal(k);
   S.classes.forEach(c=>{if(!TK[c.id])TK[c.id]=[]});
   if(k==='m')watchAll();
@@ -446,10 +450,10 @@ async function cloudInit(){
 addEventListener('online',pushAll);
 
 // 每次變更都可以「復原」
-const snap=()=>JSON.stringify({S,TK,CB});
+const snap=()=>JSON.stringify({S,TK,CB,LG});
 function op(fn,msg){
  const prev=snap();fn();commit();
- if(msg)toast(msg,()=>{const o=JSON.parse(prev);S=o.S;TK=o.TK;CB=o.CB||{};commit();rs();toast('已復原')});
+ if(msg)toast(msg,()=>{const o=JSON.parse(prev);S=o.S;TK=o.TK;CB=o.CB||{};LG=o.LG||{};commit();rs();toast('已復原')});
 }
 let TT=0;
 function toast(msg,undo){
@@ -459,7 +463,7 @@ function toast(msg,undo){
 }
 
 // ---------- 畫面：首頁是班級管理中心，點功能進入各頁 ----------
-let PG={v:'home'},DEPTH=0,DF='all',SQ='',SFL='all',FXF='todo',KP=null;
+let NK='',PG={v:'home'},DEPTH=0,DF='all',SQ='',SFL='all',FXF='todo',KP=null;
 let EX={cid:'',sub:'全部',from:semStart(),to:today()};
 const z2=n=>n===''?'—':String(n).padStart(2,'0');
 const FX_TXT=['不用訂正','要訂正','訂正完成'];
@@ -478,6 +482,7 @@ const IC={
  check:SV('<path d="M2.5 13l4 4 8-9M10.5 15.5 12 17l9.5-10"/>'),
  dl:SV('<path d="M12 4v11M7 10.5l5 5 5-5M4 19.5h16"/>'),
  cbk:SV('<path d="M6 3.5h11a1.5 1.5 0 0 1 1.5 1.5v14.5H7.5A2.5 2.5 0 0 1 5 17V4.5a1 1 0 0 1 1-1z"/><path d="M5 17a2.5 2.5 0 0 1 2.5-2.5h11M9 8h6M9 11h4"/>'),
+ coin:SV('<circle cx="12" cy="12" r="8.5"/><path d="M14.6 9.3c-.5-.9-1.5-1.4-2.6-1.4-1.5 0-2.6.8-2.6 2 0 2.8 5.4 1.5 5.4 4.3 0 1.2-1.2 2-2.8 2-1.2 0-2.3-.6-2.8-1.6M12 6.3v1.6M12 16.2v1.6"/>'),
  todo:SV('<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12l3 3 5-6"/>'),
  cal:SV('<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4M8 14h2M12 14h2M16 14h0"/>')
 };
@@ -495,7 +500,8 @@ function render(){
  if(!c){
   if(!$('ncn'))app.innerHTML=`<div class="top"><h1>作業與成績</h1><button class="ib" data-a="set" aria-label="設定">⋯</button></div><div id="st" class="ps"></div>
    <div class="box"><div class="h2">先建立班級</div><div class="ps" style="margin-bottom:14px">有好幾個班級的話，之後可以再加、隨時切換。</div>
-   <label class="f"><span>班級名稱</span><input id="ncn" placeholder="例如：六年甲班" autocomplete="off"></label>
+   <div class="f"><span>種類</span><div class="seg"><button data-a="nk" data-v="" class="${NK?'':'on'}">一般班級</button><button data-a="nk" data-v="sup" class="${NK?'on':''}">學習扶助</button></div></div>
+   <label class="f"><span>班級名稱</span><input id="ncn" placeholder="例如：六年甲班、學扶國語" autocomplete="off"></label>
    <label class="f"><span>學生名單（一行一位，前面可以加座號；可以從 Excel 直接貼上）</span><textarea id="ncs" style="min-height:160px" placeholder="1 王小明&#10;2 陳小華&#10;3 林小美"></textarea></label>
    <button class="main" data-a="mkcls">建立班級</button></div>`;
   return status(CL.st||'連線中…');
@@ -503,7 +509,7 @@ function render(){
  CID=c.id;
  const v=PG.v;
  document.body.classList.toggle('pjm',v==='proj');
- app.innerHTML=v==='proj'?projView():v==='todo'?todoView():v==='tt'?ttView():v==='cb'?cbView():v==='stus'?stusView():v==='stu'?stuView(PG.id):v==='day'?dayView():v==='tasks'?tasksView():v==='task'?taskView(PG.id):v==='grade'?gradeView():v==='fix'?fixView():v==='export'?exportView():homeView();
+ app.innerHTML=v==='money'?moneyView():v==='proj'?projView():v==='todo'?todoView():v==='tt'?ttView():v==='cb'?cbView():v==='stus'?stusView():v==='stu'?stuView(PG.id):v==='day'?dayView():v==='tasks'?tasksView():v==='task'?taskView(PG.id):v==='grade'?gradeView():v==='fix'?fixView():v==='export'?exportView():homeView();
  bindPage();
  status(CL.st||'連線中…');
 }
@@ -530,12 +536,12 @@ function homeView(){
  const dueT=ts.filter(t=>t.due===today()),dueMiss=dueT.reduce((n,t)=>n+tStats(t,ss).miss.length,0);
  const F=[['stus','學生個人檔案','查看每個人的作業紀錄','stu'],['day','每日繳交追蹤','今天誰沒交，一目了然','day'],['tasks','各科作業管理','習作、考卷、甲本、乙本','book'],
   ['grade','成績管理','登記分數、統計成績','chart'],['fix','訂正進度','追蹤頁數、課次及完成狀況','check'],['export','成績匯出','依日期、班級、科目下載','dl'],
-  ['cb','聯絡簿','寫今天的作業，投影給學生抄','cbk'],['todo','我的待辦','學校要做的事、提醒','todo'],['tt','課表','每週課表、調課、外出','cal']];
+  ['cb','聯絡簿','寫今天的作業，投影給學生抄','cbk'],['todo','我的待辦','學校要做的事、提醒','todo'],['tt','課表','每週課表、調課、外出','cal'],['money','班費與經費','班費、學習扶助花費、預算','coin']];
  return `<div class="top"><h1>作業與成績</h1><button class="ib" data-a="set" aria-label="設定">⋯</button></div><div id="st" class="ps"></div>
  <div class="mode"><button class="on">🙋 我自己</button><button data-a="proj">📺 上課中</button></div>
  <div class="box">${nowCard()}<div class="hr" style="margin:14px 0 4px"></div>${myToday()}</div>
  <div class="box">
-  <div class="row sp"><button class="clsb" data-a="clspick">${E(c.name)} <span>切換 ▾</span></button><span class="badge">班級管理中心</span></div>
+  <div class="row sp"><button class="clsb" data-a="clspick">${E(c.name)} <span>切換 ▾</span></button><span class="badge">${isSup(c)?'學習扶助':'班級管理中心'}</span></div>
   <div class="ps" style="margin:2px 0 14px">${S.classes.length>1?'共 '+S.classes.length+' 個班級，':''}可切換不同班級，資料各自獨立</div>
   <div class="stats"><button class="st1" data-a="go" data-v="stus"><b>${ss.length}</b><span>學生人數</span></button><button class="st2" data-a="go" data-v="day"><b>${miss}</b><span>尚未繳交</span></button><button class="st3" data-a="go" data-v="fix"><b>${fix}</b><span>尚未訂正</span></button></div>
   ${dueT.length?`<button class="today" data-a="go" data-v="day">📋 今天要交 ${dueT.length} 份作業${dueMiss?`，還有 <b class="bad">${dueMiss}</b> 人次沒交`:'，都交齊了 ✓'} ›</button>`:''}
@@ -905,11 +911,11 @@ function todoSheet(id,pre){
 let TTM='wk',TTD=today(),SAT=false;
 function ttView(){
  const P=PV.d.per,days=[1,2,3,4,5].concat(SAT||Object.keys(PV.d.wk[6]||{}).length?[6]:[]);
- let h=head('課表','只有你自己看得到',`<button class="bt sm" data-a="pered">上下課時間</button>`);
+ let h=head('課表','只有你自己看得到',`<button class="bt sm" data-a="pered">上下課時間／加時段</button>`);
  h+=`<div class="segs" style="margin-top:14px">${[['wk','每週課表'],['day','某一天調課／外出']].map(([v,n])=>`<button data-a="ttm" data-v="${v}" class="${TTM===v?'on':''}">${n}</button>`).join('')}</div>`;
  if(TTM==='wk')return h+`<div class="box" style="padding:6px 8px"><div class="tw"><table class="t tt"><thead><tr><th></th>${days.map(d=>`<th>週${WK[d]}</th>`).join('')}</tr></thead><tbody>
   ${P.map((p,i)=>`<tr><td class="pn"><b>${E(p.n)}</b><small>${p.s}</small></td>${days.map(d=>{const x=(PV.d.wk[d]||{})[i];return `<td><button class="ttc${x?' on':''}" data-a="ttcell" data-w="${d}" data-p="${i}">${x?cellHTML(x):'＋'}</button></td>`}).join('')}</tr>`).join('')}
-  </tbody></table></div></div><div class="ps">點格子設定那一節上哪一班、什麼科目。調課或帶學生外出，到「某一天調課／外出」改那一天就好，每週課表不會變。</div>
+  </tbody></table></div></div><div class="ps">點格子設定那一節上哪一班、什麼科目。學習扶助、課後輔導等不在一般節次的時間，按右上角「上下課時間／加時段」加一個時段（例如「課後 16:00–16:40」）。調課或帶學生外出，到「某一天調課／外出」改那一天就好，每週課表不會變。</div>
   ${days.length<6?'<button class="bt sm" data-a="ttsat" style="margin-top:8px">＋ 週六也有課</button>':''}`;
  const cells=dayCells(TTD),ex=PV.d.ex[TTD]||{cells:{}},w=pd(TTD).getDay();
  h+=`<div class="dbar"><button class="bt" data-a="ttd" data-v="-1">‹</button><input type="date" id="ttdi" value="${TTD}"><button class="bt" data-a="ttd" data-v="1">›</button></div>
@@ -928,7 +934,7 @@ function cellSheet(w,i,d){
  const P=PV.d.per[i];
  const draw=()=>sheet(`<h3>${d?mdw(d):'每週'+WK[w]} ${E(P.n)}</h3><div class="ps">${P.s}–${P.e}${d&&base?' · 平常：'+E(cellTxt(base)):''}</div><div style="height:10px"></div>
   <div class="seg" style="margin-bottom:14px">${[['c','上課'],['x','其他'],['none','空堂'],...(d?[['off','停課／外出']]:[])].map(([v,n])=>`<button data-k="${v}" class="${st.k===v?'on':''}">${n}</button>`).join('')}</div>
-  ${st.k==='c'?`<div class="f"><span>班級</span><div class="pick">${S.classes.map(c=>`<button data-c="${c.id}" class="${D.cid===c.id?'on':''}">${E(c.name)}</button>`).join('')}</div></div>
+  ${st.k==='c'?`<div class="f"><span>班級</span><div class="pick">${S.classes.map(c=>`<button data-c="${c.id}" class="${D.cid===c.id?'on':''}">${E(c.name)}${isSup(c)?'（學扶）':''}</button>`).join('')}</div></div>
    <div class="f"><span>科目</span><div class="pick">${S.subs.map(s=>`<button data-s="${E(s)}" class="${D.sub===s?'on':''}">${E(s)}</button>`).join('')}</div></div>`:''}
   ${st.k==='x'||st.k==='off'?`<label class="f"><span>${st.k==='off'?'原因（可以不填）':'內容'}</span><input id="cx" value="${E(D.x)}" placeholder="${st.k==='off'?'例如：戶外教學、調課':'例如：導師時間、晨會、開會'}" autocomplete="off"></label>`:''}
   <div class="foot">${d&&(PV.d.ex[d]||{cells:{}}).cells[i]?'<button class="bt" id="crs">改回平常</button>':'<span></span>'}<button class="go" id="csv">儲存</button></div>`,p=>{
@@ -957,11 +963,12 @@ function perSheet(){
  const pull=p=>p.querySelectorAll('[data-pi]').forEach(r=>{const i=+r.dataset.pi;D[i]={o:D[i].o,n:r.querySelector('.pnm').value.trim()||D[i].n,s:r.querySelector('.ps1').value||D[i].s,e:r.querySelector('.ps2').value||D[i].e}});
  const draw=()=>sheet(`<h3>上下課時間</h3><div class="ps">全校統一的時間，課表和提醒都用這個。</div><div style="height:10px"></div>
   ${D.map((p,i)=>`<div class="li" data-pi="${i}"><input class="pnm" value="${E(p.n)}" style="flex:1.2"><input class="ps1" type="time" value="${p.s}" style="flex:1"><input class="ps2" type="time" value="${p.e}" style="flex:1"><button data-pd="${i}" aria-label="刪除">✕</button></div>`).join('')}
-  <button class="bt sm" id="pad" style="margin-top:4px">＋ 加一節</button>
+  <div class="row" style="margin-top:4px"><button class="bt sm" id="pad">＋ 加一節</button><button class="bt sm" id="pad2">＋ 課後時段 16:00–16:40</button></div>
   <div class="ps" style="margin-top:8px">刪掉一節的話，課表上那一節的課也會一起拿掉。</div>
   <div class="foot"><button class="bt" id="pdef">恢復預設</button><button class="go" id="psv">儲存</button></div>`,p=>{
   p.querySelectorAll('[data-pd]').forEach(b=>b.onclick=()=>{pull(p);D.splice(+b.dataset.pd,1);refresh(draw)});
   p.querySelector('#pad').onclick=()=>{pull(p);const l=D[D.length-1];D.push({o:-1,n:'第 '+(D.length)+' 節',s:l?l.e:'08:00',e:l?l.e:'08:40'});refresh(draw)};
+  p.querySelector('#pad2').onclick=()=>{pull(p);D.push({o:-1,n:'課後',s:'16:00',e:'16:40'});refresh(draw)};
   p.querySelector('#pdef').onclick=()=>{const old=D.slice();D.length=0;DEF_PER.forEach((x,i)=>D.push({...x,o:old[i]?old[i].o:-1}));refresh(draw)};
   p.querySelector('#psv').onclick=()=>{
    pull(p);
@@ -1024,6 +1031,126 @@ function pjClsSheet(){
  });
 }
 
+// ---------- 班費、學習扶助花費：LG[班級id] = {bud 預算, it 收支明細, col 收班費} ----------
+const CAT_OUT=['文具','獎品','點心','影印','教材','活動','交通','其他'];
+const CAT_IN=['班費','經費撥款','捐款','其他'];
+function fixLG(o){
+ o=o&&typeof o==='object'?o:{};
+ const it=arr(o.it).filter(x=>x&&+x.a>0).map(x=>({id:x.id||nid(),d:DT.test(x.d)?x.d:today(),k:x.k==='in'?'in':'out',a:+x.a,x:String(x.x||''),cat:String(x.cat||'其他'),n:String(x.n||''),t:+x.t||Date.now()}));
+ const col=arr(o.col).filter(x=>x&&x.x).map(x=>{const pd_={};Object.keys(x.paid&&typeof x.paid==='object'?x.paid:{}).forEach(k=>{if(DT.test(x.paid[k]))pd_[k]=x.paid[k]});
+  return {id:x.id||nid(),x:String(x.x),a:+x.a>0?+x.a:0,d:DT.test(x.d)?x.d:today(),paid:pd_,t:+x.t||Date.now()}});
+ return {bud:+o.bud>0?+o.bud:0,it,col};
+}
+const lgOf=cid=>LG[cid]||(LG[cid]={bud:0,it:[],col:[]});
+const lgPeek=cid=>LG[cid]||{bud:0,it:[],col:[]};
+const money=n=>(n<0?'-':'')+'$'+Math.abs(Math.round(n)).toLocaleString();
+const isSup=c=>c&&c.kind==='sup';
+function lgSum(cid){
+ const g=lgPeek(cid),ids=new Set(stus(S.classes.find(c=>c.id===cid)).map(s=>s.id));
+ const colIn=g.col.reduce((n,c)=>n+c.a*Object.keys(c.paid).filter(k=>ids.has(k)).length,0);
+ const inn=g.it.filter(x=>x.k==='in').reduce((n,x)=>n+x.a,0)+colIn,out=g.it.filter(x=>x.k==='out').reduce((n,x)=>n+x.a,0);
+ return {inn,out,bal:inn-out,colIn,bud:g.bud};
+}
+let LGT='list';
+function moneyView(){
+ const c=cls(),sup=isSup(c),g=lgPeek(c.id),m=lgSum(c.id),ss=stus(c);
+ let h=head(sup?'學習扶助花費':'班費',`${E(c.name)}${sup?' · 學習扶助':''}`,`<button class="go sm" data-a="lgnew">＋ 記一筆</button>`);
+ h+=`<div class="box">
+  <div class="row sp" style="margin-bottom:10px"><button class="clsb" data-a="clspick" style="font-size:18px">${E(c.name)} <span>切換 ▾</span></button><button class="bt sm" data-a="lgbud">${m.bud?'預算 '+money(m.bud):'設定預算'}</button></div>
+  ${m.bud?`<div class="stats"><button class="st1" data-a="lgbud"><b style="font-size:clamp(16px,5vw,24px)">${money(m.bud)}</b><span>預算</span></button><button class="st2"><b style="font-size:clamp(16px,5vw,24px)">${money(m.out)}</b><span>已經花了</span></button><button class="st3" style="background:${m.bud-m.out<0?'var(--bads)':'var(--oks)'}"><b style="font-size:clamp(16px,5vw,24px);color:${m.bud-m.out<0?'var(--bad)':'var(--ok)'}">${money(m.bud-m.out)}</b><span>還剩</span></button></div>
+   <div class="bar2"><i style="width:${Math.min(100,m.out/m.bud*100)}%;background:${m.out>m.bud?'var(--bad)':m.out>m.bud*.8?'var(--warn)':'var(--ok)'}"></i></div>
+   ${m.inn?`<div class="ps" style="margin-top:6px">收入 ${money(m.inn)} · 收支結餘 ${money(m.bal)}</div>`:''}`
+  :`<div class="stats"><button class="st1"><b style="font-size:clamp(16px,5vw,24px)">${money(m.inn)}</b><span>收入</span></button><button class="st2"><b style="font-size:clamp(16px,5vw,24px)">${money(m.out)}</b><span>支出</span></button><button class="st3" style="background:var(--oks)"><b style="font-size:clamp(16px,5vw,24px);color:${m.bal<0?'var(--bad)':'var(--ok)'}">${money(m.bal)}</b><span>餘額</span></button></div>`}
+ </div>`;
+ h+=`<div class="segs">${[['list','收支明細'],['col','收班費'+(sup?'／費用':'')],['cat','花在哪裡']].map(([v,n])=>`<button data-a="lgt" data-v="${v}" class="${LGT===v?'on':''}">${n}</button>`).join('')}</div>`;
+ if(LGT==='col'){
+  h+=`<div class="box list">${g.col.slice().sort((a,b)=>b.d<a.d?-1:1).map(x=>{const n=ss.filter(s=>x.paid[s.id]).length;
+   return `<button class="lr" data-a="lgcol" data-id="${x.id}"><span class="lt">${E(x.x)}<small>每人 ${money(x.a)} · ${md(x.d)}</small></span><span class="lp">${n===ss.length?pill('ok','都繳了'):pill('bad','還有 '+(ss.length-n)+' 人')}<span class="pl">${money(x.a*n)}</span></span><span class="ch">›</span></button>`}).join('')||'<div class="empty">還沒有。例如：上學期班費每人 300 元，記下來就能一個一個勾誰繳了。</div>'}</div>
+   <button class="bt wide" data-a="lgcolnew">＋ 新增要收的費用</button>`;
+ }else if(LGT==='cat'){
+  const out=g.it.filter(x=>x.k==='out'),cats=[...new Set(out.map(x=>x.cat))].map(k=>({k,a:out.filter(x=>x.cat===k).reduce((n,x)=>n+x.a,0)})).sort((a,b)=>b.a-a.a),mx=cats.length?cats[0].a:1;
+  h+=cats.length?`<div class="box">${cats.map(x=>`<div class="catr"><span>${E(x.k)}</span><div class="bar2" style="flex:1;margin:0"><i style="width:${x.a/mx*100}%"></i></div><b>${money(x.a)}</b></div>`).join('')}</div>`:'<div class="box empty">還沒有支出</div>';
+ }else{
+  const L=g.it.slice().sort((a,b)=>a.d<b.d?1:a.d>b.d?-1:b.t-a.t),mons=[...new Set(L.map(x=>x.d.slice(0,7)))];
+  h+=L.length?mons.map(mo=>{const r=L.filter(x=>x.d.slice(0,7)===mo),o=r.filter(x=>x.k==='out').reduce((n,x)=>n+x.a,0);
+   return `<div class="h3" style="margin-top:16px;display:flex;justify-content:space-between"><span>${+mo.slice(0,4)} 年 ${+mo.slice(5)} 月</span><span class="ps">支出 ${money(o)}</span></div><div class="box list" style="margin-top:6px">${r.map(x=>`<button class="lr" data-a="lged" data-id="${x.id}"><span class="dt2"><b>${md(x.d)}</b><small>週${WK[pd(x.d).getDay()]}</small></span><span class="lt">${E(x.x||x.cat)}<small>${E(x.cat)}${x.n?' · '+E(x.n):''}</small></span><b class="${x.k==='in'?'ok':''}">${x.k==='in'?'+':'-'}${money(x.a)}</b></button>`).join('')}</div>`}).join('')
+   :`<div class="box empty">還沒有紀錄<br><br><button class="go" data-a="lgnew">＋ 記第一筆</button></div>`;
+ }
+ h+=`<button class="bt wide" data-a="lgcsv" style="margin-top:12px">⬇︎ 下載帳本（Excel）</button>`;
+ return h;
+}
+function lgSheet(id){
+ const cid=cls().id,g=lgPeek(cid),old=id?g.it.find(x=>x.id===id):null;
+ const D=old?{...old}:{id:nid(),d:today(),k:'out',a:'',x:'',cat:'',n:'',t:Date.now()};
+ const pull=p=>{D.a=numOr(p.querySelector('#la').value);D.x=p.querySelector('#lx').value.trim();D.d=p.querySelector('#ld').value||today();D.n=p.querySelector('#ln').value.trim()};
+ const draw=()=>sheet(`<h3>${old?'修改':'記一筆'}</h3><div style="height:8px"></div>
+  <div class="seg" style="margin-bottom:12px">${[['out','支出'],['in','收入']].map(([v,n])=>`<button data-k="${v}" class="${D.k===v?'on':''}">${n}</button>`).join('')}</div>
+  <label class="f"><span>金額</span><input id="la" type="number" inputmode="decimal" min="0" step="any" value="${E(D.a)}" placeholder="0" style="font-size:28px;font-weight:700"></label>
+  <label class="f"><span>買了什麼／項目</span><input id="lx" value="${E(D.x)}" placeholder="${D.k==='out'?'例如：獎勵貼紙、影印學習單':'例如：學校撥款、班費'}" autocomplete="off"></label>
+  <div class="f"><span>分類</span><div class="pick">${(D.k==='out'?CAT_OUT:CAT_IN).map(c=>`<button data-c="${c}" class="${D.cat===c?'on':''}">${c}</button>`).join('')}</div></div>
+  <label class="f"><span>日期</span><input id="ld" type="date" value="${E(D.d)}"></label>
+  <label class="f"><span>備註</span><input id="ln" value="${E(D.n)}" placeholder="例如：發票已交總務處、在全聯買的" autocomplete="off"></label>
+  <div class="foot">${old?'<button class="bt" id="ldl" style="color:var(--bad)">刪除</button>':'<span></span>'}<button class="go" id="lsv">${old?'儲存':'記下來'}</button></div>`,p=>{
+  p.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{pull(p);D.k=b.dataset.k;D.cat='';refresh(draw)});
+  p.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{pull(p);D.cat=b.dataset.c;refresh(draw)});
+  if(!old)setTimeout(()=>{const i=p.querySelector('#la');if(i&&D.a==='')i.focus()},60);
+  p.querySelector('#lsv').onclick=()=>{
+   pull(p);if(!(D.a>0)){p.querySelector('#la').focus();return toast('請填金額')}
+   if(!D.cat)D.cat=D.k==='out'?'其他':'其他';
+   op(()=>{const L=lgOf(cid).it;if(old){const i=L.findIndex(x=>x.id===id);if(i>=0)L[i]=D}else L.push(D)},(old?'已儲存 ':'已記下 ')+(D.k==='in'?'+':'-')+money(D.a));
+   back();
+  };
+  const dl_=p.querySelector('#ldl');if(dl_)dl_.onclick=()=>{op(()=>{const g2=lgOf(cid);g2.it=g2.it.filter(x=>x.id!==id)},'已刪除');back()};
+ });
+ draw();
+}
+function budSheet(){
+ const cid=cls().id,g=lgPeek(cid);
+ sheet(`<h3>${isSup(cls())?'學習扶助的經費預算':'預算'}</h3><div class="ps">例如學校核給這個班的經費。設定後會顯示已經花了多少、還剩多少。</div><div style="height:10px"></div>
+  <label class="f"><span>預算金額（不設定就空著）</span><input id="bu" type="number" inputmode="decimal" min="0" value="${g.bud||''}" placeholder="例如 5000" style="font-size:26px;font-weight:700"></label>
+  <div class="foot"><span></span><button class="go" id="bsv">儲存</button></div>`,p=>{
+  setTimeout(()=>p.querySelector('#bu').focus(),60);
+  p.querySelector('#bsv').onclick=()=>{const v=+p.querySelector('#bu').value||0;op(()=>{lgOf(cid).bud=v>0?v:0},v>0?'預算 '+money(v):'已取消預算');back()};
+ });
+}
+function colNewSheet(){
+ const cid=cls().id;
+ sheet(`<h3>新增要收的費用</h3><div style="height:8px"></div>
+  <label class="f"><span>名稱</span><input id="cx" placeholder="例如：上學期班費、戶外教學費" autocomplete="off"></label>
+  <label class="f"><span>每人多少錢</span><input id="ca" type="number" inputmode="decimal" min="0" placeholder="例如 300" style="font-size:24px;font-weight:700"></label>
+  <label class="f"><span>日期</span><input id="cd" type="date" value="${today()}"></label>
+  <div class="foot"><span></span><button class="go" id="csv2">新增</button></div>`,p=>{
+  p.querySelector('#csv2').onclick=()=>{
+   const x=p.querySelector('#cx').value.trim(),a=+p.querySelector('#ca').value;
+   if(!x)return toast('請填名稱');if(!(a>0))return toast('請填每人多少錢');
+   const id=nid();op(()=>lgOf(cid).col.push({id,x,a,d:p.querySelector('#cd').value||today(),paid:{},t:Date.now()}),'已新增「'+x+'」');
+   const top=STK[STK.length-1];top.live=true;top.fn=()=>paySheet(id);refresh(top.fn);
+  };
+ });
+}
+function paySheet(id){
+ const cid=cls().id,x=lgPeek(cid).col.find(y=>y.id===id);if(!x)return back();
+ const ss=stus(cls()),n=ss.filter(s=>x.paid[s.id]).length;
+ sheet(`<h3>${E(x.x)}</h3><div class="ps">每人 ${money(x.a)} · 已收 ${n}/${ss.length} 人 · 共 ${money(x.a*n)}${n<ss.length?' · 還差 '+money(x.a*(ss.length-n)):''}</div>
+  <div class="acts" style="margin-top:10px">${n<ss.length?'<button class="bt" id="call">其他人都繳了</button>':''}<button class="bt" id="cdel" style="color:var(--bad)">刪除這筆</button></div>
+  <div class="box list" style="margin-top:10px">${ss.map(s=>`<button class="lr" data-pay="${s.id}"><span class="nb">${z2(s.no)}</span><span class="lt">${E(s.name)}</span>${x.paid[s.id]?pill('ok','已繳 '+md(x.paid[s.id])):pill('bad','還沒繳')}</button>`).join('')}</div>
+  <div class="ps">點名字切換「已繳／還沒繳」。收到的錢會自動算進收入。</div>`,p=>{
+  const up=fn=>{op(()=>{const y=lgOf(cid).col.find(z=>z.id===id);fn(y)});rs()};
+  p.querySelectorAll('[data-pay]').forEach(b=>b.onclick=()=>up(y=>{const k=b.dataset.pay;if(y.paid[k])delete y.paid[k];else y.paid[k]=today()}));
+  const al=p.querySelector('#call');if(al)al.onclick=()=>up(y=>ss.forEach(s=>{if(!y.paid[s.id])y.paid[s.id]=today()}));
+  p.querySelector('#cdel').onclick=()=>{if(!confirm('刪除「'+x.x+'」和繳費紀錄？'))return;op(()=>{const g2=lgOf(cid);g2.col=g2.col.filter(y=>y.id!==id)},'已刪除');back()};
+ });
+}
+function lgCSV(){
+ const c=cls(),g=lgPeek(c.id),ss=stus(c),m=lgSum(c.id);
+ const out=[['日期','收入／支出','項目','分類','金額','備註']];
+ g.it.slice().sort((a,b)=>a.d<b.d?-1:1).forEach(x=>out.push([x.d,x.k==='in'?'收入':'支出',x.x,x.cat,x.k==='in'?x.a:-x.a,x.n]));
+ g.col.forEach(x=>{const n=ss.filter(s=>x.paid[s.id]).length;if(n)out.push([x.d,'收入',x.x+'（'+n+' 人 × '+x.a+'）','班費',x.a*n,'還沒繳：'+ss.filter(s=>!x.paid[s.id]).map(sLabel).join('、')])});
+ out.push([],['','','','收入合計',m.inn,''],['','','','支出合計',-m.out,''],['','','','餘額',m.bal,'']);
+ if(m.bud)out.push(['','','','預算',m.bud,''],['','','','預算還剩',m.bud-m.out,'']);
+ download(fname(c.name+(isSup(c)?'-學習扶助花費-':'-班費-')+stamp())+'.csv',csv(out),'text/csv');
+}
+
 // ---------- 換頁（手機的返回手勢、瀏覽器的上一頁也可以用）----------
 const STK=[];let PEND=null;
 function go(pg){PG=pg;DEPTH++;try{history.pushState({pg,dp:DEPTH,lv:0},'')}catch(e){}render();scrollTo(0,0)}
@@ -1061,11 +1188,14 @@ const rs=()=>{if(STK.length&&STK[STK.length-1].live)refresh(STK[STK.length-1].fn
 // 切換班級
 function clsSheet(){
  sheet(`<h3>切換班級</h3><div style="height:8px"></div>
-  ${S.classes.map(x=>`<button class="li" style="width:100%;text-align:left" data-cs="${x.id}"><span><b>${E(x.name)}</b><small>${x.stus.length} 位學生 · ${(TK[x.id]||[]).length} 份作業</small></span>${x.id===cls().id?'<span class="pl ok">目前</span>':''}</button>`).join('')}
-  <div class="add" style="margin-top:12px"><input id="ncn3" placeholder="新班級名稱，例如：五年一班" autocomplete="off"><button class="go" id="ncb3">新增</button></div>
+  ${S.classes.map(x=>`<button class="li" style="width:100%;text-align:left" data-cs="${x.id}"><span><b>${E(x.name)}</b>${isSup(x)?' <span class="pl warn">學習扶助</span>':''}<small>${x.stus.length} 位學生 · ${(TK[x.id]||[]).length} 份作業</small></span>${x.id===cls().id?'<span class="pl ok">目前</span>':''}</button>`).join('')}
+  <div class="h3" style="margin-top:16px">新增班級</div>
+  <div class="seg" style="margin-bottom:6px"><button data-nk3="" class="on">一般班級</button><button data-nk3="sup">學習扶助</button></div>
+  <div class="add"><input id="ncn3" placeholder="例如：五年一班、學扶英語" autocomplete="off"><button class="go" id="ncb3">新增</button></div>
   <div class="ps">新班級的學生名單，到「⋯ 設定」貼上。</div>`,p=>{
   p.querySelectorAll('[data-cs]').forEach(b=>b.onclick=()=>{CID=b.dataset.cs;try{localStorage.setItem('sch-cls',CID)}catch(e){}closeAll(()=>{PG={v:'home'};render()})});
-  const add=()=>{const v=p.querySelector('#ncn3').value;if(!v.trim())return;mkClass(v,'');closeAll(()=>openS(setSheet))};
+  let k3='';p.querySelectorAll('[data-nk3]').forEach(b=>b.onclick=()=>{k3=b.dataset.nk3;p.querySelectorAll('[data-nk3]').forEach(x=>x.classList.toggle('on',x===b))});
+  const add=()=>{const v=p.querySelector('#ncn3').value;if(!v.trim())return;mkClass(v,'',k3);closeAll(()=>openS(setSheet))};
   p.querySelector('#ncb3').onclick=add;enter(p.querySelector('#ncn3'),add);
  });
 }
@@ -1280,10 +1410,10 @@ function parseStus(text,c){
  });
  return out;
 }
-function mkClass(name,text){
+function mkClass(name,text,kind){
  name=String(name||'').trim();if(!name)return toast('請填班級名稱');
  if(S.classes.some(c=>c.name===name))return toast('已經有「'+name+'」了');
- const c={id:nid(),name,stus:[]};c.stus=parseStus(text,c);
+ const c={id:nid(),name,kind:kind==='sup'?'sup':'',stus:[]};c.stus=parseStus(text,c);
  op(()=>{S.classes.push(c);TK[c.id]=[];CID=c.id;try{localStorage.setItem('sch-cls',c.id)}catch(e){}},'已建立「'+name+'」'+(c.stus.length?'，'+c.stus.length+' 位學生':''));
 }
 const EMAIL=/^[^\s@\/]+@[^\s@\/]+\.[^\s@\/]+$/;
@@ -1345,6 +1475,7 @@ function setSheet(){
   ${c?`<h2><span>${E(c.name)}：班級名稱與學生</span></h2>
   <div class="card">
    <label class="f"><span>班級名稱</span><input id="cnm" value="${E(c.name)}"></label>
+   <div class="f"><span>種類</span><div class="seg"><button data-kd="" class="${isSup(c)?'':'on'}">一般班級</button><button data-kd="sup" class="${isSup(c)?'on':''}">學習扶助</button></div></div>
    <div class="sub" style="margin-bottom:6px">學生（${c.stus.length}）：座號、名字可以直接改</div>
    ${stus(c).map(s=>`<div class="li"><input class="no" data-sno="${s.id}" value="${E(s.no)}" inputmode="numeric" aria-label="座號"><input data-snm="${s.id}" value="${E(s.name)}" aria-label="名字" style="flex:1"><button data-sdl="${s.id}" aria-label="刪除">✕</button></div>`).join('')}
    <label class="f" style="margin-top:10px"><span>加入學生（一行一位，前面可以加座號；可以從 Excel 直接貼上）</span><textarea id="nst" placeholder="21 林小美&#10;22 張大偉"></textarea></label>
@@ -1375,6 +1506,7 @@ function setSheet(){
   const nc=()=>{const v=p.querySelector('#ncn2').value;if(!v.trim())return;mkClass(v,'');again()};
   p.querySelector('#ncb').onclick=nc;enter(p.querySelector('#ncn2'),nc);
   if(c){
+   p.querySelectorAll('[data-kd]').forEach(b=>b.onclick=()=>{const k=b.dataset.kd;if(k!==(c.kind||''))op(()=>{c.kind=k},k?'已標記為學習扶助':'已改成一般班級');again()});
    p.querySelector('#cnm').onchange=e=>{const v=e.target.value.trim();if(v&&v!==c.name)op(()=>{c.name=v},'已改名')};
    p.querySelectorAll('[data-sno]').forEach(i=>i.onchange=()=>{const s=c.stus.find(x=>x.id===i.dataset.sno);op(()=>{s.no=numOr(i.value)})});
    p.querySelectorAll('[data-snm]').forEach(i=>i.onchange=()=>{const s=c.stus.find(x=>x.id===i.dataset.snm),v=i.value.trim();if(v&&v!==s.name)op(()=>{s.name=v},'已改名')});
@@ -1460,6 +1592,13 @@ function onClick(e){
  if(a==='back')return goBack();
  if(a==='home'){if(DEPTH>0)history.go(-DEPTH);else{PG={v:'home'};render()}return}
  if(a==='proj'){PJC='';return go({v:'proj',d:ds.d||today()})}
+ if(a==='lgnew')return openS(()=>lgSheet(null));
+ if(a==='lged')return openS(()=>lgSheet(ds.id));
+ if(a==='lgbud')return openS(budSheet);
+ if(a==='lgt'){LGT=ds.v;return render()}
+ if(a==='lgcol')return openS(()=>paySheet(ds.id),true);
+ if(a==='lgcolnew')return openS(colNewSheet);
+ if(a==='lgcsv')return lgCSV();
  if(a==='tdnew')return openS(()=>todoSheet(null));
  if(a==='tded')return openS(()=>todoSheet(ds.id));
  if(a==='tdck'){const t=PV.d.todos.find(x=>x.id===ds.id);if(!t)return;const d=ds.d,dn=isDone(t,d);pop(()=>{const x=PV.d.todos.find(y=>y.id===ds.id);if(x.rep.length)x.dd=dn?x.dd.filter(y=>y!==d):[...x.dd,d];else x.done=!dn},dn?'改回還沒做':'做完了 ✓');return rs()}
@@ -1486,7 +1625,8 @@ function onClick(e){
  if(a==='new')return openS(()=>taskEdit(null,ds.due?{due:ds.due}:null));
  if(a==='tedit')return openS(()=>taskEdit(ds.id));
  if(a==='tcopy'){const t=task(ds.id);if(t)openS(()=>taskEdit(null,{sub:t.sub,cat:t.cat,g:t.g,full:t.full}));return}
- if(a==='mkcls')return mkClass($('ncn').value,$('ncs').value);
+ if(a==='mkcls')return mkClass($('ncn').value,$('ncs').value,NK);
+ if(a==='nk'){NK=ds.v;document.querySelectorAll('[data-a=nk]').forEach(x=>x.classList.toggle('on',x.dataset.v===NK));return}
  if(a==='mkfam'){b.disabled=true;CL.F.create('作業與成績',{kind:'school'}).then(useFam).catch(()=>{b.disabled=false;alert('沒有成功，請確認網路後再試。')});return}
  if(a==='sfl'){SFL=ds.v;return render()}
  if(a==='ssub'){PG.sub=ds.v;try{history.replaceState({...history.state,pg:PG},'')}catch(x){}return render()}
