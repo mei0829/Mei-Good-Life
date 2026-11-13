@@ -337,7 +337,7 @@ function render(){
    `<section class="cab c-${c.color}"><button class="ch" data-a="cab" data-id="${c.id}"><b>${E(c.name)}</b><span>${E(c.sub)}</span></button>
    ${cellsHTML(c,m)}</section>`).join('')+'</div>';
  });
- if(!rooms.length||!S.cabs.length&&!multi&&!h)h='<div class="empty">還沒有櫃子</div>';
+ if(!h)h='<div class="empty">還沒有櫃子<br><br><button class="go" data-a="newcab">＋ 新增櫃子</button></div>';
  $('board').innerHTML=h;
  status(CL.st||'連線中…');
 }
@@ -621,6 +621,8 @@ function setSheet(){
   <div class="card">${S.log.length?'<ul class="log">'+S.log.slice(0,15).map(l=>`<li><b>${E(l.n)}</b>：${E(l.f)} → ${E(l.to)}<div class="sub">${fmt(l.t)}</div></li>`).join('')+'</ul>':'<div class="sub">還沒有移動紀錄</div>'}</div>
   <div class="sub" style="margin-bottom:6px">備份</div>
   <div class="row" style="margin-bottom:14px"><button class="bt" id="exp">下載備份檔</button><button class="bt" id="imp">從備份檔還原</button></div>
+  <div class="sub" style="margin-bottom:6px">重新開始</div>
+  <div class="row" style="margin-bottom:14px"><button class="bt bad" id="wipe">全部清空，重新開始</button><span class="sub">地點會留著</span></div>
   <div class="foot">${window.fbLogout?'<button class="bt" id="lo">登出</button>':'<span></span>'}<button class="go" data-x>完成</button></div>`,p=>{
   famBind(p);
   sortable(p.querySelector('#rl'),ids=>{if(ids.join()!==S.rooms.map(r=>r.id).join())op(()=>{S.rooms=ids.map(id=>S.rooms.find(r=>r.id===id))})});
@@ -640,6 +642,12 @@ function setSheet(){
    a.download='我的櫃子-'+d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
   };
   p.querySelector('#imp').onclick=()=>$('impf').click();
+  // 清掉所有櫃子、格子名稱、東西、保固和移動紀錄；地點留著。按「復原」可以拿回來
+  p.querySelector('#wipe').onclick=()=>{
+   const k=count();
+   if(!confirm('確定要全部清空嗎？\n\n'+S.cabs.length+' 個櫃子、'+k+' 樣東西、格子名稱和保固都會清掉（地點會留著）。'+(CL.fam&&CL.fam.members.length>1?'\n家人那邊也會一起清空。':'')+'\n\n建議先按「下載備份檔」。'))return;
+   op(()=>{S.cabs=[];S.log=[]},'已全部清空');setRoom('all');closeSheet();
+  };
   const lo=p.querySelector('#lo');if(lo)lo.onclick=()=>window.fbLogout();
  });
 }
