@@ -216,6 +216,10 @@ textarea{min-height:64px;resize:vertical}
 .fns.sm .fn-t{gap:5px}.fns.sm .fn-t svg{width:18px;height:18px}
 .sbn{min-width:44px;height:40px;border:1px solid var(--line);background:var(--card);border-radius:10px;font-weight:700;font-size:15px}
 .sbn.on{background:var(--bads);border-color:transparent;color:var(--bad)}
+/* 聯絡簿：選科目、項目 */
+.cbp{margin-top:6px}
+.pick.sm button{padding:5px 12px;font-size:14px}
+.pick button.new{border-style:dashed;color:var(--sub)}
 /* 班費 */
 .bar2{height:10px;border-radius:99px;background:var(--tile);overflow:hidden;margin-top:12px}.bar2 i{display:block;height:100%;background:var(--blue);border-radius:99px}
 .catr{display:flex;gap:10px;align-items:center;padding:7px 0}.catr span{width:48px;flex:none}.catr b{min-width:70px;text-align:right}
@@ -1025,12 +1029,11 @@ function cbView(){
  `<div class="dbar"><button class="bt" data-a="cbd" data-v="-1">‹</button><input type="date" id="cbdi" value="${d}"><button class="bt" data-a="cbd" data-v="1">›</button>${d!==today()?'<button class="bt" data-a="cbd" data-v="0">今天</button>':''}</div>
  <div class="box"><div class="h3" style="margin-top:0">🌅 早自修 <span class="ps">（今天批改）</span></div>
   ${am.length?am.map((x,i)=>row(x,i,am)).join(''):'<div class="ps">還沒有</div>'}
-  <div class="add"><input id="cbam" placeholder="例如：成語一、成語二" autocomplete="off"><button class="bt" data-a="cbadd" data-k="am">加入</button></div>
-  <div class="ps">用「、」分開，每一項會分開登記批改。</div>
+  ${cbPicker('am')}
   <div class="hr"></div><div class="h3" style="margin-top:0">📒 今天的作業 <span class="ps">（${md(nextDay(d))} 批改）</span></div>
   ${lines.length?lines.map((x,i)=>row(x,i,lines)).join(''):'<div class="ps">還沒有</div>'}
-  <div class="add"><input id="cbhw" placeholder="例如：數學習作 p.30–31、圈詞第 5 課" autocomplete="off"><button class="bt" data-a="cbadd" data-k="hw">加入</button></div>
-  <div class="ps">會自動變成 ${mdw(nextDay(d))} 要批改的項目。用「、」分開可以一次加好幾項。</div>
+  ${cbPicker('hw')}
+  <div class="ps">會自動變成 ${mdw(nextDay(d))} 要批改的項目。</div>
   <div class="hr"></div><div class="h3" style="margin-top:0">🎒 記得帶</div>
   ${b.br.map(x=>`<div class="cbl"><span class="cbn">・</span><span class="lt">${E(x.x)}</span><button class="cb2" data-a="cbdel" data-k="br" data-id="${x.id}">✕</button></div>`).join('')||'<div class="ps">還沒有</div>'}
   <div class="add"><input id="cbbr" placeholder="例如：3號 帶同意書、全班帶彩色筆" autocomplete="off"><button class="bt" data-a="cbadd" data-k="br">加入</button></div>
@@ -1072,7 +1075,38 @@ function guessSub(x){
  const m=M.find(([r])=>r.test(x));return m&&S.subs.includes(m[1])?m[1]:(S.subs.includes('其他')?'其他':S.subs[0]);
 }
 // 聯絡簿上加的早自修、作業：每一項變成一份要批改的作業
+// 聯絡簿：先選科目、項目，再填頁數（記住上次選的）
+let CBP={am:{sub:'',cat:''},hw:{sub:'',cat:''}},CBV={am:'',hw:''};
+try{const x=JSON.parse(localStorage.getItem('sch-cbp'));if(x&&x.am&&x.hw)CBP=x}catch(e){}
+const cbpSave=()=>{try{localStorage.setItem('sch-cbp',JSON.stringify(CBP))}catch(e){}};
+function cbPicker(k){
+ const P=CBP[k];if(P.sub&&!S.subs.includes(P.sub))P.sub='';
+ const cats=P.sub?S.cats.filter(c=>c.s===P.sub):[];if(P.cat&&!cats.some(c=>c.n===P.cat))P.cat='';
+ return `<div class="cbp">
+  <div class="pick sm">${S.subs.map(x=>`<button data-a="cbps" data-k="${k}" data-v="${E(x)}" class="${P.sub===x?'on':''}">${E(x)}</button>`).join('')}</div>
+  ${P.sub?`<div class="pick sm" style="margin-top:6px">${cats.map(c=>`<button data-a="cbpk" data-k="${k}" data-v="${E(c.n)}" class="${P.cat===c.n?'on':''}">${E(c.n)}</button>`).join('')}<button data-a="cbpnew" data-k="${k}" class="new">＋ 新項目</button></div>`:''}
+  <div class="add"><input id="cb${k}" value="${E(CBV[k])}" placeholder="${P.cat?E(P.cat)+' 的頁數、課次，例如：p.30–31、第 5 課':P.sub?'先點上面的項目，或直接打內容':k==='am'?'先點科目、項目；或直接打，例如：成語一、成語二':'先點科目、項目；或直接打，例如：數學習作 p.30–31'}" autocomplete="off"><button class="go" data-a="cbadd" data-k="${k}">加入</button></div>
+  ${P.cat?`<div class="ps">會加入「${E(P.cat)} ＋ 你填的頁數」。用「、」分開，例如「第一個、第二個」會分成兩項；不用填頁數的直接按加入。</div>`:'<div class="ps">用「、」分開，每一項會分開登記批改。</div>'}
+ </div>`;
+}
 function cbAddTasks(k,text){
+ const P=CBP[k],cat=P.sub&&P.cat?S.cats.find(c=>c.n===P.cat&&c.s===P.sub):null;
+ if(cat){
+  const c=cls(),items=String(text).split(/\n|、|，|,|；|;/).map(s=>s.trim()).filter(Boolean),now=Date.now(),L=items.length?items:[''];
+  op(()=>L.forEach((x,i)=>(TK[c.id]||(TK[c.id]=[])).push({id:nid(),sub:cat.s,cat:cat.n,title:x,d:CBD,due:k==='am'?CBD:nextDay(CBD),g:cat.g,full:100,note:'',m:k==='am'?1:0,r:{},t:now+i,u:now})),
+   L.length>1?'已加入 '+L.length+' 項':'已加入「'+cat.n+(L[0]?' '+L[0]:'')+'」');
+  CBV[k]='';return;
+ }
+ if(P.sub&&text.trim()){
+  const c=cls(),items=String(text).split(/\n|、|，|,|；|;/).map(s=>s.trim()).filter(Boolean),now=Date.now();
+  op(()=>items.forEach((x,i)=>(TK[c.id]||(TK[c.id]=[])).push({id:nid(),sub:P.sub,cat:x,title:'',d:CBD,due:k==='am'?CBD:nextDay(CBD),g:/考|測驗/.test(x)?1:0,full:100,note:'',m:k==='am'?1:0,r:{},t:now+i,u:now})),
+   items.length>1?'已加入 '+items.length+' 項':'已加入「'+items[0]+'」');
+  CBV[k]='';return;
+ }
+ CBV[k]='';
+ cbAddTasksFree(k,text);
+}
+function cbAddTasksFree(k,text){
  const c=cls(),items=String(text).split(/\n|、|，|,|；|;/).map(s=>s.trim()).filter(Boolean);if(!items.length)return;
  const now=Date.now();
  op(()=>items.forEach((x,i)=>(TK[c.id]||(TK[c.id]=[])).push({id:nid(),sub:guessSub(x),cat:x,title:'',d:CBD,due:k==='am'?CBD:nextDay(CBD),g:/考|測驗|小考/.test(x)?1:0,full:100,note:'',m:k==='am'?1:0,r:{},t:now+i,u:now})),
@@ -1766,7 +1800,7 @@ function hwCSV(cid,sub,from,to){
 
 // ---------- 點擊 ----------
 const PAGE_ACTS=new Set(['go','stu','task']);
-function cbAdd(k){const i=$('cb'+k),v=i?i.value.trim():'';if(!v)return;if(k==='am'||k==='hw')cbAddTasks(k,v);else op(()=>cbOf(cls().id,CBD)[k].push({id:nid(),x:v}));setTimeout(()=>{const j=$('cb'+k);if(j)j.focus()},30)}
+function cbAdd(k){const i=$('cb'+k),v=i?i.value.trim():'';if(!v&&!((k==='am'||k==='hw')&&CBP[k].cat))return;if(k==='am'||k==='hw')cbAddTasks(k,v);else op(()=>cbOf(cls().id,CBD)[k].push({id:nid(),x:v}));setTimeout(()=>{const j=$('cb'+k);if(j)j.focus()},30)}
 function onClick(e){
  const b=e.target.closest('[data-a]');if(!b)return;
  const a=b.dataset.a,ds=b.dataset,inSheet=$('sheet').contains(b);
@@ -1808,6 +1842,9 @@ function onClick(e){
  if(a==='pered')return openS(perSheet);
  if(a==='cbd'){CBD=ds.v==='0'?today():addD(CBD,+ds.v);return render()}
  if(a==='cbadd')return cbAdd(ds.k);
+ if(a==='cbps'||a==='cbpk'){const k=ds.k,P=CBP[k],i=$('cb'+k);if(i)CBV[k]=i.value;if(a==='cbps'){if(P.sub===ds.v){P.sub='';P.cat=''}else{P.sub=ds.v;P.cat=''}}else P.cat=P.cat===ds.v?'':ds.v;cbpSave();render();setTimeout(()=>{const j=$('cb'+k);if(j&&a==='cbpk'&&P.cat)j.focus()},30);return}
+ if(a==='cbpnew'){const k=ds.k,P=CBP[k],i=$('cb'+k);if(i)CBV[k]=i.value;const n=(prompt('新項目的名稱（'+P.sub+'），例如：成語、日記、閱讀單')||'').trim();if(!n)return;
+  if(!S.cats.some(c=>c.n===n))op(()=>S.cats.push({n,s:P.sub,g:/考|測驗/.test(n)?1:0}),'已加入項目「'+n+'」');P.cat=n;cbpSave();render();return}
  if(a==='cbdel'){op(()=>{const b=cbOf(cls().id,CBD);b[ds.k]=b[ds.k].filter(x=>x.id!==ds.id)},'已刪除');return}
  if(a==='cbhide'){op(()=>{const b=cbOf(cls().id,CBD);b.hide=b.hide.includes(ds.id)?b.hide.filter(x=>x!==ds.id):[...b.hide,ds.id]});return}
  if(a==='cbcopy')return openS(()=>textSheet('聯絡簿',cbText(cls().id,CBD)));
