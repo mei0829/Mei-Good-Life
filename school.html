@@ -245,6 +245,8 @@ textarea{min-height:64px;resize:vertical}
 .cbinline .pick button{background:var(--card)}
 .cbinline .pick button.on{background:var(--acc)}
 .sbn.sm{min-width:36px;height:32px;font-size:14px;border-radius:8px}
+.li input.ckn{flex:1;min-width:0;border-color:transparent;background:none;padding:6px 4px;font-size:16px}
+.li input.ckn:focus{border-color:var(--line);background:var(--card)}
 /* 班費 */
 .bar2{height:10px;border-radius:99px;background:var(--tile);overflow:hidden;margin-top:12px}.bar2 i{display:block;height:100%;background:var(--blue);border-radius:99px}
 .catr{display:flex;gap:10px;align-items:center;padding:7px 0}.catr span{width:48px;flex:none}.catr b{min-width:70px;text-align:right}
@@ -1849,7 +1851,7 @@ function setSheet(){
   </div>
   <h2><span>作業種類（出作業時可以直接點選）</span></h2>
   <div class="card">
-   ${S.cats.map((k,i)=>`<div class="li"><span>${E(k.n)}</span><select data-cks="${i}" style="width:auto">${[...new Set([...S.subs,k.s])].map(s=>`<option${s===k.s?' selected':''}>${E(s)}</option>`).join('')}</select><button class="cb2${k.g?' on':''}" data-ckg="${i}">${k.g?'✓ 打分數':'不打分數'}</button><button data-ckd="${i}" aria-label="刪除">✕</button></div>`).join('')}
+   ${S.cats.map((k,i)=>`<div class="li"><input class="ckn" data-ckn="${i}" value="${E(k.n)}" aria-label="作業種類名稱"><select data-cks="${i}" style="width:auto">${[...new Set([...S.subs,k.s])].map(s=>`<option${s===k.s?' selected':''}>${E(s)}</option>`).join('')}</select><button class="cb2${k.g?' on':''}" data-ckg="${i}">${k.g?'✓ 打分數':'不打分數'}</button><button data-ckd="${i}" aria-label="刪除">✕</button></div>`).join('')}
    <div class="add"><input id="nck" placeholder="例如：數學考卷、日記、閱讀單" autocomplete="off"><select id="ncks" style="flex:none;width:auto">${S.subs.map(s=>`<option>${E(s)}</option>`).join('')}</select><button class="bt" id="nckb">加入</button></div>
   </div>
   ${famHTML()}
@@ -1892,6 +1894,14 @@ function setSheet(){
   const as=()=>{const v=p.querySelector('#ns').value.trim();if(!v||S.subs.includes(v))return;op(()=>S.subs.push(v));again()};
   p.querySelector('#nsb2').onclick=as;enter(p.querySelector('#ns'),as);
   p.querySelectorAll('[data-sd]').forEach(b=>b.onclick=()=>{const s=S.subs[+b.dataset.sd];op(()=>{S.subs=S.subs.filter(x=>x!==s)},'已移除科目「'+s+'」（原本的作業不會刪）');again()});
+  // 改作業種類的名字：已經出過的作業也一起改
+  p.querySelectorAll('[data-ckn]').forEach(i=>i.onchange=()=>{
+   const k=S.cats[+i.dataset.ckn],v=i.value.trim(),old=k.n;
+   if(!v||v===old){i.value=old;return}
+   if(S.cats.some(c=>c!==k&&c.n===v)){i.value=old;return toast('已經有「'+v+'」了')}
+   let n=0;
+   op(()=>{k.n=v;Object.values(TK).forEach(L=>L.forEach(t=>{if(t.cat===old&&t.sub===k.s){t.cat=v;n++}}));['am','hw'].forEach(x=>{if(CBP[x].cat===old)CBP[x].cat=v});cbpSave()},'已改成「'+v+'」'+(n?'，'+n+' 份作業也一起改':''));
+  });
   p.querySelectorAll('[data-cks]').forEach(sel=>sel.onchange=()=>{op(()=>{S.cats[+sel.dataset.cks].s=sel.value})});
   p.querySelectorAll('[data-ckg]').forEach(b=>b.onclick=()=>{op(()=>{const k=S.cats[+b.dataset.ckg];k.g=k.g?0:1});again()});
   p.querySelectorAll('[data-ckd]').forEach(b=>b.onclick=()=>{const k=S.cats[+b.dataset.ckd];op(()=>{S.cats=S.cats.filter(x=>x!==k)},'已移除「'+k.n+'」（原本的作業不會刪）');again()});
