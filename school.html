@@ -340,12 +340,20 @@ function fixRec(r){
  if(r.b)o.b=1;if(r.n)o.n=String(r.n);if(o.s===1&&r.o)o.o=String(r.o);
  return o;
 }
+// 分數 → 訂正：不到滿分「待訂正」、滿分「完成」（真的訂正完成的不會被改回去）
+function fixAuto(t,sid,c){
+ if(c===''||c==null||isNaN(+c))return {};
+ const r=R(t,sid);
+ if(+c>=t.full)return {f:2,fa:r.f===2&&r.fa?r.fa:today()};
+ if(r.f===2&&r.c!==undefined&&r.c<t.full)return {};
+ return {f:1};
+}
 function fixTasks(a){
  return arr(a).filter(t=>t&&(t.cat||t.title)).map(t=>{
   const r={};Object.keys(t.r&&typeof t.r==='object'?t.r:{}).forEach(k=>{const x=fixRec(t.r[k]);if(Object.keys(x).length)r[k]=x});
   return {id:t.id||nid(),sub:String(t.sub||'其他'),cat:String(t.cat||''),title:String(t.title||''),d:DT.test(t.d)?t.d:today(),due:DT.test(t.due)?t.due:'',
-   g:t.g?1:0,full:+t.full>0?+t.full:100,note:t.note||'',m:t.m?1:0,sl:t.sl?1:0,op:arr(t.op).map(String).filter(Boolean).slice(0,6),r,t:+t.t||Date.now(),u:+t.u||Date.now()};
- });
+   g:t.g?1:0,full:+t.full>0?+t.full:100,note:t.note||'',m:t.m?1:0,sl:t.sl?1:0,op:arr(t.op).map(String).filter(Boolean).slice(0,6),r,af:1,t:+t.t||Date.now(),u:+t.u||Date.now()};
+ }).map((x,i)=>{const o=arr(a).filter(t=>t&&(t.cat||t.title))[i];if(!o.af)Object.keys(x.r).forEach(k=>{const r=x.r[k];if(r.c!==undefined&&!r.f){if(r.c>=x.full){r.f=2;r.fa=r.a||today()}else r.f=1}});return x});
 }
 let S=fixMeta({classes:[]}),TK={};
 const U={};  // 每份雲端文件的同步狀態
@@ -1150,13 +1158,13 @@ function cbAddTasks(k,text){
  const P=CBP[k],cat=P.sub&&P.cat?S.cats.find(c=>c.n===P.cat&&c.s===P.sub):null;
  if(cat){
   const c=cls(),items=String(text).split(/\n|、|，|,|；|;/).map(s=>s.trim()).filter(Boolean),now=Date.now(),L=items.length?items:[''];
-  op(()=>L.forEach((x,i)=>(TK[c.id]||(TK[c.id]=[])).push({id:nid(),sub:cat.s,cat:cat.n,title:x,d:CBD,due:k==='am'?CBD:nextDay(CBD),g:cat.g,full:100,note:'',m:k==='am'?1:0,r:{},t:now+i,u:now})),
+  op(()=>L.forEach((x,i)=>(TK[c.id]||(TK[c.id]=[])).push({id:nid(),sub:cat.s,cat:cat.n,title:x,d:CBD,due:k==='am'?CBD:nextDay(CBD),g:cat.g,full:100,note:'',m:k==='am'?1:0,r:{},af:1,t:now+i,u:now})),
    L.length>1?'已加入 '+L.length+' 項':'已加入「'+cat.n+(L[0]?' '+L[0]:'')+'」');
   CBV[k]='';return;
  }
  if(P.sub&&text.trim()){
   const c=cls(),items=String(text).split(/\n|、|，|,|；|;/).map(s=>s.trim()).filter(Boolean),now=Date.now();
-  op(()=>items.forEach((x,i)=>(TK[c.id]||(TK[c.id]=[])).push({id:nid(),sub:P.sub,cat:x,title:'',d:CBD,due:k==='am'?CBD:nextDay(CBD),g:/考|測驗/.test(x)?1:0,full:100,note:'',m:k==='am'?1:0,r:{},t:now+i,u:now})),
+  op(()=>items.forEach((x,i)=>(TK[c.id]||(TK[c.id]=[])).push({id:nid(),sub:P.sub,cat:x,title:'',d:CBD,due:k==='am'?CBD:nextDay(CBD),g:/考|測驗/.test(x)?1:0,full:100,note:'',m:k==='am'?1:0,r:{},af:1,t:now+i,u:now})),
    items.length>1?'已加入 '+items.length+' 項':'已加入「'+items[0]+'」');
   CBV[k]='';return;
  }
@@ -1166,7 +1174,7 @@ function cbAddTasks(k,text){
 function cbAddTasksFree(k,text){
  const c=cls(),items=String(text).split(/\n|、|，|,|；|;/).map(s=>s.trim()).filter(Boolean);if(!items.length)return;
  const now=Date.now();
- op(()=>items.forEach((x,i)=>(TK[c.id]||(TK[c.id]=[])).push({id:nid(),sub:guessSub(x),cat:x,title:'',d:CBD,due:k==='am'?CBD:nextDay(CBD),g:/考|測驗|小考/.test(x)?1:0,full:100,note:'',m:k==='am'?1:0,r:{},t:now+i,u:now})),
+ op(()=>items.forEach((x,i)=>(TK[c.id]||(TK[c.id]=[])).push({id:nid(),sub:guessSub(x),cat:x,title:'',d:CBD,due:k==='am'?CBD:nextDay(CBD),g:/考|測驗|小考/.test(x)?1:0,full:100,note:'',m:k==='am'?1:0,r:{},af:1,t:now+i,u:now})),
   items.length>1?'已加入 '+items.length+' 項':'已加入「'+items[0]+'」');
 }
 
@@ -1225,7 +1233,7 @@ function slipSheet(id){
    pull(p);if(!D.name)return toast('請填回條名稱');if(!st.cs.length)return toast('請選班級');
    const op_=D.op?D.op.split(','):[],now=Date.now();
    if(old){op(()=>{const x=task(id);Object.assign(x,{title:D.name,d:D.d,due:D.due,op:op_,note:D.note,u:now})},'已儲存');return back()}
-   op(()=>st.cs.forEach(c=>(TK[c]||(TK[c]=[])).push({id:nid(),sub:S.subs.includes('其他')?'其他':S.subs[0],cat:'回條',title:D.name,d:D.d,due:D.due,g:0,full:100,note:D.note,m:0,sl:1,op:op_,r:{},t:now,u:now})),'已新增「'+D.name+'」');
+   op(()=>st.cs.forEach(c=>(TK[c]||(TK[c]=[])).push({id:nid(),sub:S.subs.includes('其他')?'其他':S.subs[0],cat:'回條',title:D.name,d:D.d,due:D.due,g:0,full:100,note:D.note,m:0,sl:1,op:op_,r:{},af:1,t:now,u:now})),'已新增「'+D.name+'」');
    back();
   };
   const dl_=p.querySelector('#sdl');if(dl_)dl_.onclick=()=>{if(!confirm('刪除「'+D.name+'」和收件紀錄？'))return;op(()=>{TK[cls().id]=tasks().filter(x=>x.id!==id)},'已刪除');closeAll(()=>{if(PG.v==='slip')goBack()})};
@@ -1596,7 +1604,7 @@ function kpSheet(tid,sid0){
   if(st.buf===''||st.buf==='.')return true;
   const v=+st.buf,t=task(tid),s=ss[st.i];if(isNaN(v))return true;
   if(v>t.full*1.5){toast('超過滿分 '+t.full+'，請再確認');return false}
-  op(()=>{const x=task(tid),r=R(x,s.id);setR(x,s.id,!isIn(r)||r.s===2?{c:v,s:1,a:x.due&&x.due<today()?x.due:today()}:{c:v})});
+  op(()=>{const x=task(tid),r=R(x,s.id);setR(x,s.id,{...(!isIn(r)||r.s===2?{c:v,s:1,a:x.due&&x.due<today()?x.due:today()}:{c:v}),...fixAuto(x,s.id,v)})});
   st.buf='';return true;
  };
  const move=n=>{st.buf='';const j=st.i+n;if(j>=ss.length){st.done=true}else if(j>=0)st.i=j};
@@ -1653,7 +1661,7 @@ function allIn(id,d){
 // 一個學生的一份作業：交的日期、分數、訂正、聯絡簿、備註
 function recSheet(tid,sid){
  const t=task(tid),s=stu(sid);if(!t||!s)return back();
- const D={s:0,a:'',c:'',f:0,p:'',fa:'',b:0,n:'',...R(t,sid)};
+ const D={s:0,a:'',c:'',f:0,p:'',fa:'',b:0,n:'',...R(t,sid)},F0=D.f,C0=D.c;
  if(D.s===1&&!D.a)D.a=today();
  const pull=p=>{D.a=p.querySelector('#ra').value;if(t.g)D.c=numOr(p.querySelector('#rc').value);const rp=p.querySelector('#rp');if(rp)D.p=rp.value.trim();const fa=p.querySelector('#rfa');if(fa)D.fa=fa.value;D.n=p.querySelector('#rn').value.trim()};
  const draw=()=>sheet(`<h3>${E(sLabel(s))}</h3><div class="sub" style="margin-bottom:12px"><span class="tag g">${E(t.sub)}</span>${E(tName(t))} · ${t.due?mdw(t.due)+' 要交':'沒設定繳交日'}</div>
@@ -1670,7 +1678,7 @@ function recSheet(tid,sid){
   p.querySelector('#ra').onchange=()=>{pull(p);refresh(draw)};
   p.querySelectorAll('[data-rf]').forEach(b=>b.onclick=()=>{pull(p);D.f=+b.dataset.rf;if(D.f===2&&!D.fa)D.fa=today();refresh(draw)});
   p.querySelector('#rb').onclick=()=>{pull(p);D.b=D.b?0:1;refresh(draw)};
-  p.querySelector('#rsv').onclick=()=>{pull(p);op(()=>{const x=task(tid);if(x){delete x.r[sid];setR(x,sid,D)}},'已儲存');back()};
+  p.querySelector('#rsv').onclick=()=>{pull(p);if(t.g&&D.c!==C0&&D.f===F0){Object.assign(D,fixAuto(t,sid,D.c))}op(()=>{const x=task(tid);if(x){delete x.r[sid];setR(x,sid,D)}},'已儲存');back()};
  });
  draw();
 }
@@ -1711,7 +1719,7 @@ function taskEdit(id,pre){
    const now=Date.now();
    if(old){op(()=>{const x=task(id);Object.assign(x,{sub:D.sub,cat:D.cat,title:D.title,d:D.d,due:D.due,g:D.g,full:D.full,note:D.note,u:now})},'已儲存');return back()}
    const ids=[];
-   op(()=>st.cs.forEach(c=>{const nid_=nid();ids.push(nid_);(TK[c]||(TK[c]=[])).push({id:nid_,sub:D.sub,cat:D.cat,title:D.title,d:D.d,due:D.due,g:D.g,full:D.full,note:D.note,r:{},t:now,u:now})}),st.cs.length>1?'已出給 '+st.cs.length+' 個班':'已出作業「'+tName(D)+'」');
+   op(()=>st.cs.forEach(c=>{const nid_=nid();ids.push(nid_);(TK[c]||(TK[c]=[])).push({id:nid_,sub:D.sub,cat:D.cat,title:D.title,d:D.d,due:D.due,g:D.g,full:D.full,note:D.note,r:{},af:1,t:now,u:now})}),st.cs.length>1?'已出給 '+st.cs.length+' 個班':'已出作業「'+tName(D)+'」');
    if(pre&&pre._kp&&D.g&&st.cs.length===1&&st.cs[0]===cls().id)return kpSheet(ids[0]);
    back();
   };
