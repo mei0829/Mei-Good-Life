@@ -55,7 +55,7 @@ button.go:disabled{opacity:.5}
 .fs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px}.fs .chip{flex:none}
 .grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}.grid .w{grid-column:1/3}
 .fl{display:block}.fl span{display:block;font-size:12px;color:var(--sub);margin-bottom:2px}
-.agl{margin-top:10px;border-top:1px solid var(--line)}.ag{padding:8px 0;border-bottom:1px solid var(--line)}.ais{display:flex;flex-wrap:wrap;gap:2px 14px;margin-top:2px}.ai{font-size:13px;color:var(--sub);cursor:pointer}.ai b{font-weight:500;color:var(--ink)}.ai b.neg{color:var(--bad)}.lnk{background:none;border:0;color:var(--acc);font-size:13px;padding:8px 0 0;cursor:pointer}
+.ai.z{opacity:.38}.agl{margin-top:10px;border-top:1px solid var(--line)}.ag{padding:8px 0;border-bottom:1px solid var(--line)}.ais{display:flex;flex-wrap:wrap;gap:2px 14px;margin-top:2px}.ai{font-size:13px;color:var(--sub);cursor:pointer}.ai b{font-weight:500;color:var(--ink)}.ai b.neg{color:var(--bad)}.lnk{background:none;border:0;color:var(--acc);font-size:13px;padding:8px 0 0;cursor:pointer}
 .pill{font-size:12px;padding:1px 8px;border-radius:10px;border:1px solid var(--line);color:var(--sub);white-space:nowrap}
 .pill.y{background:color-mix(in srgb,var(--acc) 12%,transparent);color:var(--acc);border-color:transparent}
 .tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:10px 0}
@@ -1760,14 +1760,16 @@ async function askAI(prompt,file,search){const sm=window.claude&&await claude.us
 function acctBrief(){
  const v=a=>isCard(a)?-cardInfo(a).owe:conv(bal(a),a.cur,'TWD'),zero=a=>isCard(a)?(()=>{const x=cardSplit(a);return x.due+x.unb<0.5})():Math.abs(v(a))<0.5;
  const gs={},ord=[];S.accts.forEach(a=>{const k=a.excl?'\u0000x':a.hold&&!isCard(a)?'\u0000h':a.type!=='cash'&&a.group||'\u0000'+a.id;if(!gs[k]){gs[k]=[];ord.push(k)}gs[k].push(a)});
- const rows=[],ex=[];let nz=0;
- ord.forEach(k=>{const as=gs[k].slice().sort((x,y)=>isCard(x)-isCard(y)||Math.abs(v(y))-Math.abs(v(x))),show=U.az?as:as.filter(a=>!zero(a));nz+=as.length-as.filter(a=>!zero(a)).length;if(!show.length)return;
+ // $0 的帳戶用很淡的字一起列出來，點了一樣能打開；整組都是 $0 的收到最下面一行
+ const rows=[],ex=[],zl=[];
+ ord.forEach(k=>{const as=gs[k].slice().sort((x,y)=>zero(x)-zero(y)||isCard(x)-isCard(y)||Math.abs(v(y))-Math.abs(v(x)));if(!as.some(a=>!zero(a))){zl.push(...as);return}const show=as;
   const own=show.filter(a=>!isCard(a)).reduce((t,a)=>t+v(a),0),owe=show.filter(isCard).reduce((t,a)=>t-v(a),0),one=show.length===1&&!(show[0].group&&show[0].type!=='cash');
-  const item=a=>`<span class="ai" data-a="${isCard(a)?'card':'acctv'}" data-i="${a.id}">${E(k==='\u0000x'||k==='\u0000h'?nm(a):a.name+(a.cur==='USD'?'（美元）':''))} <b class="num ${isCard(a)&&!zero(a)?'neg':''}">${isCard(a)?(()=>{const x=cardSplit(a);return(x.due>=0.5?'未繳 '+M(x.due):x.unb>=0.5?'':'已繳清')+(x.unb>=0.5?'</b> <span class="sub">'+(x.due>=0.5?'・':'')+'未出帳</span> <b class="num">'+M(x.unb):'')})():MA(a)}</b></span>`;
+  const item=a=>`<span class="ai${zero(a)?' z':''}" data-a="${isCard(a)?'card':'acctv'}" data-i="${a.id}">${E(k==='\u0000x'||k==='\u0000h'?nm(a):a.name+(a.cur==='USD'?'（美元）':''))} <b class="num ${isCard(a)&&!zero(a)?'neg':''}">${isCard(a)?(()=>{const x=cardSplit(a);return(x.due>=0.5?'未繳 '+M(x.due):x.unb>=0.5?'':'已繳清')+(x.unb>=0.5?'</b> <span class="sub">'+(x.due>=0.5?'・':'')+'未出帳</span> <b class="num">'+M(x.unb):'')})():MA(a)}</b></span>`;
   const r={w:Math.abs(own)+owe,h:`<div class="ag"${one?` data-a="${isCard(show[0])?'card':'acctv'}" data-i="${show[0].id}" style="cursor:pointer"`:''}><div class="row"><b class="sp">${E(k==='\u0000x'?'📒 獨立帳本（沒算進總資產）':k==='\u0000h'?S.holdIn?'📦 預存（存著要繳的，不能花）':'📦 預存（要繳出去，沒算進總資產）':one?show[0].name:k)}</b>${own||!owe?`<b class="num ${own<-0.5?'neg':''}">${M(own)}</b>`:''}</div>${one&&k!=='\u0000x'&&k!=='\u0000h'&&!isCard(show[0])&&!show[0].cur?'':`<div class="ais">${show.map(item).join('')}</div>`}</div>`};
   (k==='\u0000x'?ex:k==='\u0000h'?(ex.unshift(r),[]):rows).push(r)});
  rows.sort((x,y)=>y.w-x.w);
- return`<div class="agl">${rows.concat(ex).map(r=>r.h).join('')}</div>${nz?`<button class="lnk" data-a="az">${U.az?'收起 $0 的帳戶 ▴':'還有 '+nz+' 個帳戶是 $0，點我顯示 ▾'}</button>`:''}`;
+ const zn=a=>(a.excl?'📒 ':'')+(a.type!=='cash'&&a.group?String(a.group).replace('銀行','')+'・':'')+a.name;
+ return`<div class="agl">${rows.concat(ex).map(r=>r.h).join('')}${zl.length?`<div class="ag"><div class="sub" style="opacity:.6">$0 的帳戶</div><div class="ais">${zl.map(a=>`<span class="ai z" data-a="${isCard(a)?'card':'acctv'}" data-i="${a.id}">${E(zn(a))}</span>`).join('')}</div></div>`:''}</div>`;
 }
 function assetCard(liq){
  const hs=holdings().filter(h=>h.sh>0),stk=hs.reduce((s,h)=>s+conv(h.val,h.cur,'TWD'),0),owe=S.accts.filter(isCard).reduce((s,c)=>s+cardInfo(c).owe,0),nop=hs.filter(h=>h.px==null).length;
