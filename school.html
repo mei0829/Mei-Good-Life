@@ -272,6 +272,10 @@ i.r{background:var(--bad)}i.b{background:var(--blue)}i.g{background:var(--ok)}
 .grr .lr{border-top:0;padding-left:2px}
 .grr .ck{margin-left:2px}
 .lt.dn{color:var(--sub);text-decoration:line-through}
+.prt{background:var(--tile);border-radius:12px;padding:8px 12px;margin-top:12px;font-size:14px;line-height:1.7}
+.prt .cb2{margin-left:6px}
+.ptm{display:inline-flex;gap:3px}.ptm i{font-style:normal;width:20px;height:20px;border-radius:6px;display:grid;place-items:center;font-size:11px;background:var(--tile);color:var(--sub)}
+.ptm i.y{background:var(--oks);color:var(--ok)}.ptm i.n{background:var(--bads);color:var(--bad)}
 /* 班費 */
 .bar2{height:10px;border-radius:99px;background:var(--tile);overflow:hidden;margin-top:12px}.bar2 i{display:block;height:100%;background:var(--blue);border-radius:99px}
 .catr{display:flex;gap:10px;align-items:center;padding:7px 0}.catr span{width:48px;flex:none}.catr b{min-width:70px;text-align:right}
@@ -379,7 +383,7 @@ function fixTasks(a){
  return arr(a).filter(t=>t&&(t.cat||t.title)).map(t=>{
   const r={};Object.keys(t.r&&typeof t.r==='object'?t.r:{}).forEach(k=>{const x=fixRec(t.r[k]);if(Object.keys(x).length)r[k]=x});
   return {id:t.id||nid(),sub:String(t.sub||'其他'),cat:String(t.cat||''),title:String(t.title||''),d:DT.test(t.d)?t.d:today(),due:DT.test(t.due)?t.due:'',
-   g:t.g?1:0,full:+t.full>0?+t.full:100,note:t.note||'',m:t.m?1:0,sl:t.sl?1:0,gd:DT.test(t.gd)?t.gd:'',op:arr(t.op).map(String).filter(Boolean).slice(0,6),r,af:1,t:+t.t||Date.now(),u:+t.u||Date.now()};
+   g:t.g?1:0,full:+t.full>0?+t.full:100,note:t.note||'',m:t.m?1:0,sl:t.sl?1:0,gd:DT.test(t.gd)?t.gd:'',pts:arr(t.pts).map(String),pg:String(t.pg||''),op:arr(t.op).map(String).filter(Boolean).slice(0,6),r,af:1,t:+t.t||Date.now(),u:+t.u||Date.now()};
  }).map((x,i)=>{const o=arr(a).filter(t=>t&&(t.cat||t.title))[i];if(!o.af)Object.keys(x.r).forEach(k=>{const r=x.r[k];if(r.c!==undefined&&!r.f){if(r.c>=x.full){r.f=2;r.fa=r.a||today()}else r.f=1}});return x});
 }
 let S=fixMeta({classes:[]}),TK={};
@@ -424,7 +428,8 @@ const ST_CLS={ok:'ok',late:'late',over:'miss',due:'miss',no:'',x:'x'};
 const TAG_CLS={ok:'ok',late:'warn',over:'bad',due:'bad',no:'g',x:'g'};
 const isIn=r=>r.s===1||r.s===2;
 // 到了這天還沒交（d 預設今天）
-const missing=(t,sid,d)=>!isIn(R(t,sid))&&!!t.due&&t.due<=(d||today());
+const isTot=t=>!!(t.pts&&t.pts.length);
+const missing=(t,sid,d)=>!isTot(t)&&!isIn(R(t,sid))&&!!t.due&&t.due<=(d||today());
 const fixing=(t,sid)=>R(t,sid).f===1;
 function setR(t,sid,p){
  const r=fixRec({...R(t,sid),...p});
@@ -704,7 +709,7 @@ function stuView(sid){
 // 每日繳交追蹤：這天要交的作業 × 全班
 function dayView(){
  const ss=stus(cls()),d=BD,isT=d===today();
- const cols=tasks().filter(t=>t.due===d).sort((a,b)=>a.t-b.t);
+ const cols=tasks().filter(t=>t.due===d&&!isTot(t)).sort((a,b)=>a.t-b.t);
  const older=tasks().filter(t=>t.due&&t.due<d&&ss.some(s=>missing(t,s.id,d))).sort((a,b)=>a.due<b.due?1:-1);
  const rows=DF==='miss'?ss.filter(s=>cols.some(t=>!isIn(R(t,s.id)))):DF==='fix'?ss.filter(s=>cols.some(t=>fixing(t,s.id))):ss;
  let h=head('每日繳交追蹤',E(cls().name)+' · '+(isT?'今天 ':'')+mdw(d),`<button class="go sm" data-a="new" data-due="${d}">＋ 出作業</button>`);
@@ -741,12 +746,18 @@ function taskView(id){
  const rows=ss.filter(s=>f==='all'||(f==='miss'?!isIn(R(t,s.id)):R(t,s.id).f===1));
  return head(E(tName(t)),`${E(t.sub)} · ${md(t.d)} 出 · ${t.due?mdw(t.due)+' 要交':'沒設定繳交日'}${t.g?' · 滿分 '+t.full:''}${t.note?'<br>📝 '+E(t.note):''}`,`<button class="bt sm" data-a="tedit" data-id="${id}">編輯</button>`,1)+
  `<div class="box">
-  <div class="stats"><button class="st1" data-a="tf2" data-v="all"><b>${A.inn}<small style="font-size:16px">/${A.n}</small></b><span>已交</span></button><button class="st2" data-a="tf2" data-v="miss"><b>${A.miss.length}</b><span>尚未繳交</span></button><button class="st3" data-a="tf2" data-v="fix"><b>${A.fix.length}</b><span>${A.avg!=null?'待訂正 · 平均 '+r1(A.avg):'待訂正'}</span></button></div>
-  <div class="acts">${t.g?`<button class="go" data-a="kp" data-id="${id}">🧮 輸入分數</button>`:''}${A.miss.length?`<button class="bt" data-a="allin" data-t="${id}">其他人都交了</button>`:''}</div>
-  <div class="segs" style="margin-top:14px">${[['all','全部'],['miss','尚未繳交'],['fix','尚未訂正']].map(([v,n])=>`<button data-a="tf2" data-v="${v}" class="${f===v?'on':''}">${n}</button>`).join('')}</div>
-  <div class="tw"><table class="t"><thead><tr><th>座號</th><th>姓名</th><th>繳交</th>${t.g?'<th>分數</th>':''}<th>訂正</th></tr></thead><tbody>
+  <div class="stats">${isTot(t)?(()=>{const P=t.pts.map(task).filter(Boolean),all=ss.filter(s=>P.every(x=>isIn(R(x,s.id)))).length,sc=ss.filter(s=>R(t,s.id).c!==undefined).length;
+   return `<button class="st1"><b>${sc}<small style="font-size:16px">/${A.n}</small></b><span>已打總分</span></button><button class="st2"><b>${all}<small style="font-size:16px">/${A.n}</small></b><span>每一次都交了</span></button>`})()
+   :`<button class="st1" data-a="tf2" data-v="all"><b>${A.inn}<small style="font-size:16px">/${A.n}</small></b><span>已交</span></button><button class="st2" data-a="tf2" data-v="miss"><b>${A.miss.length}</b><span>尚未繳交</span></button>`}<button class="st3" data-a="tf2" data-v="fix"><b>${A.fix.length}</b><span>${A.avg!=null?'待訂正 · 平均 '+r1(A.avg):'待訂正'}</span></button></div>
+  <div class="acts">${t.g?`<button class="go" data-a="kp" data-id="${id}">🧮 輸入分數</button>`:''}${A.miss.length&&!isTot(t)?`<button class="bt" data-a="allin" data-t="${id}">其他人都交了</button>`:''}</div>
+  <div class="segs" style="margin-top:14px">${(isTot(t)?[['all','全部'],['fix','尚未訂正']]:[['all','全部'],['miss','尚未繳交'],['fix','尚未訂正']]).map(([v,n])=>`<button data-a="tf2" data-v="${v}" class="${f===v?'on':''}">${n}</button>`).join('')}</div>
+  ${(()=>{const P=isTot(t)?t.pts.map(task).filter(Boolean):[],par=t.pg?task(t.pg):null;
+   if(P.length)return `<div class="prt">這是 ${P.length} 次作業合起來的總分：${P.map((x,k)=>`<a href="#" data-a="task" data-id="${x.id}">第 ${k+1} 次 ${E(x.title||tName(x))}${x.due?'（'+md(x.due)+'）':''}</a>`).join('、')}<button class="cb2" data-a="unmerge" data-id="${id}">取消合併</button></div>`;
+   if(par)return `<div class="prt">這是「<a href="#" data-a="task" data-id="${par.id}">${E(tName(par))}</a>」的第 ${par.pts.indexOf(t.id)+1} 次，分數在總分那裡打。</div>`;
+   return !t.g&&!t.sl?`<button class="bt sm" data-a="merge" data-id="${id}" style="margin-top:10px">把好幾次作業合併成一個分數</button>`:'';})()}
+  <div class="tw"><table class="t"><thead><tr><th>座號</th><th>姓名</th><th>${isTot(t)?'各次':'繳交'}</th>${t.g?'<th>分數</th>':''}<th>訂正</th></tr></thead><tbody>
   ${rows.map(s=>{const r=R(t,s.id);return `<tr><td class="n">${z2(s.no)}</td><td><button class="lk" data-a="rec" data-t="${id}" data-s="${s.id}">${E(s.name)}${r.f&&r.p?`<small>${E(r.p)}</small>`:''}${r.n?`<small style="color:var(--sub)">📝 ${E(r.n)}</small>`:''}</button></td>
-   <td><button class="cell" data-a="tog" data-t="${id}" data-s="${s.id}">${subPill(t,s.id)}</button></td>
+   <td>${isTot(t)?`<span class="ptm">${t.pts.map(task).filter(Boolean).map((x,k)=>{const q=R(x,s.id);return `<i class="${isIn(q)?'y':missing(x,s.id)?'n':''}" title="第 ${k+1} 次">${k+1}</i>`}).join('')}</span>`:`<button class="cell" data-a="tog" data-t="${id}" data-s="${s.id}">${subPill(t,s.id)}</button>`}</td>
    ${t.g?`<td><button class="cell" data-a="kp" data-id="${id}" data-s="${s.id}"><b class="${r.c!==undefined?scCls(r.c/t.full*100):'sub'}">${r.c!==undefined?r.c:'—'}</b></button></td>`:''}
    <td><button class="cell" data-a="cfx" data-t="${id}" data-s="${s.id}">${fixPill(t,s.id)}</button></td></tr>`}).join('')||`<tr><td colspan="5" class="empty">沒有符合的學生</td></tr>`}
   </tbody></table></div></div>
@@ -926,7 +937,7 @@ const cbOf=(cid,d)=>{const c=CB[cid]||(CB[cid]={});return c[d]||(c[d]={hw:[],br:
 const cbPeek=(cid,d)=>(CB[cid]||{})[d]||{hw:[],br:[],hide:[]};
 // 聯絡簿上的作業：這天出的作業（自動）＋自己加的
 function cbLines(cid,d,am){
- const b=cbPeek(cid,d),ts=(TK[cid]||[]).filter(t=>t.d===d&&(am?t.m:!t.m&&!(t.due===t.d&&!t.sl))).sort((a,b)=>a.t-b.t);
+ const b=cbPeek(cid,d),ts=(TK[cid]||[]).filter(t=>t.d===d&&(am?t.m:!t.m&&!(t.due===t.d&&!t.sl)&&!isTot(t))).sort((a,b)=>a.t-b.t);
  const auto=ts.map(t=>({id:t.id,auto:1,hid:b.hide.includes(t.id),x:tName(t)+(!am&&t.due?'（'+(t.due===nextDay(d)?'下次上課':mdw(t.due))+'交）':''),t}));
  return am?auto:[...auto,...b.hw.map(x=>({...x,auto:0}))];
 }
@@ -969,7 +980,7 @@ const allReg=(t,cid)=>{const ss=stus(S.classes.find(c=>c.id===cid));return ss.le
 const grDone=(t,cid)=>!!t.gd||allReg(t,cid);
 function grTodos(d){const L=[];S.classes.forEach(c=>(TK[c.id]||[]).forEach(t=>{if(t.sl||!t.due)return;if(t.due===d||(t.due<d&&t.due>=addD(d,-7)&&!grDone(t,c.id)))L.push({t,c})}));return L.sort((a,b)=>a.t.due<b.t.due?-1:a.t.due>b.t.due?1:a.t.t-b.t.t)}
 function grRow(x,d,sm){const {t,c}=x,dn=grDone(t,c.id),ss=stus(c),n=ss.filter(s=>isIn(R(t,s.id))).length;
- return `<div class="tdr${dn?' dn':''}${sm?' sm':''}"><button class="ck${dn?' on':''}" data-a="grck" data-c="${c.id}" data-id="${t.id}" aria-label="${dn?'改回還沒改完':'改完了'}">${dn?'✓':''}</button><button class="tdt" data-a="gtask" data-c="${c.id}" data-id="${t.id}"><span>改 ${E(tName(t))}</span><small>${S.classes.length>1?E(c.name)+' · ':''}${t.due<d&&!dn?`<b class="bad">${md(t.due)} 的還沒改完</b> · `:''}已登記 ${n}/${ss.length}${dn?(t.gd?' · '+(t.gd===d?'今天':md(t.gd))+' 改完':' · 全班都登記了'):''}</small></button></div>`}
+ return `<div class="tdr${dn?' dn':''}${sm?' sm':''}"><button class="ck${dn?' on':''}" data-a="grck" data-c="${c.id}" data-id="${t.id}" aria-label="${dn?'改回還沒改完':'改完了'}">${dn?'✓':''}</button><button class="tdt" data-a="gtask" data-c="${c.id}" data-id="${t.id}"><span>${isTot(t)?'打總分：':'改 '}${E(tName(t))}</span><small>${S.classes.length>1?E(c.name)+' · ':''}${t.due<d&&!dn?`<b class="bad">${md(t.due)} 的還沒改完</b> · `:''}已登記 ${n}/${ss.length}${dn?(t.gd?' · '+(t.gd===d?'今天':md(t.gd))+' 改完':' · 全班都登記了'):''}</small></button></div>`}
 // 完成的時間：一次性的看 dt；每週重複的看那天的 dk
 const doneAt=(t,d)=>t.rep.length?(t.dk&&t.dk[d])||0:t.dt||0;
 const hmOf=ms=>{const x=new Date(ms);return z(x.getHours())+':'+z(x.getMinutes())};
@@ -1836,20 +1847,23 @@ function taskEdit(id,pre){
  const pre_={...(pre||{})};Object.keys(pre_).forEach(k=>pre_[k]===undefined&&delete pre_[k]);delete pre_._kp;
  const D=old?{...old}:{sub:S.subs.includes(last.sub)?last.sub:S.subs[0],cat:'',title:'',d:today(),due:addD(today(),1),g:0,full:100,note:'',...pre_};
  if(!old&&!(pre&&pre.cat)&&last.cat&&last.sub===D.sub){D.cat=last.cat;D.g=(S.cats.find(c=>c.n===last.cat)||{}).g||0}
- const st={cs:[cls().id]};
- const pull=p=>{D.title=p.querySelector('#et').value.trim();D.d=p.querySelector('#edd').value||today();D.due=p.querySelector('#edu').value;D.full=+p.querySelector('#ef').value>0?+p.querySelector('#ef').value:100;D.note=p.querySelector('#en').value.trim();const c=p.querySelector('#ec').value.trim();if(c)D.cat=c};
+ const st={cs:[cls().id],split:false,parts:[{t:'',due:addD(today(),1)},{t:'',due:addD(today(),2)}]};
+ const pull=p=>{p.querySelectorAll('[data-pi]').forEach(r=>{const k=+r.dataset.pi;st.parts[k]={t:r.querySelector('.ptx').value.trim(),due:r.querySelector('.pdu').value}});D.title=p.querySelector('#et').value.trim();D.d=p.querySelector('#edd').value||today();D.due=p.querySelector('#edu').value;D.full=+p.querySelector('#ef').value>0?+p.querySelector('#ef').value:100;D.note=p.querySelector('#en').value.trim();const c=p.querySelector('#ec').value.trim();if(c)D.cat=c};
  const cats=()=>S.cats.filter(c=>c.s===D.sub);
  const draw=()=>sheet(`<h3>${old?'修改作業':'出作業'}</h3><div style="height:8px"></div>
   ${!old&&S.classes.length>1?`<div class="f"><span>班級（可以一次出給好幾個班）</span><div class="pick">${S.classes.map(c=>`<button data-pc="${c.id}" class="${st.cs.includes(c.id)?'on':''}">${E(c.name)}</button>`).join('')}</div></div>`:''}
   <div class="f"><span>科目</span><div class="pick">${[...new Set([...S.subs,D.sub])].map(x=>`<button data-ps="${E(x)}" class="${x===D.sub?'on':''}">${E(x)}</button>`).join('')}</div></div>
   <div class="f"><span>作業種類</span><div class="pick">${cats().map(c=>`<button data-pk="${E(c.n)}" class="${D.cat===c.n?'on':''}">${E(c.n)}</button>`).join('')}</div>
    <input id="ec" style="margin-top:6px" placeholder="或自己輸入，例如：日記、閱讀單" value="${cats().some(c=>c.n===D.cat)?'':E(D.cat)}" autocomplete="off"></div>
-  <label class="f"><span>範圍（第幾課、第幾頁）</span><input id="et" value="${E(D.title)}" placeholder="例如：第 3 課、p.12–15" autocomplete="off"></label>
+  <label class="f"><span>${st.split?'整份的範圍（總分的名稱）':'範圍（第幾課、第幾頁）'}</span><input id="et" value="${E(D.title)}" placeholder="${st.split?'例如：p.30–35':'例如：第 3 課、p.12–15'}" autocomplete="off"></label>
+  ${!old?`<button class="tg${st.split?' on':''}" id="esp"><i>${st.split?'✓':''}</i><span>分好幾次寫，最後打一個總分</span></button>`:''}
+  ${st.split?`<div class="f"><span>每一次的範圍和繳交日（每一次都會登記交了沒）</span>${st.parts.map((x,k)=>`<div class="li" data-pi="${k}"><span style="flex:none;font-size:14px">第 ${k+1} 次</span><input class="ptx" value="${E(x.t)}" placeholder="例如：p.30–31" style="flex:1.3" autocomplete="off"><input class="pdu" type="date" value="${E(x.due)}" style="flex:1"><button data-prm="${k}" aria-label="刪除">✕</button></div>`).join('')}
+   <button class="bt sm" id="epad">＋ 再加一次</button></div>`:''}
   <div class="two"><label class="f"><span>出作業日</span><input id="edd" type="date" value="${E(D.d)}"></label>
-   <label class="f"><span>繳交日</span><input id="edu" type="date" value="${E(D.due)}"></label></div>
-  <div class="quick" style="margin:-6px 0 12px">${[['今天',0],['明天',1],['後天',2],['下週一',(8-pd(today()).getDay())%7||7]].map(([n,d])=>`<button data-dd="${d}">${n}交</button>`).join('')}<button data-dd="x">不設定</button></div>
-  <button class="tg${D.g?' on':''}" id="eg"><i>${D.g?'✓':''}</i><span>要打分數（考卷、小考）</span></button>
-  <label class="f" style="${D.g?'':'display:none'}"><span>滿分</span><input id="ef" type="number" inputmode="decimal" min="1" value="${E(D.full)}"></label>
+   <label class="f" style="${st.split?'display:none':''}"><span>繳交日</span><input id="edu" type="date" value="${E(D.due)}"></label></div>
+  <div class="quick" style="margin:-6px 0 12px;${st.split?'display:none':''}">${[['今天',0],['明天',1],['後天',2],['下週一',(8-pd(today()).getDay())%7||7]].map(([n,d])=>`<button data-dd="${d}">${n}交</button>`).join('')}<button data-dd="x">不設定</button></div>
+  ${st.split?'':`<button class="tg${D.g?' on':''}" id="eg"><i>${D.g?'✓':''}</i><span>要打分數（考卷、小考）</span></button>`}
+  <label class="f" style="${D.g||st.split?'':'display:none'}"><span>滿分</span><input id="ef" type="number" inputmode="decimal" min="1" value="${E(D.full)}"></label>
   <label class="f"><span>備註</span><textarea id="en" placeholder="例如：要家長簽名">${E(D.note)}</textarea></label>
   <div class="foot">${old?'<button class="bt bad" id="edl">刪除</button>':'<span></span>'}<button class="go" id="esv">${old?'儲存':'出作業'}</button></div>`,p=>{
   p.querySelectorAll('[data-pc]').forEach(b=>b.onclick=()=>{pull(p);const c=b.dataset.pc;st.cs=st.cs.includes(c)?st.cs.filter(x=>x!==c):[...st.cs,c];refresh(draw)});
@@ -1857,7 +1871,10 @@ function taskEdit(id,pre){
   p.querySelectorAll('[data-pk]').forEach(b=>b.onclick=()=>{p.querySelector('#ec').value='';pull(p);const c=S.cats.find(x=>x.n===b.dataset.pk);D.cat=c.n;D.g=c.g;refresh(draw)});
   p.querySelector('#ec').oninput=e=>{if(e.target.value.trim())p.querySelectorAll('[data-pk].on').forEach(b=>b.classList.remove('on'))};
   p.querySelectorAll('[data-dd]').forEach(b=>b.onclick=()=>{pull(p);D.due=b.dataset.dd==='x'?'':addD(today(),+b.dataset.dd);refresh(draw)});
-  p.querySelector('#eg').onclick=()=>{pull(p);D.g=D.g?0:1;refresh(draw)};
+  const eg=p.querySelector('#eg');if(eg)eg.onclick=()=>{pull(p);D.g=D.g?0:1;refresh(draw)};
+  const esp=p.querySelector('#esp');if(esp)esp.onclick=()=>{pull(p);st.split=!st.split;refresh(draw)};
+  const epad=p.querySelector('#epad');if(epad)epad.onclick=()=>{pull(p);const l=st.parts[st.parts.length-1];st.parts.push({t:'',due:l&&l.due?nextDay(l.due):addD(today(),1)});refresh(draw)};
+  p.querySelectorAll('[data-prm]').forEach(b=>b.onclick=()=>{pull(p);if(st.parts.length>2)st.parts.splice(+b.dataset.prm,1);else toast('至少要分兩次');refresh(draw)});
   p.querySelector('#esv').onclick=()=>{
    pull(p);
    if(!D.cat&&!D.title){toast('請選作業種類或填範圍');return}
@@ -1865,6 +1882,15 @@ function taskEdit(id,pre){
    try{localStorage.setItem('sch-sub',JSON.stringify({sub:D.sub,cat:D.cat}))}catch(e){}
    const now=Date.now();
    if(old){op(()=>{const x=task(id);Object.assign(x,{sub:D.sub,cat:D.cat,title:D.title,d:D.d,due:D.due,g:D.g,full:D.full,note:D.note,u:now})},'已儲存');return back()}
+   if(st.split){
+    const P=st.parts.filter(x=>x.t);if(P.length<2)return toast('請填至少兩次的範圍');
+    const last=P.map(x=>x.due||D.d).sort().pop(),name=D.title||P.map(x=>x.t).join('、');
+    op(()=>st.cs.forEach(c=>{const L=TK[c]||(TK[c]=[]),pid=nid(),ids=P.map(()=>nid());
+     P.forEach((x,k)=>L.push({id:ids[k],sub:D.sub,cat:D.cat,title:x.t,d:D.d,due:x.due||D.d,g:0,full:100,note:D.note,pg:pid,r:{},af:1,t:now+k,u:now}));
+     L.push({id:pid,sub:D.sub,cat:D.cat,title:name,d:D.d,due:last,g:1,full:D.full,note:D.note,pts:ids,r:{},af:1,t:now+P.length,u:now});
+    }),'已出作業，分 '+P.length+' 次寫，最後打一個總分');
+    return back();
+   }
    const ids=[];
    op(()=>st.cs.forEach(c=>{const nid_=nid();ids.push(nid_);(TK[c]||(TK[c]=[])).push({id:nid_,sub:D.sub,cat:D.cat,title:D.title,d:D.d,due:D.due,g:D.g,full:D.full,note:D.note,r:{},af:1,t:now,u:now})}),st.cs.length>1?'已出給 '+st.cs.length+' 個班':'已出作業「'+tName(D)+'」');
    if(pre&&pre._kp&&D.g&&st.cs.length===1&&st.cs[0]===cls().id)return kpSheet(ids[0]);
@@ -1873,6 +1899,29 @@ function taskEdit(id,pre){
   const dl_=p.querySelector('#edl');
   if(dl_)dl_.onclick=()=>{if(!confirm('確定要刪除「'+tName(old)+'」？全班這份作業的紀錄、分數都會刪除。'))return;op(()=>{TK[cls().id]=tasks().filter(x=>x.id!==id)},'已刪除作業');closeAll(()=>{if(PG.v==='task')goBack()})};
  });
+ draw();
+}
+// 把已經出好的幾次作業合併成一個總分
+function mergeSheet(id){
+ const t0=task(id);if(!t0)return back();
+ const C=tasks().filter(x=>!x.g&&!x.sl&&!isTot(x)&&!x.pg).sort((a,b)=>tDate(a)<tDate(b)?1:tDate(a)>tDate(b)?-1:0).slice(0,40);
+ const st={sel:[id],name:'',full:100};
+ const draw=()=>{
+  const sel=C.filter(x=>st.sel.includes(x.id)).sort((a,b)=>(a.due||a.d)<(b.due||b.d)?-1:1);
+  sheet(`<h3>合併成一個分數</h3><div class="ps">勾選要合在一起的每一次（每一次還是會分開登記交了沒），最後打一個總分。</div><div style="height:10px"></div>
+   <div class="box list" style="padding:2px 10px;max-height:46vh;overflow:auto">${C.map(x=>`<button class="lr" data-ms="${x.id}"><span class="ck${st.sel.includes(x.id)?' on':''}" style="display:grid;place-items:center">${st.sel.includes(x.id)?'✓':''}</span><span class="lt">${E(tName(x))}<small>${E(x.sub)} · ${x.due?md(x.due)+' 交':md(x.d)+' 出'}</small></span></button>`).join('')}</div>
+   <label class="f" style="margin-top:12px"><span>總分的名稱</span><input id="mn" value="${E(st.name)}" placeholder="${E(sel.length?(sel[0].cat||sel[0].sub)+' '+sel.map(x=>x.title).filter(Boolean).join('、'):'例如：數學習作 p.30–35')}" autocomplete="off"></label>
+   <label class="f"><span>滿分</span><input id="mf" type="number" inputmode="decimal" value="${st.full}"></label>
+   <div class="foot"><span class="ps">已選 ${sel.length} 次</span><button class="go" id="msv">合併</button></div>`,p=>{
+   const pull=()=>{st.name=p.querySelector('#mn').value.trim();st.full=+p.querySelector('#mf').value>0?+p.querySelector('#mf').value:100};
+   p.querySelectorAll('[data-ms]').forEach(b=>b.onclick=()=>{pull();const k=b.dataset.ms;st.sel=st.sel.includes(k)?st.sel.filter(x=>x!==k):[...st.sel,k];refresh(draw)});
+   p.querySelector('#msv').onclick=()=>{pull();if(sel.length<2)return toast('至少選兩次');
+    const pid=nid(),f=sel[0],now=Date.now(),name=st.name||sel.map(x=>x.title).filter(Boolean).join('、');
+    op(()=>{sel.forEach(x=>{task(x.id).pg=pid});tasks().push({id:pid,sub:f.sub,cat:st.name?st.name:f.cat,title:st.name?'':sel.map(x=>x.title).filter(Boolean).join('、'),d:sel.map(x=>x.d).sort()[0],due:sel.map(x=>x.due||x.d).sort().pop(),g:1,full:st.full,note:'',pts:sel.map(x=>x.id),r:{},af:1,t:now,u:now})},'已合併 '+sel.length+' 次，在這裡打總分');
+    closeAll(()=>go({v:'task',id:pid}));
+   };
+  });
+ };
  draw();
 }
 // 可以複製的文字（貼到 LINE、聯絡簿）
@@ -2114,6 +2163,9 @@ function onClick(e){
  if(a==='lps'){LPS=ds.v;return render()}
  if(a==='calm'){if(ds.v==='0'){CALM=today().slice(0,7);CALD=today()}else{const [y,m]=CALM.split('-').map(Number),x=new Date(y,m-1+(+ds.v),1);CALM=ymd(x).slice(0,7)}return render()}
  if(a==='cald'){CALD=ds.v;return render()}
+ if(a==='merge')return openS(()=>mergeSheet(ds.id));
+ if(a==='unmerge'){const t=task(ds.id);if(!t)return;const hasSc=Object.keys(t.r).length;if(!confirm('取消合併？'+(hasSc?'總分的分數會刪除，':'')+'每一次的作業和登記都會留著。'))return;
+  op(()=>{const L=tasks();L.forEach(x=>{if(x.pg===t.id)x.pg=''});TK[cls().id]=L.filter(x=>x.id!==t.id)},'已取消合併');return goBack()}
  if(a==='slnew')return openS(()=>slipSheet(null));
  if(a==='sledit')return openS(()=>slipSheet(ds.id));
  if(a==='slip'){SLD=today();return go({v:'slip',id:ds.id})}
