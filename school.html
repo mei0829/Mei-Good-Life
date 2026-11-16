@@ -383,7 +383,7 @@ function fixTasks(a){
  return arr(a).filter(t=>t&&(t.cat||t.title)).map(t=>{
   const r={};Object.keys(t.r&&typeof t.r==='object'?t.r:{}).forEach(k=>{const x=fixRec(t.r[k]);if(Object.keys(x).length)r[k]=x});
   return {id:t.id||nid(),sub:String(t.sub||'其他'),cat:String(t.cat||''),title:String(t.title||''),d:DT.test(t.d)?t.d:today(),due:DT.test(t.due)?t.due:'',
-   g:t.g?1:0,full:+t.full>0?+t.full:100,note:t.note||'',m:t.m?1:0,sl:t.sl?1:0,gd:DT.test(t.gd)?t.gd:'',ex:t.ex!=null?(t.ex?1:0):(t.g&&/考|測驗/.test(String(t.cat||'')+String(t.title||''))?1:0),pts:arr(t.pts).map(String),pg:String(t.pg||''),op:arr(t.op).map(String).filter(Boolean).slice(0,6),r,af:1,t:+t.t||Date.now(),u:+t.u||Date.now()};
+   g:t.g?1:0,full:+t.full>0?+t.full:100,note:t.note||'',m:t.m?1:0,sl:t.sl?1:0,gd:DT.test(t.gd)?t.gd:'',ex:t.ex!=null?(t.ex?1:0):(t.g&&/考|測驗/.test(String(t.cat||'')+String(t.title||''))?1:0),pts:arr(t.pts).map(String),pg:String(t.pg||''),sgf:String(t.sgf||''),sgt:String(t.sgt||''),op:arr(t.op).map(String).filter(Boolean).slice(0,6),r,af:1,t:+t.t||Date.now(),u:+t.u||Date.now()};
  }).map((x,i)=>{const o=arr(a).filter(t=>t&&(t.cat||t.title))[i];if(!o.af)Object.keys(x.r).forEach(k=>{const r=x.r[k];if(r.c!==undefined&&!r.f){if(r.c>=x.full){r.f=2;r.fa=r.a||today()}else r.f=1}});return x});
 }
 let S=fixMeta({classes:[]}),TK={};
@@ -435,7 +435,9 @@ function setR(t,sid,p){
  const r=fixRec({...R(t,sid),...p});
  if(Object.keys(r).length)t.r[sid]=r;else delete t.r[sid];
  t.u=Date.now();
+ if(t.sgf&&p.s===1){const e=findT(t.sgf);if(e&&R(e,sid).f===1){e.r[sid]={...R(e,sid),f:2,fa:p.a||today()};e.u=Date.now()}}
 }
+const findT=id=>{for(const L of Object.values(TK)){const x=L.find(t=>t.id===id);if(x)return x}return null};
 // 某個學生還沒完成的：到期沒交、還沒訂正
 function owes(sid,d){
  return tasks().filter(t=>missing(t,sid,d)||fixing(t,sid)).sort((a,b)=>tDate(a)<tDate(b)?-1:tDate(a)>tDate(b)?1:0).map(t=>({t,miss:missing(t,sid,d),fix:fixing(t,sid)}));
@@ -754,12 +756,15 @@ function taskView(id){
   ${(()=>{const P=isTot(t)?t.pts.map(task).filter(Boolean):[],par=t.pg?task(t.pg):null;
    if(P.length)return `<div class="prt">這是 ${P.length} 次作業合起來的總分：${P.map((x,k)=>`<a href="#" data-a="task" data-id="${x.id}">第 ${k+1} 次 ${E(x.title||tName(x))}${x.due?'（'+md(x.due)+'）':''}</a>`).join('、')}<button class="cb2" data-a="unmerge" data-id="${id}">取消合併</button></div>`;
    if(par)return `<div class="prt">這是「<a href="#" data-a="task" data-id="${par.id}">${E(tName(par))}</a>」的第 ${par.pts.indexOf(t.id)+1} 次，分數在總分那裡打。</div>`;
+   const sg=t.sgt?task(t.sgt):null,ex=t.sgf?task(t.sgf):null;
+   if(ex)return `<div class="prt">這是「<a href="#" data-a="task" data-id="${ex.id}">${E(tName(ex))}</a>」發回去訂簽的。交回來的人，考卷的訂正會自動變成「完成」。</div>`;
+   if(t.g)return sg?`<div class="prt">📤 已發回訂簽：${md(sg.d)} 發回 · ${sg.due?mdw(sg.due)+' 交回':''} · 已收 ${ss.filter(s=>isIn(R(sg,s.id))).length}/${ss.length}　<a href="#" data-a="task" data-id="${sg.id}">看訂簽名單 ›</a></div>`:`<button class="bt" data-a="sgnew" data-id="${id}" style="margin-top:10px;width:100%">📤 發回訂簽（帶回家訂正、簽名）</button>`;
    return !t.g&&!t.sl?`<button class="bt sm" data-a="merge" data-id="${id}" style="margin-top:10px">把好幾次作業合併成一個分數</button>`:'';})()}
-  <div class="tw"><table class="t"><thead><tr><th>座號</th><th>姓名</th><th>${isTot(t)?'各次':'繳交'}</th>${t.g?'<th>分數</th>':''}<th>訂正</th></tr></thead><tbody>
+  <div class="tw"><table class="t"><thead><tr><th>座號</th><th>姓名</th><th>${isTot(t)?'各次':'繳交'}</th>${t.g?'<th>分數</th>':''}<th>訂正</th>${t.sgt&&task(t.sgt)?'<th>訂簽</th>':''}</tr></thead><tbody>
   ${rows.map(s=>{const r=R(t,s.id);return `<tr><td class="n">${z2(s.no)}</td><td><button class="lk" data-a="rec" data-t="${id}" data-s="${s.id}">${E(s.name)}${r.f&&r.p?`<small>${E(r.p)}</small>`:''}${r.n?`<small style="color:var(--sub)">📝 ${E(r.n)}</small>`:''}</button></td>
    <td>${isTot(t)?`<span class="ptm">${t.pts.map(task).filter(Boolean).map((x,k)=>{const q=R(x,s.id);return `<i class="${isIn(q)?'y':missing(x,s.id)?'n':''}" title="第 ${k+1} 次">${k+1}</i>`}).join('')}</span>`:`<button class="cell" data-a="tog" data-t="${id}" data-s="${s.id}">${subPill(t,s.id)}</button>`}</td>
    ${t.g?`<td><button class="cell" data-a="kp" data-id="${id}" data-s="${s.id}"><b class="${r.c!==undefined?scCls(r.c/t.full*100):'sub'}">${r.c!==undefined?r.c:'—'}</b></button></td>`:''}
-   <td><button class="cell" data-a="cfx" data-t="${id}" data-s="${s.id}">${fixPill(t,s.id)}</button></td></tr>`}).join('')||`<tr><td colspan="5" class="empty">沒有符合的學生</td></tr>`}
+   <td><button class="cell" data-a="cfx" data-t="${id}" data-s="${s.id}">${fixPill(t,s.id)}</button></td>${t.sgt&&task(t.sgt)?`<td><button class="cell" data-a="tog" data-t="${t.sgt}" data-s="${s.id}">${isIn(R(task(t.sgt),s.id))?pill('ok','交回'):missing(task(t.sgt),s.id)?pill('bad','沒交'):pill('','還沒')}</button></td>`:''}</tr>`}).join('')||`<tr><td colspan="5" class="empty">沒有符合的學生</td></tr>`}
   </tbody></table></div></div>
   <div class="ps">點「已交／未交」「訂正」就能切換；點名字可以改交的日期、寫訂正哪幾頁、聯絡簿、免交。</div>
   <button class="bt wide" data-a="tcopy" data-id="${id}" style="margin-top:12px">＋ 再出一份類似的（例如下一課）</button>`;
@@ -1905,6 +1910,22 @@ function taskEdit(id,pre){
  draw();
 }
 // 把已經出好的幾次作業合併成一個總分
+function sgSheet(id){
+ const e=task(id);if(!e)return back();
+ const st={due:nextDay(today())};
+ const draw=()=>sheet(`<h3>發回訂簽</h3><div class="ps">${E(tName(e))} · 帶回家訂正、請家長簽名，再交回來</div><div style="height:10px"></div>
+  <label class="f"><span>哪天要交回</span><input id="sgd" type="date" value="${st.due}"></label>
+  <div class="quick" style="margin:-6px 0 12px">${[['明天',1],['後天',2],['下週一',(8-pd(today()).getDay())%7||7]].map(([n,v])=>`<button data-dd="${v}">${n}</button>`).join('')}</div>
+  <div class="ps">會自動：今天的聯絡簿加上「${E(tName(e))} 訂簽」；交回那天出現在今天要批改、投影提醒沒交的；交回的人，訂正自動變成完成。</div>
+  <div class="foot"><span></span><button class="go" id="sgsv">發回</button></div>`,p=>{
+  p.querySelectorAll('[data-dd]').forEach(b=>b.onclick=()=>{st.due=addD(today(),+b.dataset.dd);refresh(draw)});
+  p.querySelector('#sgsv').onclick=()=>{
+   const due=p.querySelector('#sgd').value||st.due,nid_=nid(),now=Date.now();
+   op(()=>{const x=task(id);tasks().push({id:nid_,sub:x.sub,cat:x.cat,title:(x.title?x.title+' ':'')+'訂簽',d:today(),due,g:0,ex:0,full:100,note:'帶回家訂正、簽名',sgf:x.id,r:{},af:1,t:now,u:now});x.sgt=nid_},'已發回訂簽，'+md(due)+' 交回');back();
+  };
+ });
+ draw();
+}
 function mergeSheet(id){
  const t0=task(id);if(!t0)return back();
  const C=tasks().filter(x=>!x.g&&!x.sl&&!isTot(x)&&!x.pg).sort((a,b)=>tDate(a)<tDate(b)?1:tDate(a)>tDate(b)?-1:0).slice(0,40);
@@ -2166,6 +2187,7 @@ function onClick(e){
  if(a==='lps'){LPS=ds.v;return render()}
  if(a==='calm'){if(ds.v==='0'){CALM=today().slice(0,7);CALD=today()}else{const [y,m]=CALM.split('-').map(Number),x=new Date(y,m-1+(+ds.v),1);CALM=ymd(x).slice(0,7)}return render()}
  if(a==='cald'){CALD=ds.v;return render()}
+ if(a==='sgnew')return openS(()=>sgSheet(ds.id));
  if(a==='merge')return openS(()=>mergeSheet(ds.id));
  if(a==='unmerge'){const t=task(ds.id);if(!t)return;const hasSc=Object.keys(t.r).length;if(!confirm('取消合併？'+(hasSc?'總分的分數會刪除，':'')+'每一次的作業和登記都會留著。'))return;
   op(()=>{const L=tasks();L.forEach(x=>{if(x.pg===t.id)x.pg=''});TK[cls().id]=L.filter(x=>x.id!==t.id)},'已取消合併');return goBack()}
