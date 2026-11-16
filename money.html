@@ -341,7 +341,7 @@ function shopField(o){const used=shopUsed(),top=[...new Set(used.concat(['7-ELEV
  ${U.shopAll?SHOPS.map(([g,ns])=>`<div class="sub" style="margin:8px 0 2px">${g}</div><div class="chips">${ns.map(n=>`<button class="chip ${o.shop===n?'on':''}" data-a="shop" data-i="${E(n)}">${E(n)}</button>`).join('')}</div>`).join(''):''}`}
 function txLine(t){
  const a=A(t.acct),to=A(t.to),x=t.type==='xfer';
- return`<div class="li" data-a="edtx" data-i="${t.id}"><div class="ic">${E(x?'轉':(t.cat||'?').slice(0,1))}</div><div class="sp"><div>${E(t.note||(x?'轉帳':t.cat)||'')}</div><div class="sub">${x?E(nm(a)+' → '+nm(to)):E(t.cat||'')+(t.sub?'・'+E(t.sub):'')+(t.shop?' · '+PIN+E(t.shop):'')+' · '+E(nm(a))}${t.bill?' · 帳單':''}${t.src&&t.src!=='m'&&t.src!=='fix'?' · 匯入':''}${lentOf(t.id)?' · 幫人代墊 '+M(lentOf(t.id))+'，自己 '+M(myA(t)):''}${t.iou&&t.type==='in'?' · 朋友還錢，不算收入':''}${t.fee?' · 含手續費 '+M(t.fee):''}</div>${stPill(t)}</div><div class="num ${t.type==='in'?'in':''}">${t.type==='in'?'+':x?'':'−'}${M(t.amt)}</div></div>`;
+ return`<div class="li" data-a="edtx" data-i="${t.id}"><div class="ic">${E(x?'轉':(t.cat||'?').slice(0,1))}</div><div class="sp"><div>${E(t.note||(x?'轉帳':t.cat)||'')}</div><div class="sub">${x?E(nm(a)+' → '+nm(to)):E(t.cat||'')+(t.sub?'・'+E(t.sub):'')+(t.shop?' · '+PIN+E(t.shop):'')+' · '+E(nm(a))}${t.bill?' · 帳單':''}${t.src&&t.src!=='m'&&t.src!=='fix'?' · 匯入':''}${lentOf(t.id)?' · 幫人代墊 '+M(lentOf(t.id))+'，自己 '+M(myA(t)):''}${t.iou&&t.type==='in'?' · 朋友還錢，不算收入':''}${t.fee?' · 含手續費 '+M(t.fee):''}${t.inst?' · 分期 '+t.inst.n+'/'+t.inst.of:''}</div>${stPill(t)}</div><div class="num ${t.type==='in'?'in':''}">${t.type==='in'?'+':x?'':'−'}${M(t.amt)}</div></div>`;
 }
 function vTx(){
  const q=U.q.toLowerCase(),fc=isCard(A(U.fa))&&U.fs,xs=S.tx.filter(t=>t.d.startsWith(U.mon)&&(!U.fa||t.acct===U.fa||t.to===U.fa)&&(!fc||(txStatus(t)||{}).k===U.fs)&&(!q||((t.note||'')+' '+(t.cat||'')+' '+(t.sub||'')+' '+(t.shop||'')).toLowerCase().includes(q)))
@@ -734,6 +734,7 @@ const HELP=[
  ['idea','賺錢點子筆記',['idea'],`「更多 → <b>賺錢點子</b>」：想到、看到能賺錢的方法，在黃色便條打一句話按「記下」就好。<br>點進去可以補預估每月可賺、要先花多少、每週幾小時（會算時薪，跟正職比）、下一步、筆記。<br>進度：想法 → 研究中 → 進行中 → 有在賺；不做的改「先放著」。上面會顯示進行中的點子每月預估可以多賺多少。<br>不知道值不值得做？點進去按「<b>🔎 請 AI 幫我研究這個點子</b>」：AI 會上網查行情，告訴你大概能賺多少、要先花多少、每週要幾小時、怎麼開始、要注意什麼。看完按「<b>把結果填進下面</b>」，數字和下一步就會自動填好，再按「儲存」。`],
  ['check','對帳便條（每週看一次真實帳戶）',['check','home'],`「更多 → <b>對帳便條</b>」：像便條紙一樣列出所有帳戶。打開網銀 App，看過一個、數字對了就點一下打勾；點錯再點一下就取消。<br>數字不對就按「更新餘額」改成真的數字。<br>全部勾完會自動記下檢核時間，下面有檢核紀錄。超過 7 天沒對帳，總覽會出現黃色便條提醒。`],
  ['trip','旅遊、買東西要預存（單次目標）',['bills'],`想為一次旅遊、一個大東西先存錢：<br>1. 設定 → 帳戶 → 新增一個帳戶（例如「國泰 旅遊」，網銀子帳戶最好），勾「<b>📦 預存帳戶</b>」，這筆錢就不會被當成可以花的。<br>2. 固定收支 → 新增「<b>旅遊基金</b>」：從薪水帳戶轉到旅遊帳戶、每次存多少、<b>目標金額</b>、<b>存到哪天</b>（出發日）。<br>3. 進度條會顯示存了多少，還會算「還有幾次、每次要存多少」，不夠會提醒你。<br>4. 出發後在旅遊帳戶記花費，那時才算支出。玩完把這個固定項目刪掉就好。`],
+ ['inst','刷卡分期怎麼記？每期金額怎麼改？',['tx'],`記一筆刷卡時，金額填<b>總金額</b>，按「<b>＋ 這筆是分期付款</b>」，選幾期（3、6、12…），會自動拆成每個月一筆，第 1 期吸收除不盡的零頭。<br>每一期的<b>日期和金額都可以改</b>，跟銀行帳單不一樣就直接改那一期；按「重新平均分配」可以重算。<br>之後在記帳頁點任何一期，會打開整筆分期，可以一起改所有期；刪除會刪掉全部期。<br>每期會算進那個月的卡費和支出，所以每個月只算那一期的錢。<br>（在「固定收支」記的分期也可以：改金額會套用到之後每一期；單一期不一樣，就在記帳頁改那一筆。）`],
  ['vary','停車費、電費這種金額不固定的，怎麼記？',['bills'],`<b>不用每次停車都記。</b>停車費是政府代扣、每個月扣一次，這樣做：<br>1. 固定收支 → 停車費：金額填<b>大概的月平均</b>（例如 1,500），勾「<b>金額每次不一樣</b>」。<br>2. 這個平均金額會被算進「未來要準備多少錢」，網站會<b>自動幫你預留</b>，不用另外轉帳存。<br>3. 真的扣款後（看信用卡或銀行 App），按「<b>已扣款，填實際金額</b>」，輸入真的扣了多少和<b>扣款日</b>（預設是這期的日子，提早或延後扣的話改成真的那天），就記好了。<br>4. 從哪個帳戶扣就選哪個（例如中油卡），錢就從那裡算。<br>⚠︎ 如果你是<b>每次停車自己付</b>（繳費機、App），那就每次記一筆、<b>不要</b>加固定項目，避免重複；想控制就到「預算」幫停車費設上限。`],
  ['excl','🔒 不算進總資產 去哪了？（已合併到 📒 獨立帳本）',['set','book','home'],`以前的「🔒 不算進總資產」已經合併到「<b>📒 獨立帳本</b>」，原本勾 🔒 的帳戶都自動變成獨立帳本。<br>勾了 📒 的帳戶：<b>不算進總資產</b>、真的可以花的錢，<b>收支也另外記</b>，不混進記帳統計、預算、圖表，在「更多 → 獨立帳本」看。<br>適合：爸媽給的錢、代管的錢、副業專用帳戶。`],
  ['book','爸媽帳戶、副業：獨立帳本',['book','set'],`想把某個帳戶的錢單獨拉出來記（例如第一銀行・爸媽：爸媽轉進來、副業收入，拿去買股票、繳儲蓄險）：<br>1. 設定 → 帳戶 → 點那個帳戶，勾「<b>📒 獨立帳本</b>」。<br>2. 「更多 → 獨立帳本」就會看到：現在有多少、每個月進出多少、錢從哪裡來、從這裡買的股票、固定扣的儲蓄險、明細。<br>3. 這個帳戶的收支<b>不會混進</b>日常花費、預算、圖表。<br>記收入時分類可以選「家人贊助」或「副業」。買股票記交易時，扣款帳戶選這個帳戶。`],
@@ -1511,6 +1512,15 @@ function cardNote(o){
 }
 // 刷卡手續費：存的時候「金額」＝消費＋手續費（帳單上就是這樣），另外記住手續費是多少
 const feeTot=o=>{const f=pAmt(o.fee)||0,a=pAmt(o.amt)||0;return f>0?'卡費會算 '+M(a+f)+'（消費 '+M(a)+' ＋ 手續費 '+M(f)+'）':''};
+// 刷卡分期：拆成每個月一筆（每筆都是那個月的刷卡），每期金額都可以改；第 1 期多吸收除不盡的零頭
+function instMake(tot,n,d){n=Math.max(2,Math.min(60,n|0));const base=Math.floor(tot/n),r=Math.round((tot-base*n)*100)/100;return Array.from({length:n},(_,i)=>({d:addM(d,i),amt:String(i?base:base+r)}))}
+const instSum=o=>(o.inst||[]).reduce((a,x)=>a+(pAmt(x.amt)||0),0);
+function instField(o){if(!o.inst)return`<div style="margin-top:8px"><button class="go q" data-a="instOn">＋ 這筆是分期付款</button></div>`;
+ const n=o.inst.length;return`<div class="card" style="margin:8px 0 0;padding:10px 12px"><div class="row"><b class="sp">分期付款</b><select data-m="sheet.o.instN" data-n="1" data-r="1" style="width:auto">${[3,6,10,12,18,24,30,36].concat([3,6,10,12,18,24,30,36].includes(n)?[]:[n]).sort((a,b)=>a-b).map(k=>`<option value="${k}" ${k===n?'selected':''}>${k} 期</option>`).join('')}</select><button class="x" data-a="instOff" aria-label="取消分期">×</button></div>
+ <div class="sub" style="margin:4px 0 6px">每期會記在那個月的刷卡，算進那一期帳單。金額跟銀行帳單不一樣的話，直接改那一期。</div>
+ ${o.inst.map((x,i)=>`<div class="row" style="gap:6px;margin-top:4px"><span class="sub" style="width:48px">第 ${i+1} 期</span><input type="date" value="${x.d}" data-m="sheet.o.inst.${i}.d" style="flex:1.2;min-width:0"><input inputmode="decimal" value="${E(x.amt)}" data-m="sheet.o.inst.${i}.amt" data-is="1" style="flex:1;min-width:0;text-align:right"></div>`).join('')}
+ <div class="row" style="margin-top:6px"><span class="sub sp" id="instsum">${instSumTxt(o)}</span><button class="go q" data-a="instEven">重新平均分配</button></div></div>`}
+const instSumTxt=o=>{const s=instSum(o),a=pAmt(o.amt)||0;return'合計 '+M(s)+(a&&Math.abs(s-a)>=0.5?'（跟上面的金額差 '+M(s-a)+'，例如利息）':'')};
 function sheetTx(o){
  const cs=S.cats[o.type==='in'?'in':'out'],x=o.type==='xfer',inc=o.type==='in',cd=o.type==='out'&&isCard(A(o.acct)),badInc=inc&&isCard(A(o.acct))&&o.cat!=='退款';
  const acs=(k,lbl)=>`<label class="fl"><span>${lbl}</span><select data-m="sheet.o.${k}" data-r="1">${S.accts.filter(a=>!(inc&&k==='acct'&&isCard(a)&&a.id!==o.acct)).map(a=>`<option value="${a.id}" ${o[k]===a.id?'selected':''}>${E(nm(a))}</option>`).join('')}</select></label>`;
@@ -1521,7 +1531,8 @@ function sheetTx(o){
  ${badInc?'<div class="note" style="border-color:var(--bad)">⚠︎ 收入不會進信用卡。薪資請把「帳戶」改成薪水匯進去的銀行帳戶。</div>':''}
  ${cd?`<div class="note" id="cardnote" style="margin-top:8px">${cardNote(o)}</div>
  <div class="row" style="gap:8px;margin-top:8px;align-items:flex-end"><label class="fl sp"><span>手續費（選填，例如海外刷卡、分期）</span><input inputmode="decimal" value="${E(o.fee||'')}" data-m="sheet.o.fee" data-fe="1" placeholder="0"></label><button class="go q" data-a="fee15">海外 1.5%</button></div>
- <div class="sub" id="feetot" style="text-align:right">${feeTot(o)}</div>`:''}
+ <div class="sub" id="feetot" style="text-align:right">${feeTot(o)}</div>
+ ${instField(o)}`:''}
  <label class="fl"><span>說明</span><input value="${E(o.note)}" data-m="sheet.o.note" data-g="1" placeholder="${x?'例：繳卡費、提款':'例：午餐、停車費'}"></label>
  ${x||o.cat==='薪資'?'':shopField(o)}
  ${o.type==='out'?lendField(o):''}
@@ -2085,7 +2096,7 @@ const ACT={
  bg:(i,el,e)=>{if(e.target===el){U.sheet=null;render()}},
  close:()=>{U.sheet=null;render()},
  addtx:i=>openTx({type:'out',amt:'',acct:A(S.lastAcct)?S.lastAcct:S.accts[0].id,to:'',cat:'',d:i||today(),note:''}),
- edtx:i=>{const t=S.tx.find(x=>x.id===i);if(t)openTx(Object.assign({to:''},t,t.fee?{amt:String(Math.round((t.amt-t.fee)*100)/100),fee:String(t.fee)}:{},{catSet:1,shopSet:!!t.shop,lend:S.iou.filter(x=>x.tx===t.id&&x.dir==='in').map(x=>({iid:x.id,who:x.who,amt:String(x.amt),back:x.back}))}))},
+ edtx:i=>{let t=S.tx.find(x=>x.id===i);if(t&&t.inst){const G=S.tx.filter(x=>x.inst&&x.inst.g===t.inst.g).sort((a,b)=>a.inst.n-b.inst.n);t=Object.assign({},G[0],{instG:t.inst.g,inst:G.map((x,j)=>({d:x.d,amt:String(j===0&&x.fee?Math.round((x.amt-x.fee)*100)/100:x.amt)})),instN:G.length,amt:String(t.inst.tot||G.reduce((a,x)=>a+x.amt,0))});if(t.fee)t.amt=String(+t.amt-t.fee)}if(t)openTx(Object.assign({to:''},t,t.fee?{amt:String(Math.round((t.amt-t.fee)*100)/100),fee:String(t.fee)}:{},{catSet:1,shopSet:!!t.shop,lend:S.iou.filter(x=>x.tx===t.id&&x.dir==='in').map(x=>({iid:x.id,who:x.who,amt:String(x.amt),back:x.back}))}))},
  cycfix:i=>{const c=A(U.cardId)||S.accts.find(isCard);U.sheet={k:'cycfix',o:{cid:c.id,close:i,v:''}};render()},
  cycfixsave:()=>{const o=U.sheet.o,c=A(o.cid),s=c&&cardInfo(c).by[o.close],v=pAmt(o.v);if(!s||!isFinite(v))return toast('請輸入銀行帳單金額');const d=Math.round((v-s.amt)*100)/100;if(Math.abs(d)<0.5)return toast('已經一樣了');
   const dt=cfDate(o.close);S.tx.push({id:nid(),d:dt,pd:dt,type:d>0?'out':'in',amt:Math.abs(d),acct:c.id,cat:d>0?reconCat():'退款',note:'照銀行金額修正',src:'fix',ts:Date.now()});U.sheet=null;save();render();toast('已修正成 '+M(v))},
@@ -2177,6 +2188,9 @@ const ACT={
  acctv:i=>{U.sheet={k:'acctv',o:{id:i,n:30}};render()},
  avmore:()=>{U.sheet.o.n+=30;render()},
  avadd:i=>{const a=A(i);openTx({type:'out',amt:'',acct:i,to:'',cat:'',d:today(),note:''})},
+ instOn:()=>{const o=U.sheet.o,a=pAmt(o.amt)||0;if(!a)return toast('先輸入總金額');o.inst=instMake(a,6,o.d||today());o.instN=6;render()},
+ instOff:()=>{const o=U.sheet.o;if(o.instG&&!confirm('取消分期？儲存後只會留下一筆，其他期會刪掉'))return;delete o.inst;render()},
+ instEven:()=>{const o=U.sheet.o,a=pAmt(o.amt)||0;if(!a)return toast('先輸入總金額');o.inst=instMake(a,o.inst.length,o.inst[0]&&o.inst[0].d||o.d||today());render()},
  fee15:()=>{const o=U.sheet.o,a=pAmt(o.amt)||0;if(!a)return toast('先輸入金額');o.fee=String(Math.round(a*0.015));const f=document.querySelector('[data-m="sheet.o.fee"]');if(f)f.value=o.fee;const n=$('feetot');if(n)n.textContent=feeTot(o)},
  sa:i=>{U.sa=i;render()},
  bkadd:()=>{U.sheet={k:'broker',o:{pick:'',name:'',no:'',acct:U.sa&&U.sa.startsWith('a:')?U.sa.slice(2):'',note:''}};render()},
@@ -2266,10 +2280,15 @@ const ACT={
   if(L.some(x=>!x.who||!(x.amt>0)))return toast('代墊要填是誰和金額');if(L.reduce((a,x)=>a+x.amt,0)>amt+0.001)return toast('代墊的錢不能比這筆還多');
   const keep=new Set(L.map(x=>x.iid).filter(Boolean));S.iou=S.iou.filter(x=>!(x.tx===t.id&&x.dir==='in'&&!keep.has(x.id)));
   L.forEach(l=>{const x=l.iid&&S.iou.find(y=>y.id===l.iid);if(x)Object.assign(x,{who:l.who,amt:l.amt,d:t.d,note:t.note});else S.iou.push({id:nid()+Math.random().toString(36).slice(2,5),who:l.who,amt:l.amt,dir:'in',note:t.note,d:t.d,tx:t.id,back:[]})});
+  if(o.instG&&!o.inst){S.tx=S.tx.filter(x=>!(x.inst&&x.inst.g===o.instG&&x.id!==t.id));delete t.inst}
+  if(o.inst&&o.type==='out'&&isCard(A(o.acct))){const P=o.inst.map(x=>({d:x.d,amt:pAmt(x.amt)||0}));if(P.some(x=>!x.d||!(x.amt>0)))return toast('每一期都要有日期和金額');
+   const g=o.instG||nid(),old=S.tx.filter(x=>x.inst&&x.inst.g===g).sort((a,b)=>a.inst.n-b.inst.n),tot=P.reduce((a,x)=>a+x.amt,0);S.tx=S.tx.filter(x=>!(x.inst&&x.inst.g===g)&&x.id!==t.id);
+   P.forEach((x,i)=>{const y=Object.assign({},t,{id:i===0?t.id:(old[i]&&old[i].id)||nid()+i,d:x.d,pd:i===0&&t.pd?t.pd:x.d,amt:x.amt+(i===0?fee:0),inst:{g,n:i+1,of:P.length,tot:tot+fee}});if(i){delete y.fee}S.tx.push(y)});
+   S.lastAcct=o.acct;U.sheet=null;save();render();toast('已記下分期 '+P.length+' 期，共 '+M(tot));return}
   const k=S.tx.findIndex(x=>x.id===t.id);if(k>=0)S.tx[k]=t;else S.tx.push(t);
   S.lastAcct=o.acct;U.sheet=null;save();render();if(U.fromTrip&&U.fromTrip===o){U.fromTrip=0;setTimeout(()=>{if(history.length>1)history.back();else location.href='trip.html'},900)}const neg=[o.acct,o.to].map(A).find(a=>a&&!isCard(a)&&bal(a)<-0.5);
   toast(neg?neg.name+' 變成負的了，記得按「更新銀行餘額」填實際餘額':o.id?'已更新':'已記下 '+M(amt+fee))},
- deltx:()=>{const id=U.sheet.o.id;if(!confirm(S.iou.some(x=>x.tx===id)?'刪除這筆紀錄？（裡面的代墊也會一起刪）':'刪除這筆紀錄？'))return;S.tx=S.tx.filter(x=>x.id!==id);S.iou=S.iou.filter(x=>x.tx!==id);S.iou.forEach(x=>{if(x.back)x.back=x.back.filter(b=>b.tx!==id)});U.sheet=null;save();render()},
+ deltx:()=>{const id=U.sheet.o.id;if(U.sheet.o.instG){if(!confirm('刪除這筆分期？（全部 '+U.sheet.o.inst.length+' 期都會刪掉）'))return;S.tx=S.tx.filter(x=>!(x.inst&&x.inst.g===U.sheet.o.instG));U.sheet=null;save();render();return}if(!confirm(S.iou.some(x=>x.tx===id)?'刪除這筆紀錄？（裡面的代墊也會一起刪）':'刪除這筆紀錄？'))return;S.tx=S.tx.filter(x=>x.id!==id);S.iou=S.iou.filter(x=>x.tx!==id);S.iou.forEach(x=>{if(x.back)x.back=x.back.filter(b=>b.tx!==id)});U.sheet=null;save();render()},
  addbill:i=>{const p=PRESETS[+i]||{name:'',cat:'其他',freq:1};openBill({name:p.sub?'':p.name,sub:!!p.sub,warn:3,quit:false,autoRec:!!p.sub,kind:p.kind||'out',amt:'',freq:p.freq,next:p.sub?'':today(),end:'',sym:'',acct:p.kind||p.bank?firstBank():(p.auto&&S.accts.find(isCard)||A(firstBank())||S.accts[0]).id,cat:pickCat(p.cat,p.alt,p.kind,p.name),sc:!p.kind&&subsOf(pickCat(p.cat,p.alt,'',p.name)).includes(p.name)?p.name:'',auto:!!p.auto||p.kind==='inv',vary:!!p.vary,note:p.note||'',to:p.kind==='save'?saveTo(firstBank()):'',goal:''})},
  edbill:i=>{const b=S.bills.find(x=>x.id===i);if(b)openBill(Object.assign({},b,{winTo:+b.winDays?billLast(b):'',fund:(S.bills.find(x=>x.id===b.fb)||{}).to||''}))},
  bauto:i=>{const o=U.sheet.o;o.auto=i==='1';if(o.auto&&o.autoRec==null)o.autoRec=true;render()},
@@ -2465,6 +2484,8 @@ function field(e){
  if(el.dataset.fxm&&e.type==='change'){const v=pAmt(el.value);if(v>0){S.fx={USD:v,d:today(),auto:0};save();render()}return}
  if(el.dataset.pv){const n=$('pctpv');if(n)n.textContent=el.value?'＝ 每月 '+M(planInc()*(+el.value||0)/100):''}
  if(el.dataset.fe||el.dataset.hr){const n=$('feetot');if(n)n.textContent=feeTot(U.sheet.o)}
+ if(p==='sheet.o.instN'&&U.sheet.o.inst){const o=U.sheet.o;o.inst=instMake(pAmt(o.amt)||instSum(o),+o.instN,o.inst[0]&&o.inst[0].d||o.d||today())}
+ if(el.dataset.is){const n=$('instsum');if(n)n.textContent=instSumTxt(U.sheet.o)}
  if(el.dataset.hr){const n=$('fhrs');if(n)n.textContent=hrsLine(U.sheet.o)}
  if(el.dataset.cn){const n=$('cardnote');if(n)n.innerHTML=cardNote(U.sheet.o)}
  if(el.dataset.sq&&e.type==='input'){const n=$('subres');if(n)n.innerHTML=subRes(U.sheet.o)}
