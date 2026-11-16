@@ -278,6 +278,11 @@ i.r{background:var(--bad)}i.b{background:var(--blue)}i.g{background:var(--ok)}
 .ptm i.y{background:var(--oks);color:var(--ok)}.ptm i.n{background:var(--bads);color:var(--bad)}
 .drag{flex:none;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;color:var(--sub);font-size:16px;letter-spacing:-3px;padding:6px 6px 6px 0}
 .cbl.dragging{background:var(--blues);border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.12)}
+.bands{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin-top:12px}
+.bands button{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:6px 2px;text-align:center;line-height:1.2}
+.bands b{display:block;font-size:20px}.bands span{font-size:11px;color:var(--sub)}
+.bands button.on{background:var(--acc);border-color:var(--acc);color:var(--on)}.bands button.on span{color:var(--on)}
+.bands button.low b{color:var(--bad)}
 /* 班費 */
 .bar2{height:10px;border-radius:99px;background:var(--tile);overflow:hidden;margin-top:12px}.bar2 i{display:block;height:100%;background:var(--blue);border-radius:99px}
 .catr{display:flex;gap:10px;align-items:center;padding:7px 0}.catr span{width:48px;flex:none}.catr b{min-width:70px;text-align:right}
@@ -748,7 +753,14 @@ function taskView(id){
  const t=task(id);if(!t)return head('找不到這份作業','',0,1);
  const ss=stus(cls()),A=tStats(t,ss),f=PG.f||'all';
  const SG=t.sgt?task(t.sgt):null,XM=isExam(t);
- const rows=ss.filter(s=>f==='all'||(f==='sg'?SG&&!isIn(R(SG,s.id)):f==='miss'?!isIn(R(t,s.id)):R(t,s.id).f===1));
+ // 分數級距（換算成 100 分）、排序
+ const BANDS=[['100',100,1e9],['90–99',90,100],['80–89',80,90],['70–79',70,80],['60–69',60,70],['59 以下',-1e9,60]];
+ const pc=s=>{const c=R(t,s.id).c;return c===undefined?null:c/t.full*100},bandOf=s=>{const v=pc(s);return v==null?-1:BANDS.findIndex(([n,a,b])=>v>=a&&v<b)};
+ const BD=PG.bd==null?-1:+PG.bd,SO=PG.so||'no';
+ let rows=ss.filter(s=>f==='all'||(f==='sg'?SG&&!isIn(R(SG,s.id)):f==='miss'?!isIn(R(t,s.id)):R(t,s.id).f===1));
+ if(t.g&&BD>=0)rows=rows.filter(s=>bandOf(s)===BD);
+ if(t.g&&SO!=='no')rows=rows.slice().sort((a,b)=>{const x=pc(a),y=pc(b);if(x==null&&y==null)return 0;if(x==null)return 1;if(y==null)return -1;return SO==='desc'?y-x:x-y});
+ const scs=ss.map(pc).filter(v=>v!=null);
  return head(E(XM?'考 '+t.sub+' '+(t.title||t.cat):tName(t)),XM?`${E(t.sub)} · ${t.due?mdw(t.due)+' 考':''}`:`${E(t.sub)} · ${md(t.d)} 出 · ${t.due?mdw(t.due)+' 要交':'沒設定繳交日'}${t.g?' · 滿分 '+t.full:''}${t.note?'<br>📝 '+E(t.note):''}`,`<button class="bt sm" data-a="tedit" data-id="${id}">編輯</button>`,1)+
  `<div class="box">
   <div class="stats">${XM?(()=>{const sc=ss.filter(s=>R(t,s.id).c!==undefined).length;
@@ -756,6 +768,9 @@ function taskView(id){
    return `<button class="st1"><b>${sc}<small style="font-size:16px">/${A.n}</small></b><span>已打總分</span></button><button class="st2"><b>${all}<small style="font-size:16px">/${A.n}</small></b><span>每一次都交了</span></button>`})()
    :`<button class="st1" data-a="tf2" data-v="all"><b>${A.inn}<small style="font-size:16px">/${A.n}</small></b><span>已交</span></button><button class="st2" data-a="tf2" data-v="miss"><b>${A.miss.length}</b><span>尚未繳交</span></button>`}<button class="st3" data-a="tf2" data-v="fix"><b>${A.fix.length}</b><span>${A.avg!=null?'待訂正 · 平均 '+r1(A.avg):'待訂正'}</span></button></div>
   <div class="acts">${t.g?`<button class="go" data-a="kp" data-id="${id}">🧮 輸入分數</button>`:''}${A.miss.length&&!isTot(t)&&!XM?`<button class="bt" data-a="allin" data-t="${id}">其他人都交了</button>`:''}</div>
+  ${t.g&&scs.length?`<div class="bands">${BANDS.map(([n],i)=>{const k=ss.filter(s=>bandOf(s)===i).length;return `<button data-a="band" data-v="${i}" class="${BD===i?'on':''}${i===5&&k?' low':''}"><b>${k}</b><span>${n}</span></button>`}).join('')}</div>
+   <div class="ps" style="margin-top:6px">共 ${scs.length} 人有分數${scs.length<ss.length?'（'+(ss.length-scs.length)+' 人還沒登記）':''} · 平均 ${r1(scs.reduce((a,b)=>a+b,0)/scs.length)} · 最高 ${r1(Math.max(...scs))} · 最低 ${r1(Math.min(...scs))}${t.full!==100?'（換算成 100 分）':''}${BD>=0?' · <a href="#" data-a="band" data-v="'+BD+'">顯示全部</a>':''}</div>
+   <div class="segs" style="margin-top:10px">${[['no','依座號'],['desc','分數高→低'],['asc','分數低→高']].map(([v,n])=>`<button data-a="tso" data-v="${v}" class="${SO===v?'on':''}">${n}</button>`).join('')}</div>`:''}
   <div class="segs" style="margin-top:14px">${(XM?[['all','全部'],['fix','尚未訂正'],...(SG?[['sg','訂簽還沒收回']]:[])]:isTot(t)?[['all','全部'],['fix','尚未訂正']]:[['all','全部'],['miss','尚未繳交'],['fix','尚未訂正']]).map(([v,n])=>`<button data-a="tf2" data-v="${v}" class="${f===v?'on':''}">${n}</button>`).join('')}</div>
   ${(()=>{const P=isTot(t)?t.pts.map(task).filter(Boolean):[],par=t.pg?task(t.pg):null;
    if(P.length)return `<div class="prt">這是 ${P.length} 次作業合起來的總分：${P.map((x,k)=>`<a href="#" data-a="task" data-id="${x.id}">第 ${k+1} 次 ${E(x.title||tName(x))}${x.due?'（'+md(x.due)+'）':''}</a>`).join('、')}<button class="cb2" data-a="unmerge" data-id="${id}">取消合併</button></div>`;
@@ -2217,15 +2232,17 @@ function gradeData(cid,sub,from,to){
 function gradeCSV(cid,sub,from,to){
  const {c,ts,rows,colAvg}=gradeData(cid,sub,from,to);
  if(!ts.length)return toast('這段時間沒有成績');
- const out=[['座號','姓名',...ts.map(t=>md(tDate(t))+' '+(t.cat?'':t.sub+' ')+tName(t)+(t.full!==100?'（滿分'+t.full+'）':'')),'平均（換算100分）']];
+ const out=[['座號','姓名',...ts.map(t=>md(tDate(t))+' '+tName(t)+(t.full!==100?'（滿分'+t.full+'）':'')),'平均（換算100分）']];
  rows.forEach(r=>out.push([r.s.no,r.s.name,...r.v.map((v,i)=>v===undefined?(R(ts[i],r.s.id).s===2?'免':''):v),r.avg==null?'':r1(r.avg)]));
  out.push(['','班平均',...colAvg.map(a=>a==null?'':r1(a)),'']);
+ [['100',100,1e9],['90-99',90,100],['80-89',80,90],['70-79',70,80],['60-69',60,70],['59以下',-1e9,60]].forEach(([n,lo,hi])=>out.push(['',n+' 人數',...ts.map((t,i)=>rows.filter(r=>r.v[i]!==undefined&&r.v[i]/t.full*100>=lo&&r.v[i]/t.full*100<hi).length),'']));
+ out.push(['','有分數人數',...ts.map((t,i)=>rows.filter(r=>r.v[i]!==undefined).length),'']);
  download(fname(`${c.name}-${sub==='全部'?'全部科目':sub}成績-${from}到${to}`)+'.csv',csv(out),'text/csv');
 }
 function hwCSV(cid,sub,from,to){
  const c=S.classes.find(x=>x.id===cid),ss=stus(c),ts=(TK[cid]||[]).filter(t=>(sub==='全部'||t.sub===sub)&&tDate(t)>=from&&tDate(t)<=to).sort((a,b)=>tDate(a)<tDate(b)?-1:1);
  if(!ts.length)return toast('這段時間沒有作業');
- const out=[['座號','姓名',...ts.map(t=>md(tDate(t))+' '+(t.cat?'':t.sub+' ')+tName(t)),'沒交','遲交','要訂正']];
+ const out=[['座號','姓名',...ts.map(t=>md(tDate(t))+' '+tName(t)),'沒交','遲交','要訂正']];
  ss.forEach(s=>{let m=0,l=0,f=0;
   const cells=ts.map(t=>{const r=R(t,s.id),k=stOf(t,s.id);if(k==='late')l++;if(missing(t,s.id))m++;if(r.f===1)f++;
    return [k==='ok'?'✓':k==='late'?'遲交 '+md(r.a):k==='x'?'免交':missing(t,s.id)?'沒交':'',r.c!==undefined?r.c+'分':'',r.f===1?'待訂正'+(r.p?' '+r.p:''):r.f===2?'訂正完成':''].filter(Boolean).join(' ')});
@@ -2341,6 +2358,8 @@ function onClick(e){
  if(a==='df'){DF=ds.v;return render()}
  if(a==='bd'){BD=ds.v==='0'?today():addD(BD,+ds.v);return render()}
  if(a==='tf'){TF.sub=ds.v;return render()}
+ if(a==='band'){PG.bd=PG.bd!=null&&+PG.bd===+ds.v?null:+ds.v;try{history.replaceState({...history.state,pg:PG},'')}catch(x){}return render()}
+ if(a==='tso'){PG.so=ds.v;try{history.replaceState({...history.state,pg:PG},'')}catch(x){}return render()}
  if(a==='tf2'){PG.f=ds.v;try{history.replaceState({...history.state,pg:PG},'')}catch(x){}return render()}
  if(a==='gsub'){GF.sub=ds.v;return render()}
  if(a==='gr'){[GF.from,GF.to]=RANGE(ds.v);return render()}
