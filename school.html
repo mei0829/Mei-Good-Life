@@ -643,7 +643,7 @@ function homeCB(){
 function homeView(){
  const c=cls(),ss=stus(c),d=today();
  const F=[['day','每日繳交追蹤','今天誰沒交','day'],['cb','聯絡簿','早自修、作業、投影','cbk'],['forgot','沒帶紀錄','聯絡簿、作業沒帶','miss'],
-  ['exam','考試','出題、影印、考試日','exam'],['todo','我的待辦','學校要做的事','todo'],['tt','課表','調課、外出','cal'],
+  ['exam','考試','所有考試、成績、訂簽','exam'],['todo','我的待辦','學校要做的事','todo'],['tt','課表','調課、外出','cal'],
   ['stus','學生個人檔案','每個人的紀錄','stu'],['tasks','各科作業','習作、考卷、甲本','book'],['grade','成績管理','登記分數','chart'],
   ['fix','訂正進度','頁數、課次','check'],['export','成績匯出','依日期、科目下載','dl'],['money','班費與經費','班費、學扶花費','coin'],['slips','回條','提早交也能記','slip'],['cal','行事曆','哪天有作業、考試','cal'],['lp','上課紀錄','每節上了什麼','book']];
  // 今天要批改：每個班今天要交的（早自修、昨天聯絡簿上的作業…）
@@ -1457,13 +1457,32 @@ function exRow(x,d){
  const dn=x.k==='wr'?!!x.e.wrd:x.k==='pr'?!!x.e.prd:false,late=x.due<d;
  return `<div class="tdr${dn?' dn':''}">${x.k==='day'?'<span class="ck" style="border:0">📅</span>':`<button class="ck${dn?' on':''}" data-a="exck" data-id="${x.e.id}" data-k="${x.k}">${dn?'✓':''}</button>`}<button class="tdt" data-a="exed" data-id="${x.e.id}"><span>${E(x.x)}</span><small class="${late&&!dn?'bad':''}">${x.k==='wr'?'出題截止 '+dl(x.due):x.k==='pr'?'影印確認 '+dl(x.due):''}${x.k!=='day'?' · 考試 '+mdw(x.e.d):''}</small></button></div>`;
 }
+// 考試：所有考試都在這裡（各班的考試、小考，加上期中考、期末考）
+let EXS='全部';
 function examView(){
- const d=today(),L=PV.d.exams.slice().sort((a,b)=>a.d<b.d?-1:1),up=L.filter(e=>e.d>=d),past=L.filter(e=>e.d<d).reverse();
- const row=e=>`<button class="lr" data-a="exed" data-id="${e.id}"><span class="dt2"><b>${md(e.d)}</b><small>週${WK[pd(e.d).getDay()]}</small></span><span class="lt">${E(e.n)}<small>${e.d>=d?'還有 '+dayN(e.d)+' 天':'考完了'}${e.x?' · '+E(e.x):''}</small></span><span class="lp">${e.wr?pill(e.wrd?'ok':dayN(e.wd)<0?'bad':'warn',e.wrd?'出題 ✓':'出題截止 '+md(e.wd)):''}${e.pr?pill(e.prd?'ok':'',e.prd?'影印 ✓':'影印 '+md(e.pd)):''}</span></button>`;
- return head('考試','只有你自己看得到',`<button class="go sm" data-a="exnew">＋ 新增</button>`)+
-  `<div class="ps" style="margin-top:6px">記下期中考、期末考的日期。要出題的話，出題截止日會提早三週，前一週開始出現在待辦；考卷影印確認會在前三天出現在待辦。</div>
-  ${up.length?`<div class="h3">接下來</div><div class="box list">${up.map(row).join('')}</div>`:'<div class="box empty">還沒有考試<br><br><button class="go" data-a="exnew">＋ 新增考試</button></div>'}
-  ${past.length?`<div class="h3">考完的</div><div class="box list">${past.slice(0,10).map(row).join('')}</div>`:''}`;
+ const d=today(),multi=S.classes.length>1;
+ // 各班的考試
+ const cx=[];S.classes.forEach(c=>(TK[c.id]||[]).forEach(t=>{if(isExam(t))cx.push({k:'c',c,t,d:tDate(t),sub:t.sub})}));
+ // 期中考、期末考
+ const bx=PV.d.exams.map(e=>({k:'b',e,d:e.d,sub:''}));
+ const subs=[...new Set(cx.map(x=>x.sub))];if(EXS!=='全部'&&!subs.includes(EXS))EXS='全部';
+ const L=[...cx.filter(x=>EXS==='全部'||x.sub===EXS),...(EXS==='全部'?bx:[])];
+ const up=L.filter(x=>x.d>=d).sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0),past=L.filter(x=>x.d<d).sort((a,b)=>a.d<b.d?1:-1);
+ const db=x=>`<span class="dt2"><b>${md(x.d)}</b><small>週${WK[pd(x.d).getDay()]}</small></span>`;
+ const row=x=>{
+  if(x.k==='b'){const e=x.e;return `<button class="lr" data-a="exed" data-id="${e.id}">${db(x)}<span class="lt"><b>${E(e.n)}</b><small>${e.d>=d?(e.d===d?'今天':'還有 '+dayN(e.d)+' 天'):'考完了'}${e.x?' · '+E(e.x):''}</small></span><span class="lp">${e.wr?pill(e.wrd?'ok':dayN(e.wd)<0?'bad':'warn',e.wrd?'出題 ✓':'出題截止 '+md(e.wd)):''}${e.pr?pill(e.prd?'ok':'',e.prd?'影印 ✓':'影印 '+md(e.pd)):''}</span></button>`}
+  const {c,t}=x,ss=stus(c),sc=ss.filter(s=>R(t,s.id).c!==undefined),A=tStats(t,ss),sg=t.sgt?findT(t.sgt):null,sgn=sg?ss.filter(s=>isIn(R(sg,s.id))).length:0;
+  const tags=x.d>=d&&!sc.length?[pill('',x.d===d?'今天考':'還有 '+dayN(x.d)+' 天')]
+   :[pill(sc.length===ss.length?'ok':'warn','已登記 '+sc.length+'/'+ss.length),A.avg!=null?pill(scCls(A.avg)==='bad'?'bad':scCls(A.avg)==='ok'?'ok':'','平均 '+r1(A.avg)):'',A.fix.length?pill('bad','待訂正 '+A.fix.length):'',sg?pill(sgn===ss.length?'ok':sg.due<d?'bad':'','訂簽 '+sgn+'/'+ss.length):''];
+  return `<button class="lr" data-a="gtask" data-c="${c.id}" data-id="${t.id}">${db(x)}<span class="lt"><b>考 ${E(t.sub)} ${E(t.title||t.cat)}</b><small>${multi?E(c.name)+' · ':''}滿分 ${t.full}</small><span class="lp" style="justify-content:flex-start;margin-top:4px">${tags.join('')}</span></span><span class="ch">›</span></button>`;
+ };
+ return head('考試',multi?'所有班級的考試':'',`<button class="go sm" data-a="exq">＋ 出考試</button>`)+
+  `<div class="row" style="margin-top:10px"><button class="bt sm" data-a="exnew">＋ 期中考、期末考（出題、影印提醒）</button></div>
+  ${subs.length>1?`<div class="segs" style="margin-top:10px">${['全部',...subs].map(v=>`<button data-a="exs" data-v="${E(v)}" class="${EXS===v?'on':''}">${E(v)}</button>`).join('')}</div>`:''}
+  ${up.length?`<div class="h3">接下來的考試</div><div class="box list">${up.map(row).join('')}</div>`:''}
+  ${past.length?`<div class="h3">考完的</div><div class="box list">${past.slice(0,60).map(row).join('')}</div>`:''}
+  ${!up.length&&!past.length?'<div class="box empty">還沒有考試<br><br><button class="go" data-a="exq">＋ 出考試</button></div>':''}
+  <div class="ps" style="margin-top:8px">點考試看全班成績、級距、訂正、訂簽。期中考、期末考的出題截止日會提早三週，考卷影印確認會在考前三天出現在待辦。</div>`;
 }
 function examSheet(id){
  const old=id?PV.d.exams.find(e=>e.id===id):null;
@@ -2301,6 +2320,8 @@ function onClick(e){
   op(()=>setR(t,s.id,same?{s:0,o:''}:{s:1,a:SLD,o:t.op.length?SLO:''}),same?sLabel(s)+' 改回還沒交':null);return}
  if(a==='slcopy'){const t=task(ds.id),ss=stus(cls()),m=ss.filter(x=>!isIn(R(t,x.id)));return openS(()=>textSheet('回條還沒交',`${cls().name}　${t.title}${t.due?'（'+mdw(t.due)+' 截止）':''}\n還沒交：${m.map(x=>x.no!==''?x.no+' 號':x.name).join('、')}`))}
  if(a==='gtask'){CID=ds.c;try{localStorage.setItem('sch-cls',CID)}catch(x){}return go({v:'task',id:ds.id})}
+ if(a==='exq')return openS(()=>examEdit(null));
+ if(a==='exs'){EXS=ds.v;return render()}
  if(a==='exnew')return openS(()=>examSheet(null));
  if(a==='exed')return openS(()=>examSheet(ds.id));
  if(a==='exck'){const e=PV.d.exams.find(x=>x.id===ds.id);if(!e)return;const k=ds.k==='wr'?'wrd':'prd',on=!!e[k];pop(()=>{const x=PV.d.exams.find(y=>y.id===ds.id);x[k]=on?'':today()},on?'改回還沒做':ds.k==='wr'?'出題完成 ✓':'考卷影印好了 ✓');return}
