@@ -283,6 +283,7 @@ i.r{background:var(--bad)}i.b{background:var(--blue)}i.g{background:var(--ok)}
 .bands b{display:block;font-size:20px}.bands span{font-size:11px;color:var(--sub)}
 .bands button.on{background:var(--acc);border-color:var(--acc);color:var(--on)}.bands button.on span{color:var(--on)}
 .bands button.low b{color:var(--bad)}
+.fn.hl{background:var(--warns)}.fn.hl b{color:var(--warn)}
 /* 班費 */
 .bar2{height:10px;border-radius:99px;background:var(--tile);overflow:hidden;margin-top:12px}.bar2 i{display:block;height:100%;background:var(--blue);border-radius:99px}
 .catr{display:flex;gap:10px;align-items:center;padding:7px 0}.catr span{width:48px;flex:none}.catr b{min-width:70px;text-align:right}
@@ -572,6 +573,7 @@ const IC={
  dl:SV('<path d="M12 4v11M7 10.5l5 5 5-5M4 19.5h16"/>'),
  cbk:SV('<path d="M6 3.5h11a1.5 1.5 0 0 1 1.5 1.5v14.5H7.5A2.5 2.5 0 0 1 5 17V4.5a1 1 0 0 1 1-1z"/><path d="M5 17a2.5 2.5 0 0 1 2.5-2.5h11M9 8h6M9 11h4"/>'),
  slip:SV('<path d="M4 7.5l8 5 8-5"/><rect x="4" y="5.5" width="16" height="13" rx="2"/>'),
+ flag:SV('<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>'),
  miss:SV('<rect x="4" y="3.5" width="16" height="17" rx="2.5"/><path d="M9 9l6 6M15 9l-6 6"/>'),
  exam:SV('<path d="M7 3.5h7l4 4v13H7z"/><path d="M14 3.5v4h4M9.5 12h6M9.5 15.5h4"/>'),
  coin:SV('<circle cx="12" cy="12" r="8.5"/><path d="M14.6 9.3c-.5-.9-1.5-1.4-2.6-1.4-1.5 0-2.6.8-2.6 2 0 2.8 5.4 1.5 5.4 4.3 0 1.2-1.2 2-2.8 2-1.2 0-2.3-.6-2.8-1.6M12 6.3v1.6M12 16.2v1.6"/>'),
@@ -601,7 +603,7 @@ function render(){
  CID=c.id;
  const v=PG.v;
  document.body.classList.toggle('pjm',v==='proj');
- app.innerHTML=v==='lp'?lpView():v==='cal'?calView():v==='slips'?slipsView():v==='slip'?slipView(PG.id):v==='exam'?examView():v==='forgot'?forgotView():v==='money'?moneyView():v==='proj'?projView():v==='todo'?todoView():v==='tt'?ttView():v==='cb'?cbView():v==='stus'?stusView():v==='stu'?stuView(PG.id):v==='day'?dayView():v==='tasks'?tasksView():v==='task'?taskView(PG.id):v==='grade'?gradeView():v==='fix'?fixView():v==='export'?exportView():homeView();
+ app.innerHTML=v==='track'?trackView():v==='lp'?lpView():v==='cal'?calView():v==='slips'?slipsView():v==='slip'?slipView(PG.id):v==='exam'?examView():v==='forgot'?forgotView():v==='money'?moneyView():v==='proj'?projView():v==='todo'?todoView():v==='tt'?ttView():v==='cb'?cbView():v==='stus'?stusView():v==='stu'?stuView(PG.id):v==='day'?dayView():v==='tasks'?tasksView():v==='task'?taskView(PG.id):v==='grade'?gradeView():v==='fix'?fixView():v==='export'?exportView():homeView();
  bindPage();
  status(CL.st||'連線中…');
 }
@@ -642,7 +644,8 @@ function homeCB(){
 // 首頁：【我自己】待辦最明顯，再來是今天要批改、未繳交；班級和功能放下面
 function homeView(){
  const c=cls(),ss=stus(c),d=today();
- const F=[['day','每日繳交追蹤','今天誰沒交','day'],['cb','聯絡簿','早自修、作業、投影','cbk'],['forgot','沒帶紀錄','聯絡簿、作業沒帶','miss'],
+ const nTrk=trackItems(c).length;
+ const F=[['track','待追蹤'+(nTrk?' '+nTrk:''),'還沒交、沒訂正、沒收回','flag'],['day','每日繳交追蹤','今天誰沒交','day'],['cb','聯絡簿','早自修、作業、投影','cbk'],['forgot','沒帶紀錄','聯絡簿、作業沒帶','miss'],
   ['exam','考試','所有考試、成績、訂簽','exam'],['todo','我的待辦','學校要做的事','todo'],['tt','課表','調課、外出','cal'],
   ['stus','學生個人檔案','每個人的紀錄','stu'],['tasks','各科作業','習作、考卷、甲本','book'],['grade','成績管理','登記分數','chart'],
   ['fix','訂正進度','頁數、課次','check'],['export','成績匯出','依日期、科目下載','dl'],['money','班費與經費','班費、學扶花費','coin'],['slips','回條','提早交也能記','slip'],['cal','行事曆','哪天有作業、考試','cal'],['lp','上課紀錄','每節上了什麼','book']];
@@ -674,7 +677,7 @@ function homeView(){
  <div class="box">
   <div class="row sp"><button class="clsb" data-a="clspick" style="font-size:18px">${E(c.name)} <span>切換班級 ▾</span></button><span class="ps">${ss.length} 人${S.classes.length>1?' · 共 '+S.classes.length+' 班':''}</span></div>
   <button class="main" data-a="new" style="margin-top:12px">＋ 出作業</button>
-  <div class="fns sm" style="margin-top:12px">${F.map(([v,n,dd,ic])=>`<button class="fn" data-a="go" data-v="${v}"><div class="fn-t">${IC[ic]}<b>${n}</b></div><span>${dd}</span></button>`).join('')}</div>
+  <div class="fns sm" style="margin-top:12px">${F.map(([v,n,dd,ic])=>`<button class="fn${v==='track'?' hl':''}" data-a="go" data-v="${v}"><div class="fn-t">${IC[ic]}<b>${n}</b></div><span>${dd}</span></button>`).join('')}</div>
  </div>`;
 }
 // 學生個人檔案
@@ -1459,6 +1462,38 @@ function exRow(x,d){
 }
 // 考試：所有考試都在這裡（各班的考試、小考，加上期中考、期末考）
 let EXS='全部';
+// 待追蹤：還沒結束的作業、考試、回條（最久的在最上面）
+let TRK='全部';
+function trackItems(c){
+ const ss=stus(c),d=today(),L=[];
+ (TK[c.id]||[]).forEach(t=>{
+  if(t.sgf)return; // 訂簽跟著考試一起看
+  const A=tStats(t,ss);
+  if(t.sl){const m=ss.filter(s=>!isIn(R(t,s.id))).length;if(m&&t.d<=d)L.push({t,k:'回條',dt:t.due||t.d,tags:[pill(t.due&&t.due<d?'bad':'warn','還沒交 '+m)]});return}
+  if(isExam(t)){
+   if(tDate(t)>d)return;
+   const sc=ss.filter(s=>R(t,s.id).c!==undefined).length,sg=t.sgt?findT(t.sgt):null,sgm=sg?ss.filter(s=>!isIn(R(sg,s.id))).length:0;
+   const tags=[];if(sc<ss.length)tags.push(pill('warn','未登記 '+(ss.length-sc)));if(A.fix.length)tags.push(pill('bad','待訂正 '+A.fix.length));if(sg&&sgm&&sg.d<=d)tags.push(pill(sg.due<d?'bad':'','訂簽未收 '+sgm));
+   if(tags.length)L.push({t,k:'考試',dt:tDate(t),tags});return;
+  }
+  if(isTot(t)){const sc=ss.filter(s=>R(t,s.id).c!==undefined).length,tags=[];if(t.due<=d&&sc<ss.length)tags.push(pill('warn','總分未登記 '+(ss.length-sc)));if(A.fix.length)tags.push(pill('bad','待訂正 '+A.fix.length));if(tags.length)L.push({t,k:'作業',dt:tDate(t),tags});return}
+  if(!t.due||t.due>d)return;
+  const miss=ss.filter(s=>missing(t,s.id)).length,tags=[];
+  if(miss)tags.push(pill(t.due<d?'bad':'warn','未交 '+miss));if(A.fix.length)tags.push(pill('bad','待訂正 '+A.fix.length));
+  if(t.g&&!t.pg){const sc=ss.filter(s=>R(t,s.id).c!==undefined).length;if(sc<ss.length-miss)tags.push(pill('warn','未登記 '+(ss.length-miss-sc)))}
+  if(tags.length)L.push({t,k:'作業',dt:t.due,tags});
+ });
+ return L.sort((a,b)=>a.dt<b.dt?-1:a.dt>b.dt?1:0);
+}
+function trackView(){
+ const c=cls(),all=trackItems(c),L=all.filter(x=>TRK==='全部'||x.k===TRK),n=k=>all.filter(x=>x.k===k).length;
+ return head('待追蹤',E(c.name)+' · 還沒結束的作業、考試、回條',`<button class="bt sm" data-a="clspick">換班級</button>`)+
+  `<div class="segs" style="margin-top:12px">${[['全部',all.length],['作業',n('作業')],['考試',n('考試')],['回條',n('回條')]].map(([v,k])=>`<button data-a="trk" data-v="${v}" class="${TRK===v?'on':''}">${v} ${k}</button>`).join('')}</div>
+  ${L.length?`<div class="box list" style="margin-top:10px">${L.map(x=>{const t=x.t;
+   return `<button class="lr" data-a="${x.k==='回條'?'slip':'task'}" data-id="${t.id}"><span class="dt2"><b>${md(x.dt)}</b><small>${x.dt<today()?dayN(x.dt)*-1+' 天前':x.dt===today()?'今天':'還有 '+dayN(x.dt)+' 天'}</small></span><span class="lt"><b>${x.k==='考試'?'考 '+E(t.sub)+' '+E(t.title||t.cat):E(t.sl?t.title:tName(t))}</b><small>${x.k}${t.sub&&x.k!=='考試'&&!t.sl?' · '+E(t.sub):''}</small><span class="lp" style="justify-content:flex-start;margin-top:4px">${x.tags.join('')}</span></span><span class="ch">›</span></button>`}).join('')}</div>`
+   :'<div class="box empty">都追蹤完了 🎉<br>到期的作業都交了、考試都登記好、訂正和訂簽也都完成了。</div>'}
+  <div class="ps" style="margin-top:8px">到期還有人沒交、還沒訂正、考試還沒登記完或訂簽沒收齊的，都會留在這裡；全部完成就會自動消失。最久的排在最上面。</div>`;
+}
 function examView(){
  const d=today(),multi=S.classes.length>1;
  // 各班的考試
@@ -2320,6 +2355,7 @@ function onClick(e){
   op(()=>setR(t,s.id,same?{s:0,o:''}:{s:1,a:SLD,o:t.op.length?SLO:''}),same?sLabel(s)+' 改回還沒交':null);return}
  if(a==='slcopy'){const t=task(ds.id),ss=stus(cls()),m=ss.filter(x=>!isIn(R(t,x.id)));return openS(()=>textSheet('回條還沒交',`${cls().name}　${t.title}${t.due?'（'+mdw(t.due)+' 截止）':''}\n還沒交：${m.map(x=>x.no!==''?x.no+' 號':x.name).join('、')}`))}
  if(a==='gtask'){CID=ds.c;try{localStorage.setItem('sch-cls',CID)}catch(x){}return go({v:'task',id:ds.id})}
+ if(a==='trk'){TRK=ds.v;return render()}
  if(a==='exq')return openS(()=>examEdit(null));
  if(a==='exs'){EXS=ds.v;return render()}
  if(a==='exnew')return openS(()=>examSheet(null));
