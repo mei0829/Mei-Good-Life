@@ -940,7 +940,7 @@ function cbText(cid,d){
 }
 
 // ---------- 畫面：我的待辦、課表、聯絡簿、上課中（投影）----------
-const lpLine=(d,i)=>{const e=lpGet(d,i);return `<button class="lpline" data-a="lped" data-d="${d}" data-i="${i}">${e?(e.dn?'上了：'+E(e.dn):'預計：'+E(e.pl)):'<span class="ps">＋ 寫這節要上什麼</span>'}</button>`};
+const lpLine=(d,i)=>{const e=lpGet(d,i),c=dayCells(d)[i],mv=e&&c&&c.sub&&e.sub&&e.sub!==c.sub?'（上'+E(e.sub)+'）':'';return `<button class="lpline" data-a="lped" data-d="${d}" data-i="${i}">${e?mv+(e.dn?'上了：'+E(e.dn):'預計：'+E(e.pl)):'<span class="ps">＋ 寫這節要上什麼</span>'}</button>`};
 function nowCard(){
  const n=nowInfo(),note=dayNote(n.d),P=PV.d.per;
  if(!hasTT())return `<button class="today" data-a="go" data-v="tt" style="margin-top:0">🗓 先設定課表，這裡就會顯示現在第幾節、下一節是什麼 ›</button>`;
@@ -1295,22 +1295,30 @@ function lpPrev(d,i,cid,sub){
 }
 function lpSheet(d,i){
  const P=PV.d.per[i];if(!P)return back();
- const cell=dayCells(d)[i],old=lpGet(d,i);
- const D={pl:old?old.pl:'',dn:old?old.dn:'',cid:old&&old.cid||(cell&&cell.cid)||'',sub:old&&old.sub||(cell&&cell.sub)||''};
- const prev=D.cid?lpPrev(d,i,D.cid,D.sub):null;
- sheet(`<h3>${mdw(d)} ${E(P.n)}</h3><div class="ps">${P.s}–${P.e}${cell?' · '+E(cellTxt(cell)):' · 空堂'}</div><div style="height:10px"></div>
-  ${prev?`<div class="prevlp"><span class="ps">上次 ${md(prev.d)} ${E((PV.d.per[prev.i]||{}).n||'')}</span>${E(prev.e.dn||prev.e.pl)}</div>`:''}
+ const cell=dayCells(d)[i],old=lpGet(d,i),tsub=(cell&&cell.sub)||'';
+ // sub：這節實際上的科目（課表是數學，拿來上國語就選國語；課表不會變）
+ const D={pl:old?old.pl:'',dn:old?old.dn:'',cid:old&&old.cid||(cell&&cell.cid)||'',sub:old&&old.sub||tsub};
+ const pull=p=>{D.pl=p.querySelector('#lpp').value;D.dn=p.querySelector('#lpd').value};
+ const draw=()=>{
+  const prev=D.cid?lpPrev(d,i,D.cid,D.sub):null,moved=tsub&&D.sub&&D.sub!==tsub;
+  sheet(`<h3>${mdw(d)} ${E(P.n)}</h3><div class="ps">${P.s}–${P.e}${cell?' · 課表：'+E(cellTxt(cell)):' · 空堂'}</div><div style="height:10px"></div>
+  ${D.cid?`<div class="f"><span>這節實際上的科目${moved?` <b class="warn">（課表是${E(tsub)}，這節拿來上${E(D.sub)}）</b>`:''}</span><div class="pick sm">${S.subs.map(x=>`<button data-ls="${E(x)}" class="${D.sub===x?'on':''}">${E(x)}${x===tsub?'（課表）':''}</button>`).join('')}</div>
+   <div class="ps" style="margin-top:4px">只改這一節的紀錄，課表不會變。</div></div>`:''}
+  ${prev?`<div class="prevlp"><span class="ps">${E(D.sub)} 上次 ${md(prev.d)} ${E((PV.d.per[prev.i]||{}).n||'')}</span>${E(prev.e.dn||prev.e.pl)}</div>`:''}
   <label class="f"><span>預計要上</span><textarea id="lpp" style="min-height:70px" placeholder="例如：第 5 課 生字、課文朗讀">${E(D.pl)}</textarea></label>
   <label class="f"><span>實際上了 <button class="bt sm" id="lpsame" style="margin-left:6px">照預計上完了</button></span><textarea id="lpd" style="min-height:70px" placeholder="例如：上到第 2 段，生字還差 3 個">${E(D.dn)}</textarea></label>
   <div class="foot">${old?'<button class="bt" id="lpdel" style="color:var(--bad)">清除</button>':'<span></span>'}<button class="go" id="lpsv">儲存</button></div>`,p=>{
-  p.querySelector('#lpsame').onclick=e=>{e.preventDefault();const v=p.querySelector('#lpp').value.trim();if(!v)return toast('先寫預計要上的');p.querySelector('#lpd').value=v};
-  if(!old)setTimeout(()=>p.querySelector('#lpp').focus(),60);
-  p.querySelector('#lpsv').onclick=()=>{
-   const pl=p.querySelector('#lpp').value.trim(),dn=p.querySelector('#lpd').value.trim();
-   pop(()=>{const m=PV.d.lp[d]||(PV.d.lp[d]={});if(pl||dn)m[i]={pl,dn,cid:D.cid,sub:D.sub};else delete m[i]},pl||dn?'已儲存':null);back();
-  };
-  const dl_=p.querySelector('#lpdel');if(dl_)dl_.onclick=()=>{pop(()=>{delete (PV.d.lp[d]||{})[i]},'已清除');back()};
- });
+   p.querySelectorAll('[data-ls]').forEach(b=>b.onclick=()=>{pull(p);D.sub=b.dataset.ls;refresh(draw)});
+   p.querySelector('#lpsame').onclick=e=>{e.preventDefault();const v=p.querySelector('#lpp').value.trim();if(!v)return toast('先寫預計要上的');p.querySelector('#lpd').value=v};
+   p.querySelector('#lpsv').onclick=()=>{
+    const pl=p.querySelector('#lpp').value.trim(),dn=p.querySelector('#lpd').value.trim();
+    pop(()=>{const m=PV.d.lp[d]||(PV.d.lp[d]={});if(pl||dn)m[i]={pl,dn,cid:D.cid,sub:D.sub};else delete m[i]},pl||dn?'已儲存'+(moved?'（記在'+D.sub+'）':''):null);back();
+   };
+   const dl_=p.querySelector('#lpdel');if(dl_)dl_.onclick=()=>{pop(()=>{delete (PV.d.lp[d]||{})[i]},'已清除');back()};
+  });
+ };
+ draw();
+ if(!old)setTimeout(()=>{const t=document.querySelector('#sheet #lpp');if(t)t.focus()},60);
 }
 let LPD=today(),LPM='day',LPS='';
 function lpView(){
@@ -1322,7 +1330,7 @@ function lpView(){
   h+=`<div class="dbar"><button class="bt" data-a="lpd" data-v="-1">‹</button><input type="date" id="lpdi" value="${LPD}"><button class="bt" data-a="lpd" data-v="1">›</button>${LPD!==today()?'<button class="bt" data-a="lpd" data-v="0">今天</button>':''}</div>
    ${note?`<div class="note" style="margin-top:10px">📍 ${E(note)}</div>`:''}
    <div class="box list" style="padding:2px 12px">${P.map((p,i)=>{const c=cells[i],e=lpGet(LPD,i);if(!c&&!e)return '';
-    return `<button class="lr lpr" data-a="lped" data-d="${LPD}" data-i="${i}"><span class="dt2"><b style="font-size:14px">${E(p.n)}</b><small>${p.s}</small></span><span class="lt"><span class="ps">${c?E(cellTxt(c)):e&&e.cid?E(lpCls(e)+' '+e.sub):'空堂'}</span>
+    return `<button class="lr lpr" data-a="lped" data-d="${LPD}" data-i="${i}"><span class="dt2"><b style="font-size:14px">${E(p.n)}</b><small>${p.s}</small></span><span class="lt"><span class="ps">${c?E(cellTxt(c)):e&&e.cid?E(lpCls(e)+' '+e.sub):'空堂'}${e&&c&&c.sub&&e.sub&&e.sub!==c.sub?` <b class="warn">→ 上${E(e.sub)}</b>`:''}</span>
      ${e?`${e.pl?`<span class="lpx"><i>預計</i>${E(e.pl)}</span>`:''}${e.dn?`<span class="lpx ok"><i>上了</i>${E(e.dn)}</span>`:''}`:'<span class="lpx none">點一下寫這節要上什麼</span>'}</span></button>`}).join('')||'<div class="empty">這天沒有排課。到「課表」把每週的課排好，這裡就會列出每一節。</div>'}</div>`;
  }else{
   const c=cls(),subs=[...new Set(Object.values(PV.d.lp).flatMap(m=>Object.values(m)).filter(e=>e.cid===c.id).map(e=>e.sub).filter(Boolean))];
