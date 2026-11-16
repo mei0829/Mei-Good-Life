@@ -267,6 +267,11 @@ textarea{min-height:64px;resize:vertical}
 .cald i,.calk i{width:6px;height:6px;border-radius:50%;display:inline-block}
 .calk{margin-top:8px;text-align:center}.calk i{margin:0 3px 0 8px;vertical-align:1px}
 i.r{background:var(--bad)}i.b{background:var(--blue)}i.g{background:var(--ok)}
+.grr{display:flex;align-items:center;gap:8px;border-top:1px solid var(--line)}
+.list>.grr:first-child{border-top:0}
+.grr .lr{border-top:0;padding-left:2px}
+.grr .ck{margin-left:2px}
+.lt.dn{color:var(--sub);text-decoration:line-through}
 /* 班費 */
 .bar2{height:10px;border-radius:99px;background:var(--tile);overflow:hidden;margin-top:12px}.bar2 i{display:block;height:100%;background:var(--blue);border-radius:99px}
 .catr{display:flex;gap:10px;align-items:center;padding:7px 0}.catr span{width:48px;flex:none}.catr b{min-width:70px;text-align:right}
@@ -374,7 +379,7 @@ function fixTasks(a){
  return arr(a).filter(t=>t&&(t.cat||t.title)).map(t=>{
   const r={};Object.keys(t.r&&typeof t.r==='object'?t.r:{}).forEach(k=>{const x=fixRec(t.r[k]);if(Object.keys(x).length)r[k]=x});
   return {id:t.id||nid(),sub:String(t.sub||'其他'),cat:String(t.cat||''),title:String(t.title||''),d:DT.test(t.d)?t.d:today(),due:DT.test(t.due)?t.due:'',
-   g:t.g?1:0,full:+t.full>0?+t.full:100,note:t.note||'',m:t.m?1:0,sl:t.sl?1:0,op:arr(t.op).map(String).filter(Boolean).slice(0,6),r,af:1,t:+t.t||Date.now(),u:+t.u||Date.now()};
+   g:t.g?1:0,full:+t.full>0?+t.full:100,note:t.note||'',m:t.m?1:0,sl:t.sl?1:0,gd:DT.test(t.gd)?t.gd:'',op:arr(t.op).map(String).filter(Boolean).slice(0,6),r,af:1,t:+t.t||Date.now(),u:+t.u||Date.now()};
  }).map((x,i)=>{const o=arr(a).filter(t=>t&&(t.cat||t.title))[i];if(!o.af)Object.keys(x.r).forEach(k=>{const r=x.r[k];if(r.c!==undefined&&!r.f){if(r.c>=x.full){r.f=2;r.fa=r.a||today()}else r.f=1}});return x});
 }
 let S=fixMeta({classes:[]}),TK={};
@@ -591,7 +596,7 @@ function bindPage(){
  const td_=$('ttdi');if(td_)td_.onchange=()=>{if(DT.test(td_.value)){TTD=td_.value;render()}};
  const tn_=$('ttnote');if(tn_)tn_.onchange=()=>{const v=tn_.value.trim();pop(()=>{const e=PV.d.ex[TTD]||(PV.d.ex[TTD]={cells:{},note:''});e.note=v})};
  const cd_=$('cbdi');if(cd_)cd_.onchange=()=>{if(DT.test(cd_.value)){CBD=cd_.value;render()}};
- ['am','hw','br'].forEach(k=>{const i=$('cb'+k);enter(i,()=>cbAdd(k))});
+ ['am','hw','gr','br'].forEach(k=>{const i=$('cb'+k);enter(i,()=>cbAdd(k))});
  const sd_=$('sld');if(sd_)sd_.onchange=()=>{if(DT.test(sd_.value))SLD=sd_.value};
  const lpi=$('lpdi');if(lpi)lpi.onchange=()=>{if(DT.test(lpi.value)){LPD=lpi.value;render()}};
  const bd=$('bdi');if(bd)bd.onchange=()=>{if(DT.test(bd.value)){BD=bd.value;render()}};
@@ -638,8 +643,11 @@ function homeView(){
  <div class="box">
   <div class="h2 row sp"><span>今天要批改</span><button class="bt sm" data-a="proj">投影</button></div>
   ${grade.length?grade.map(({c:x,ts})=>`${S.classes.length>1?`<div class="ps" style="margin:8px 0 2px">${E(x.name)}</div>`:''}<div class="list">${ts.map(t=>{const ss2=stus(x),n=ss2.filter(s=>isIn(R(t,s.id))).length;
-   return `<button class="lr" data-a="gtask" data-c="${x.id}" data-id="${t.id}"><span class="lt">${E(tName(t))}<small>${t.m?'早自修':t.d<d?md(t.d)+' 出的作業':'今天出的'}${t.g?' · 要打分數':''}</small></span>${n===ss2.length?pill('ok','都登記了'):pill(n?'warn':'','已登記 '+n+'/'+ss2.length)}<span class="ch">›</span></button>`}).join('')}</div>`).join('')
+   const dn=grDone(t,x.id);
+   return `<div class="grr"><button class="ck${dn?' on':''}" data-a="grck" data-c="${x.id}" data-id="${t.id}" aria-label="${dn?'改回還沒改完':'改完了'}">${dn?'✓':''}</button><button class="lr" data-a="gtask" data-c="${x.id}" data-id="${t.id}"><span class="lt${dn?' dn':''}">${E(tName(t))}<small>${t.m?'早自修':t.d<d?md(t.d)+' 出的作業':'今天收的'}${t.g?' · 要打分數':''}${t.gd?' · 改完了':''}</small></span>${n===ss2.length?pill('ok','都登記了'):pill(n?'warn':'','已登記 '+n+'/'+ss2.length)}<span class="ch">›</span></button></div>`}).join('')}</div>`).join('')
    :'<div class="ps">今天沒有要批改的。</div>'}
+  <div class="row" style="margin-top:8px"><button class="bt sm${CBOPEN==='gr'?' on':''}" data-a="cbopen" data-k="gr">＋ 批改項目</button><span class="ps">也會出現在待辦事項，打勾 = 改完了</span></div>
+  ${CBOPEN==='gr'?(CBD=today(),`<div class="cbinline">${cbPicker('gr')}</div>`):''}
   ${homeCB()}
  </div>
  ${slipBox()}
@@ -918,7 +926,7 @@ const cbOf=(cid,d)=>{const c=CB[cid]||(CB[cid]={});return c[d]||(c[d]={hw:[],br:
 const cbPeek=(cid,d)=>(CB[cid]||{})[d]||{hw:[],br:[],hide:[]};
 // 聯絡簿上的作業：這天出的作業（自動）＋自己加的
 function cbLines(cid,d,am){
- const b=cbPeek(cid,d),ts=(TK[cid]||[]).filter(t=>t.d===d&&(am?t.m:!t.m)).sort((a,b)=>a.t-b.t);
+ const b=cbPeek(cid,d),ts=(TK[cid]||[]).filter(t=>t.d===d&&(am?t.m:!t.m&&!(t.due===t.d&&!t.sl))).sort((a,b)=>a.t-b.t);
  const auto=ts.map(t=>({id:t.id,auto:1,hid:b.hide.includes(t.id),x:tName(t)+(!am&&t.due?'（'+(t.due===nextDay(d)?'下次上課':mdw(t.due))+'交）':''),t}));
  return am?auto:[...auto,...b.hw.map(x=>({...x,auto:0}))];
 }
@@ -956,6 +964,12 @@ function tdRow(t,d){
  return `<div class="tdr${dn?' dn':''}"><button class="ck${dn?' on':''}" data-a="tdck" data-id="${t.id}" data-d="${d}" aria-label="${dn?'改回沒做':'做完了'}">${dn?'✓':''}</button><button class="tdt" data-a="tded" data-id="${t.id}"><span>${E(t.x)}</span><small>${E(todoWhen(t))}${t.rm?' · 🔔 '+RMS.find(r=>r[0]===t.rm)[1]:''}${t.n?' · 📝':''}</small></button></div>`;
 }
 let DONEOPEN=false;
+// 批改項目也是待辦：今天要批改的，還有過去一週還沒改完的；全班都登記了也算改完
+const allReg=(t,cid)=>{const ss=stus(S.classes.find(c=>c.id===cid));return ss.length>0&&ss.every(s=>isIn(R(t,s.id)))};
+const grDone=(t,cid)=>!!t.gd||allReg(t,cid);
+function grTodos(d){const L=[];S.classes.forEach(c=>(TK[c.id]||[]).forEach(t=>{if(t.sl||!t.due)return;if(t.due===d||(t.due<d&&t.due>=addD(d,-7)&&!grDone(t,c.id)))L.push({t,c})}));return L.sort((a,b)=>a.t.due<b.t.due?-1:a.t.due>b.t.due?1:a.t.t-b.t.t)}
+function grRow(x,d,sm){const {t,c}=x,dn=grDone(t,c.id),ss=stus(c),n=ss.filter(s=>isIn(R(t,s.id))).length;
+ return `<div class="tdr${dn?' dn':''}${sm?' sm':''}"><button class="ck${dn?' on':''}" data-a="grck" data-c="${c.id}" data-id="${t.id}" aria-label="${dn?'改回還沒改完':'改完了'}">${dn?'✓':''}</button><button class="tdt" data-a="gtask" data-c="${c.id}" data-id="${t.id}"><span>改 ${E(tName(t))}</span><small>${S.classes.length>1?E(c.name)+' · ':''}${t.due<d&&!dn?`<b class="bad">${md(t.due)} 的還沒改完</b> · `:''}已登記 ${n}/${ss.length}${dn?(t.gd?' · '+(t.gd===d?'今天':md(t.gd))+' 改完':' · 全班都登記了'):''}</small></button></div>`}
 // 完成的時間：一次性的看 dt；每週重複的看那天的 dk
 const doneAt=(t,d)=>t.rep.length?(t.dk&&t.dk[d])||0:t.dt||0;
 const hmOf=ms=>{const x=new Date(ms);return z(x.getHours())+':'+z(x.getMinutes())};
@@ -964,15 +978,15 @@ function doneRow(t,d){const at=doneAt(t,d);
 function myToday(){
  const d=today(),{over,day}=todosFor(d),n=nowInfo();
  const prep=n.nxt>=0?PV.d.todos.filter(t=>t.p===n.nxt&&onDay(t,d)&&!isDone(t,d)):[];
- const list=[...over,...day.filter(t=>!prep.includes(t))],exs=examTodos(d);
+ const list=[...over,...day.filter(t=>!prep.includes(t))],exs=examTodos(d),grs=grTodos(d),grU=grs.filter(x=>!grDone(x.t,x.c.id)),grF=grs.filter(x=>grDone(x.t,x.c.id));
  return `${prep.length?`<div class="h3">下一節前要準備</div>${prep.map(t=>tdRow(t,d)).join('')}`:''}
-  <div class="h2" style="margin:2px 0 6px">📌 待辦事項${list.filter(t=>!isDone(t,d)).length+exs.filter(x=>x.k!=='day'&&!(x.k==='wr'?x.e.wrd:x.e.prd)).length?'（'+(list.filter(t=>!isDone(t,d)).length+exs.filter(x=>x.k!=='day'&&!(x.k==='wr'?x.e.wrd:x.e.prd)).length)+'）':''}</div>
+  <div class="h2" style="margin:2px 0 6px">📌 待辦事項${(()=>{const n=list.filter(t=>!isDone(t,d)).length+exs.filter(x=>x.k!=='day'&&!(x.k==='wr'?x.e.wrd:x.e.prd)).length+grU.length;return n?'（'+n+'）':''})()}</div>
   ${(()=>{const undone=list.filter(t=>!isDone(t,d)),exU=exs.filter(x=>x.k==='day'||!(x.k==='wr'?x.e.wrd:x.e.prd));
    // 今天做完的：今天的、過期的、還有別天但今天才做完的
    const fin=[...new Map([...list.filter(t=>isDone(t,d)),...PV.d.todos.filter(t=>!t.rep.length&&t.done&&t.dt&&ymd(new Date(t.dt))===d)].map(t=>[t.id,t])).values()].sort((a,b)=>doneAt(b,d)-doneAt(a,d));
-   return exU.map(x=>exRow(x,d)).join('')+undone.slice(0,10).map(t=>tdRow(t,d)).join('')
-    +(!undone.length&&!exU.length?`<div class="ps" style="padding:4px 2px">${fin.length?'今天的待辦都做完了 🎉':'今天沒有待辦 🎉'}</div>`:'')
-    +(fin.length?`<button class="donebar" data-a="doneopen">✓ 今天完成 ${fin.length} 項 ${DONEOPEN?'▾':'▸'}</button>${DONEOPEN?`<div class="donelist">${fin.map(t=>doneRow(t,d)).join('')}</div>`:''}`:'');})()}
+   return exU.map(x=>exRow(x,d)).join('')+grU.map(x=>grRow(x,d)).join('')+undone.slice(0,10).map(t=>tdRow(t,d)).join('')
+    +(!undone.length&&!exU.length&&!grU.length?`<div class="ps" style="padding:4px 2px">${fin.length+grF.length?'今天的待辦都做完了 🎉':'今天沒有待辦 🎉'}</div>`:'')
+    +(fin.length+grF.length?`<button class="donebar" data-a="doneopen">✓ 今天完成 ${fin.length+grF.length} 項 ${DONEOPEN?'▾':'▸'}</button>${DONEOPEN?`<div class="donelist">${grF.map(x=>grRow(x,d,1)).join('')}${fin.map(t=>doneRow(t,d)).join('')}</div>`:''}`:'');})()}
   <div class="row" style="margin-top:8px"><button class="bt sm" data-a="tdnew">＋ 待辦</button><button class="bt sm" data-a="go" data-v="todo">全部待辦 ›</button></div>`;
 }
 function todoView(){
@@ -1166,8 +1180,8 @@ function guessSub(x){
 }
 // 聯絡簿上加的早自修、作業：每一項變成一份要批改的作業
 // 聯絡簿：先選科目、項目，再填頁數（記住上次選的）
-let CBP={am:{sub:'',cat:''},hw:{sub:'',cat:''}},CBV={am:'',hw:''};
-try{const x=JSON.parse(localStorage.getItem('sch-cbp'));if(x&&x.am&&x.hw)CBP=x}catch(e){}
+let CBP={am:{sub:'',cat:''},hw:{sub:'',cat:''},gr:{sub:'',cat:''}},CBV={am:'',hw:'',gr:''};
+try{const x=JSON.parse(localStorage.getItem('sch-cbp'));if(x&&x.am&&x.hw)CBP={gr:{sub:'',cat:''},...x}}catch(e){}
 const cbpSave=()=>{try{localStorage.setItem('sch-cbp',JSON.stringify(CBP))}catch(e){}};
 function cbPicker(k){
  const P=CBP[k];if(P.sub&&!S.subs.includes(P.sub))P.sub='';
@@ -1183,13 +1197,13 @@ function cbAddTasks(k,text){
  const P=CBP[k],cat=P.sub&&P.cat?S.cats.find(c=>c.n===P.cat&&c.s===P.sub):null;
  if(cat){
   const c=cls(),items=String(text).split(/\n|、|，|,|；|;/).map(s=>s.trim()).filter(Boolean),now=Date.now(),L=items.length?items:[''];
-  op(()=>L.forEach((x,i)=>(TK[c.id]||(TK[c.id]=[])).push({id:nid(),sub:cat.s,cat:cat.n,title:x,d:CBD,due:k==='am'?CBD:nextDay(CBD),g:cat.g,full:100,note:'',m:k==='am'?1:0,r:{},af:1,t:now+i,u:now})),
+  op(()=>L.forEach((x,i)=>(TK[c.id]||(TK[c.id]=[])).push({id:nid(),sub:cat.s,cat:cat.n,title:x,d:CBD,due:k==='am'||k==='gr'?CBD:nextDay(CBD),g:cat.g,full:100,note:'',m:k==='am'?1:0,r:{},af:1,t:now+i,u:now})),
    L.length>1?'已加入 '+L.length+' 項':'已加入「'+cat.n+(L[0]?' '+L[0]:'')+'」');
   CBV[k]='';return;
  }
  if(P.sub&&text.trim()){
   const c=cls(),items=String(text).split(/\n|、|，|,|；|;/).map(s=>s.trim()).filter(Boolean),now=Date.now();
-  op(()=>items.forEach((x,i)=>(TK[c.id]||(TK[c.id]=[])).push({id:nid(),sub:P.sub,cat:x,title:'',d:CBD,due:k==='am'?CBD:nextDay(CBD),g:/考|測驗/.test(x)?1:0,full:100,note:'',m:k==='am'?1:0,r:{},af:1,t:now+i,u:now})),
+  op(()=>items.forEach((x,i)=>(TK[c.id]||(TK[c.id]=[])).push({id:nid(),sub:P.sub,cat:x,title:'',d:CBD,due:k==='am'||k==='gr'?CBD:nextDay(CBD),g:/考|測驗/.test(x)?1:0,full:100,note:'',m:k==='am'?1:0,r:{},af:1,t:now+i,u:now})),
    items.length>1?'已加入 '+items.length+' 項':'已加入「'+items[0]+'」');
   CBV[k]='';return;
  }
@@ -1199,7 +1213,7 @@ function cbAddTasks(k,text){
 function cbAddTasksFree(k,text){
  const c=cls(),items=String(text).split(/\n|、|，|,|；|;/).map(s=>s.trim()).filter(Boolean);if(!items.length)return;
  const now=Date.now();
- op(()=>items.forEach((x,i)=>(TK[c.id]||(TK[c.id]=[])).push({id:nid(),sub:guessSub(x),cat:x,title:'',d:CBD,due:k==='am'?CBD:nextDay(CBD),g:/考|測驗|小考/.test(x)?1:0,full:100,note:'',m:k==='am'?1:0,r:{},af:1,t:now+i,u:now})),
+ op(()=>items.forEach((x,i)=>(TK[c.id]||(TK[c.id]=[])).push({id:nid(),sub:guessSub(x),cat:x,title:'',d:CBD,due:k==='am'||k==='gr'?CBD:nextDay(CBD),g:/考|測驗|小考/.test(x)?1:0,full:100,note:'',m:k==='am'?1:0,r:{},af:1,t:now+i,u:now})),
   items.length>1?'已加入 '+items.length+' 項':'已加入「'+items[0]+'」');
 }
 
@@ -2081,7 +2095,7 @@ function hwCSV(cid,sub,from,to){
 
 // ---------- 點擊 ----------
 const PAGE_ACTS=new Set(['go','stu','task']);
-function cbAdd(k){const i=$('cb'+k),v=i?i.value.trim():'';if(!v&&!((k==='am'||k==='hw')&&CBP[k].cat))return;if(k==='am'||k==='hw')cbAddTasks(k,v);else op(()=>cbOf(cls().id,CBD)[k].push({id:nid(),x:v}));setTimeout(()=>{const j=$('cb'+k);if(j)j.focus()},30)}
+function cbAdd(k){const i=$('cb'+k),v=i?i.value.trim():'';if(!v&&!((k==='am'||k==='hw'||k==='gr')&&CBP[k].cat))return;if(k==='am'||k==='hw'||k==='gr')cbAddTasks(k,v);else op(()=>cbOf(cls().id,CBD)[k].push({id:nid(),x:v}));setTimeout(()=>{const j=$('cb'+k);if(j)j.focus()},30)}
 function onClick(e){
  const b=e.target.closest('[data-a]');if(!b)return;
  const a=b.dataset.a,ds=b.dataset,inSheet=$('sheet').contains(b);
@@ -2136,6 +2150,7 @@ function onClick(e){
  if(a==='pered')return openS(perSheet);
  if(a==='cbd'){CBD=ds.v==='0'?today():addD(CBD,+ds.v);return render()}
  if(a==='cbadd')return cbAdd(ds.k);
+ if(a==='grck'){const t=(TK[ds.c]||[]).find(x=>x.id===ds.id);if(!t)return;if(!t.gd&&allReg(t,ds.c))return toast('全班都登記了，已經算改完');const was=!!t.gd;op(()=>{t.gd=was?'':today()},was?'改回還沒改完':'「'+tName(t)+'」改完了 ✓');return}
  if(a==='cbopen'){CBOPEN=CBOPEN===ds.k?'':ds.k;render();setTimeout(()=>{const i=$('cb'+ds.k);if(i&&CBOPEN)i.focus()},40);return}
  if(a==='doneopen'){DONEOPEN=!DONEOPEN;return render()}
  if(a==='cbps'||a==='cbpk'){const k=ds.k,P=CBP[k],i=$('cb'+k);if(i)CBV[k]=i.value;if(a==='cbps'){if(P.sub===ds.v){P.sub='';P.cat=''}else{P.sub=ds.v;P.cat=''}}else P.cat=P.cat===ds.v?'':ds.v;cbpSave();render();setTimeout(()=>{const j=$('cb'+k);if(j&&a==='cbpk'&&P.cat)j.focus()},30);return}
