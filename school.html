@@ -947,7 +947,7 @@ const cbPeek=(cid,d)=>(CB[cid]||{})[d]||{hw:[],br:[],hide:[]};
 // 聯絡簿上的作業：這天出的作業（自動）＋自己加的
 function cbLines(cid,d,am){
  const b=cbPeek(cid,d),ts=(TK[cid]||[]).filter(t=>t.d===d&&(am?t.m:!t.m&&!(t.due===t.d&&!t.sl)&&!isTot(t))).sort((a,b)=>a.t-b.t);
- const auto=ts.map(t=>({id:t.id,auto:1,hid:b.hide.includes(t.id),x:t.g&&t.ex?exLine(t):t.sgf?tName(t)+(t.due?'（'+md(t.due)+' 交回）':''):tName(t)+(!am&&t.due?'（'+(t.due===nextDay(d)?'下次上課':mdw(t.due))+'交）':''),t}));
+ const auto=ts.map(t=>({id:t.id,auto:1,hid:b.hide.includes(t.id),x:t.g&&t.ex?'考 '+t.sub+' '+(t.title||t.cat):tName(t),t}));
  const L=am?auto:[...auto,...b.hw.map(x=>({...x,auto:0}))],ord=(b.o&&b.o[am?'am':'hw'])||[];
  // 照拖曳排好的順序；沒排過的放後面
  return ord.length?L.map((x,i)=>({x,i,k:ord.indexOf(x.id)})).sort((a,b)=>(a.k<0?1e6+a.i:a.k)-(b.k<0?1e6+b.i:b.k)).map(o=>o.x):L;
@@ -1149,7 +1149,7 @@ let CBD=today();
 function cbView(){
  const c=cls(),d=CBD,b=cbPeek(c.id,d),am=cbLines(c.id,d,1),lines=cbLines(c.id,d),o=owesByNo(c.id,d),ss=stus(c);
  const row=(x,i,list)=>{const reg=x.t?ss.filter(s=>isIn(R(x.t,s.id))).length:0,empty=x.t&&!Object.keys(x.t.r).length;
-  return `<div class="cbl${x.hid?' hid':''}" data-sid="${x.id}"><span class="drag" aria-label="拖曳排序">⋮⋮</span><span class="cbn">${x.hid?'':list.filter((y,j)=>j<=i&&!y.hid).length+'.'}</span><span class="lt">${x.t?`<a href="#" data-a="task" data-id="${x.id}" style="color:inherit;text-decoration:none">${E(x.x)}</a>`:E(x.x)}${x.t?`<small>${x.t.due===d?'今天批改':x.t.due?md(x.t.due)+' 批改':''}${reg?' · 已登記 '+reg+'/'+ss.length:''}</small>`:''}</span>
+  return `<div class="cbl${x.hid?' hid':''}" data-sid="${x.id}"><span class="drag" aria-label="拖曳排序">⋮⋮</span><span class="cbn">${x.hid?'':list.filter((y,j)=>j<=i&&!y.hid).length+'.'}</span><span class="lt">${x.t?`<a href="#" data-a="task" data-id="${x.id}" style="color:inherit;text-decoration:none">${E(x.x)}</a>`:E(x.x)}${x.t?`<small>${isExam(x.t)?(x.t.due?md(x.t.due)+' 考':''):x.t.due===d?'今天批改':x.t.due?md(x.t.due)+(x.t.sgf?' 收回':' 批改'):''}${reg?' · 已登記 '+reg+'/'+ss.length:''}</small>`:''}</span>
    ${x.t?(empty?`<button class="cb2" data-a="cbtdel" data-id="${x.id}">✕</button>`:`<button class="cb2" data-a="cbhide" data-id="${x.id}">${x.hid?'顯示':'不顯示'}</button>`):`<button class="cb2" data-a="cbdel" data-k="hw" data-id="${x.id}">✕</button>`}</div>`};
  return head('聯絡簿',E(c.name)+' · '+mdw(d),`<button class="go sm" data-a="proj" data-d="${d}">📺 投影</button>`)+
  `<div class="dbar"><button class="bt" data-a="cbd" data-v="-1">‹</button><input type="date" id="cbdi" value="${d}"><button class="bt" data-a="cbd" data-v="1">›</button>${d!==today()?'<button class="bt" data-a="cbd" data-v="0">今天</button>':''}</div>
