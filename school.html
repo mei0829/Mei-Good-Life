@@ -383,7 +383,7 @@ function fixTasks(a){
  return arr(a).filter(t=>t&&(t.cat||t.title)).map(t=>{
   const r={};Object.keys(t.r&&typeof t.r==='object'?t.r:{}).forEach(k=>{const x=fixRec(t.r[k]);if(Object.keys(x).length)r[k]=x});
   return {id:t.id||nid(),sub:String(t.sub||'其他'),cat:String(t.cat||''),title:String(t.title||''),d:DT.test(t.d)?t.d:today(),due:DT.test(t.due)?t.due:'',
-   g:t.g?1:0,full:+t.full>0?+t.full:100,note:t.note||'',m:t.m?1:0,sl:t.sl?1:0,gd:DT.test(t.gd)?t.gd:'',pts:arr(t.pts).map(String),pg:String(t.pg||''),op:arr(t.op).map(String).filter(Boolean).slice(0,6),r,af:1,t:+t.t||Date.now(),u:+t.u||Date.now()};
+   g:t.g?1:0,full:+t.full>0?+t.full:100,note:t.note||'',m:t.m?1:0,sl:t.sl?1:0,gd:DT.test(t.gd)?t.gd:'',ex:t.ex!=null?(t.ex?1:0):(t.g&&/考|測驗/.test(String(t.cat||'')+String(t.title||''))?1:0),pts:arr(t.pts).map(String),pg:String(t.pg||''),op:arr(t.op).map(String).filter(Boolean).slice(0,6),r,af:1,t:+t.t||Date.now(),u:+t.u||Date.now()};
  }).map((x,i)=>{const o=arr(a).filter(t=>t&&(t.cat||t.title))[i];if(!o.af)Object.keys(x.r).forEach(k=>{const r=x.r[k];if(r.c!==undefined&&!r.f){if(r.c>=x.full){r.f=2;r.fa=r.a||today()}else r.f=1}});return x});
 }
 let S=fixMeta({classes:[]}),TK={};
@@ -1164,7 +1164,7 @@ function projView(){
  const tc=d===today()&&n.cur>=0&&n.cells[n.cur]&&n.cells[n.cur].cid?n.cells[n.cur].cid:'';
  if(!PJC||!S.classes.some(c=>c.id===PJC))PJC=tc||cls().id;
  const c=S.classes.find(x=>x.id===PJC),b=cbPeek(c.id,d),am=cbLines(c.id,d,1).filter(x=>!x.hid),hw=cbLines(c.id,d).filter(x=>!x.hid),o=owesByNo(c.id,d);
- const soon=(TK[c.id]||[]).filter(t=>t.g&&t.due&&t.due>d&&t.due<=addD(d,7)).sort((a,b)=>a.due<b.due?-1:1);
+ const soon=(TK[c.id]||[]).filter(t=>t.ex&&t.g&&t.due&&t.due>d&&t.due<=addD(d,7)).sort((a,b)=>a.due<b.due?-1:1);
  const exs=PV.d.exams.filter(e=>e.d>=d&&e.d<=addD(d,21)).sort((a,b)=>a.d<b.d?-1:1);
  const P=PV.d.per,cur=d===today()&&n.cur>=0?P[n.cur].n+(n.cells[n.cur]?' '+(n.cells[n.cur].sub||n.cells[n.cur].x||''):''):'';
  return `<div class="pj">
@@ -1209,13 +1209,13 @@ function cbAddTasks(k,text){
  const P=CBP[k],cat=P.sub&&P.cat?S.cats.find(c=>c.n===P.cat&&c.s===P.sub):null;
  if(cat){
   const c=cls(),items=String(text).split(/\n|、|，|,|；|;/).map(s=>s.trim()).filter(Boolean),now=Date.now(),L=items.length?items:[''];
-  op(()=>L.forEach((x,i)=>(TK[c.id]||(TK[c.id]=[])).push({id:nid(),sub:cat.s,cat:cat.n,title:x,d:CBD,due:k==='am'||k==='gr'?CBD:nextDay(CBD),g:cat.g,full:100,note:'',m:k==='am'?1:0,r:{},af:1,t:now+i,u:now})),
+  op(()=>L.forEach((x,i)=>(TK[c.id]||(TK[c.id]=[])).push({id:nid(),sub:cat.s,cat:cat.n,title:x,d:CBD,due:k==='am'||k==='gr'?CBD:nextDay(CBD),g:cat.g,ex:cat.g&&/考|測驗/.test(cat.n)?1:0,full:100,note:'',m:k==='am'?1:0,r:{},af:1,t:now+i,u:now})),
    L.length>1?'已加入 '+L.length+' 項':'已加入「'+cat.n+(L[0]?' '+L[0]:'')+'」');
   CBV[k]='';return;
  }
  if(P.sub&&text.trim()){
   const c=cls(),items=String(text).split(/\n|、|，|,|；|;/).map(s=>s.trim()).filter(Boolean),now=Date.now();
-  op(()=>items.forEach((x,i)=>(TK[c.id]||(TK[c.id]=[])).push({id:nid(),sub:P.sub,cat:x,title:'',d:CBD,due:k==='am'||k==='gr'?CBD:nextDay(CBD),g:/考|測驗/.test(x)?1:0,full:100,note:'',m:k==='am'?1:0,r:{},af:1,t:now+i,u:now})),
+  op(()=>items.forEach((x,i)=>(TK[c.id]||(TK[c.id]=[])).push({id:nid(),sub:P.sub,cat:x,title:'',d:CBD,due:k==='am'||k==='gr'?CBD:nextDay(CBD),g:/考|測驗/.test(x)?1:0,ex:/考|測驗/.test(x)?1:0,full:100,note:'',m:k==='am'?1:0,r:{},af:1,t:now+i,u:now})),
    items.length>1?'已加入 '+items.length+' 項':'已加入「'+items[0]+'」');
   CBV[k]='';return;
  }
@@ -1225,7 +1225,7 @@ function cbAddTasks(k,text){
 function cbAddTasksFree(k,text){
  const c=cls(),items=String(text).split(/\n|、|，|,|；|;/).map(s=>s.trim()).filter(Boolean);if(!items.length)return;
  const now=Date.now();
- op(()=>items.forEach((x,i)=>(TK[c.id]||(TK[c.id]=[])).push({id:nid(),sub:guessSub(x),cat:x,title:'',d:CBD,due:k==='am'||k==='gr'?CBD:nextDay(CBD),g:/考|測驗|小考/.test(x)?1:0,full:100,note:'',m:k==='am'?1:0,r:{},af:1,t:now+i,u:now})),
+ op(()=>items.forEach((x,i)=>(TK[c.id]||(TK[c.id]=[])).push({id:nid(),sub:guessSub(x),cat:x,title:'',d:CBD,due:k==='am'||k==='gr'?CBD:nextDay(CBD),g:/考|測驗|小考/.test(x)?1:0,ex:/考|測驗|小考/.test(x)?1:0,full:100,note:'',m:k==='am'?1:0,r:{},af:1,t:now+i,u:now})),
   items.length>1?'已加入 '+items.length+' 項':'已加入「'+items[0]+'」');
 }
 
@@ -1375,9 +1375,9 @@ let CALM=today().slice(0,7),CALD=today();
 function calDay(cid,d){
  const ts=TK[cid]||[];
  return {
-  ex:ts.filter(t=>t.g&&tDate(t)===d),
-  due:ts.filter(t=>!t.g&&!t.sl&&t.due===d),
-  out:ts.filter(t=>!t.g&&!t.sl&&t.d===d&&t.due!==d),
+  ex:ts.filter(t=>t.g&&t.ex&&tDate(t)===d),
+  due:ts.filter(t=>!(t.g&&t.ex)&&!t.sl&&!isTot(t)&&t.due===d),
+  out:ts.filter(t=>!(t.g&&t.ex)&&!t.sl&&!isTot(t)&&t.d===d&&t.due!==d),
   sl:ts.filter(t=>t.sl&&t.due===d),
   big:PV.d.exams.filter(e=>e.d===d),
   lp:Object.keys(PV.d.lp[d]||{}).map(i=>({i:+i,e:PV.d.lp[d][i]})).filter(x=>x.e.cid===cid),
@@ -1847,7 +1847,7 @@ function taskEdit(id,pre){
  let last={};try{last=JSON.parse(localStorage.getItem('sch-sub'))||{}}catch(e){}
  const pre_={...(pre||{})};Object.keys(pre_).forEach(k=>pre_[k]===undefined&&delete pre_[k]);delete pre_._kp;
  const D=old?{...old}:{sub:S.subs.includes(last.sub)?last.sub:S.subs[0],cat:'',title:'',d:today(),due:addD(today(),1),g:0,full:100,note:'',...pre_};
- if(!old&&!(pre&&pre.cat)&&last.cat&&last.sub===D.sub){D.cat=last.cat;D.g=(S.cats.find(c=>c.n===last.cat)||{}).g||0}
+ if(!old&&!(pre&&pre.cat)&&last.cat&&last.sub===D.sub){D.cat=last.cat;D.g=(S.cats.find(c=>c.n===last.cat)||{}).g||0;D.ex=D.g&&/考|測驗/.test(last.cat)?1:0}
  const st={cs:[cls().id],split:false,parts:[{t:'',due:addD(today(),1)},{t:'',due:addD(today(),2)}]};
  const pull=p=>{p.querySelectorAll('[data-pi]').forEach(r=>{const k=+r.dataset.pi;st.parts[k]={t:r.querySelector('.ptx').value.trim(),due:r.querySelector('.pdu').value}});D.title=p.querySelector('#et').value.trim();D.d=p.querySelector('#edd').value||today();D.due=p.querySelector('#edu').value;D.full=+p.querySelector('#ef').value>0?+p.querySelector('#ef').value:100;D.note=p.querySelector('#en').value.trim();const c=p.querySelector('#ec').value.trim();if(c)D.cat=c};
  const cats=()=>S.cats.filter(c=>c.s===D.sub);
@@ -1863,16 +1863,18 @@ function taskEdit(id,pre){
   <div class="two"><label class="f"><span>出作業日</span><input id="edd" type="date" value="${E(D.d)}"></label>
    <label class="f" style="${st.split?'display:none':''}"><span>繳交日</span><input id="edu" type="date" value="${E(D.due)}"></label></div>
   <div class="quick" style="margin:-6px 0 12px;${st.split?'display:none':''}">${[['今天',0],['明天',1],['後天',2],['下週一',(8-pd(today()).getDay())%7||7]].map(([n,d])=>`<button data-dd="${d}">${n}交</button>`).join('')}<button data-dd="x">不設定</button></div>
-  ${st.split?'':`<button class="tg${D.g?' on':''}" id="eg"><i>${D.g?'✓':''}</i><span>要打分數（考卷、小考）</span></button>`}
+  ${st.split?'':`<button class="tg${D.g?' on':''}" id="eg"><i>${D.g?'✓':''}</i><span>要打分數</span></button>`}
+  ${D.g&&!st.split?`<button class="tg${D.ex?' on':''}" id="eex"><i>${D.ex?'✓':''}</i><span>這是考試、小考（會出現在「快要考試」、行事曆的考試）</span></button>`:''}
   <label class="f" style="${D.g||st.split?'':'display:none'}"><span>滿分</span><input id="ef" type="number" inputmode="decimal" min="1" value="${E(D.full)}"></label>
   <label class="f"><span>備註</span><textarea id="en" placeholder="例如：要家長簽名">${E(D.note)}</textarea></label>
   <div class="foot">${old?'<button class="bt bad" id="edl">刪除</button>':'<span></span>'}<button class="go" id="esv">${old?'儲存':'出作業'}</button></div>`,p=>{
   p.querySelectorAll('[data-pc]').forEach(b=>b.onclick=()=>{pull(p);const c=b.dataset.pc;st.cs=st.cs.includes(c)?st.cs.filter(x=>x!==c):[...st.cs,c];refresh(draw)});
   p.querySelectorAll('[data-ps]').forEach(b=>b.onclick=()=>{pull(p);if(D.sub!==b.dataset.ps){D.sub=b.dataset.ps;if(S.cats.some(c=>c.n===D.cat))D.cat=''}refresh(draw)});
-  p.querySelectorAll('[data-pk]').forEach(b=>b.onclick=()=>{p.querySelector('#ec').value='';pull(p);const c=S.cats.find(x=>x.n===b.dataset.pk);D.cat=c.n;D.g=c.g;refresh(draw)});
+  p.querySelectorAll('[data-pk]').forEach(b=>b.onclick=()=>{p.querySelector('#ec').value='';pull(p);const c=S.cats.find(x=>x.n===b.dataset.pk);D.cat=c.n;D.g=c.g;D.ex=c.g&&/考|測驗/.test(c.n)?1:0;refresh(draw)});
   p.querySelector('#ec').oninput=e=>{if(e.target.value.trim())p.querySelectorAll('[data-pk].on').forEach(b=>b.classList.remove('on'))};
   p.querySelectorAll('[data-dd]').forEach(b=>b.onclick=()=>{pull(p);D.due=b.dataset.dd==='x'?'':addD(today(),+b.dataset.dd);refresh(draw)});
-  const eg=p.querySelector('#eg');if(eg)eg.onclick=()=>{pull(p);D.g=D.g?0:1;refresh(draw)};
+  const eg=p.querySelector('#eg');if(eg)eg.onclick=()=>{pull(p);D.g=D.g?0:1;if(!D.g)D.ex=0;refresh(draw)};
+  const eex=p.querySelector('#eex');if(eex)eex.onclick=()=>{pull(p);D.ex=D.ex?0:1;refresh(draw)};
   const esp=p.querySelector('#esp');if(esp)esp.onclick=()=>{pull(p);st.split=!st.split;refresh(draw)};
   const epad=p.querySelector('#epad');if(epad)epad.onclick=()=>{pull(p);const l=st.parts[st.parts.length-1];st.parts.push({t:'',due:l&&l.due?nextDay(l.due):addD(today(),1)});refresh(draw)};
   p.querySelectorAll('[data-prm]').forEach(b=>b.onclick=()=>{pull(p);if(st.parts.length>2)st.parts.splice(+b.dataset.prm,1);else toast('至少要分兩次');refresh(draw)});
@@ -1882,7 +1884,7 @@ function taskEdit(id,pre){
    if(!st.cs.length){toast('請選班級');return}
    try{localStorage.setItem('sch-sub',JSON.stringify({sub:D.sub,cat:D.cat}))}catch(e){}
    const now=Date.now();
-   if(old){op(()=>{const x=task(id);Object.assign(x,{sub:D.sub,cat:D.cat,title:D.title,d:D.d,due:D.due,g:D.g,full:D.full,note:D.note,u:now})},'已儲存');return back()}
+   if(old){op(()=>{const x=task(id);Object.assign(x,{sub:D.sub,cat:D.cat,title:D.title,d:D.d,due:D.due,g:D.g,ex:D.g&&D.ex?1:0,full:D.full,note:D.note,u:now})},'已儲存');return back()}
    if(st.split){
     const P=st.parts.filter(x=>x.t);if(P.length<2)return toast('請填至少兩次的範圍');
     const last=P.map(x=>x.due||D.d).sort().pop(),name=D.title||P.map(x=>x.t).join('、');
@@ -1893,7 +1895,7 @@ function taskEdit(id,pre){
     return back();
    }
    const ids=[];
-   op(()=>st.cs.forEach(c=>{const nid_=nid();ids.push(nid_);(TK[c]||(TK[c]=[])).push({id:nid_,sub:D.sub,cat:D.cat,title:D.title,d:D.d,due:D.due,g:D.g,full:D.full,note:D.note,r:{},af:1,t:now,u:now})}),st.cs.length>1?'已出給 '+st.cs.length+' 個班':'已出作業「'+tName(D)+'」');
+   op(()=>st.cs.forEach(c=>{const nid_=nid();ids.push(nid_);(TK[c]||(TK[c]=[])).push({id:nid_,sub:D.sub,cat:D.cat,title:D.title,d:D.d,due:D.due,g:D.g,ex:D.g&&D.ex?1:0,full:D.full,note:D.note,r:{},af:1,t:now,u:now})}),st.cs.length>1?'已出給 '+st.cs.length+' 個班':'已出作業「'+tName(D)+'」');
    if(pre&&pre._kp&&D.g&&st.cs.length===1&&st.cs[0]===cls().id)return kpSheet(ids[0]);
    back();
   };
