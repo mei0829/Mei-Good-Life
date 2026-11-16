@@ -276,6 +276,8 @@ i.r{background:var(--bad)}i.b{background:var(--blue)}i.g{background:var(--ok)}
 .prt .cb2{margin-left:6px}
 .ptm{display:inline-flex;gap:3px}.ptm i{font-style:normal;width:20px;height:20px;border-radius:6px;display:grid;place-items:center;font-size:11px;background:var(--tile);color:var(--sub)}
 .ptm i.y{background:var(--oks);color:var(--ok)}.ptm i.n{background:var(--bads);color:var(--bad)}
+.drag{flex:none;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;color:var(--sub);font-size:16px;letter-spacing:-3px;padding:6px 6px 6px 0}
+.cbl.dragging{background:var(--blues);border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.12)}
 /* 班費 */
 .bar2{height:10px;border-radius:99px;background:var(--tile);overflow:hidden;margin-top:12px}.bar2 i{display:block;height:100%;background:var(--blue);border-radius:99px}
 .catr{display:flex;gap:10px;align-items:center;padding:7px 0}.catr span{width:48px;flex:none}.catr b{min-width:70px;text-align:right}
@@ -935,16 +937,18 @@ const icsDl=(list,name)=>download(name,icsOf(list),'text/calendar');
 function fixCB(o){
  const out={};Object.keys(o&&typeof o==='object'?o:{}).forEach(d=>{if(!DT.test(d))return;const v=o[d]||{};
   const L=a=>arr(a).filter(x=>x&&x.x).map(x=>({id:x.id||nid(),x:String(x.x)}));
-  const r={hw:L(v.hw),br:L(v.br),hide:arr(v.hide).map(String)};if(r.hw.length||r.br.length||r.hide.length)out[d]=r});
+  const r={hw:L(v.hw),br:L(v.br),hide:arr(v.hide).map(String),o:{am:arr(v.o&&v.o.am).map(String),hw:arr(v.o&&v.o.hw).map(String)}};if(r.hw.length||r.br.length||r.hide.length||r.o.am.length||r.o.hw.length)out[d]=r});
  return out;
 }
-const cbOf=(cid,d)=>{const c=CB[cid]||(CB[cid]={});return c[d]||(c[d]={hw:[],br:[],hide:[]})};
+const cbOf=(cid,d)=>{const c=CB[cid]||(CB[cid]={});const x=c[d]||(c[d]={hw:[],br:[],hide:[]});if(!x.o)x.o={am:[],hw:[]};return x};
 const cbPeek=(cid,d)=>(CB[cid]||{})[d]||{hw:[],br:[],hide:[]};
 // 聯絡簿上的作業：這天出的作業（自動）＋自己加的
 function cbLines(cid,d,am){
  const b=cbPeek(cid,d),ts=(TK[cid]||[]).filter(t=>t.d===d&&(am?t.m:!t.m&&!(t.due===t.d&&!t.sl)&&!isTot(t))).sort((a,b)=>a.t-b.t);
  const auto=ts.map(t=>({id:t.id,auto:1,hid:b.hide.includes(t.id),x:tName(t)+(!am&&t.due?'（'+(t.due===nextDay(d)?'下次上課':mdw(t.due))+'交）':''),t}));
- return am?auto:[...auto,...b.hw.map(x=>({...x,auto:0}))];
+ const L=am?auto:[...auto,...b.hw.map(x=>({...x,auto:0}))],ord=(b.o&&b.o[am?'am':'hw'])||[];
+ // 照拖曳排好的順序；沒排過的放後面
+ return ord.length?L.map((x,i)=>({x,i,k:ord.indexOf(x.id)})).sort((a,b)=>(a.k<0?1e6+a.i:a.k)-(b.k<0?1e6+b.i:b.k)).map(o=>o.x):L;
 }
 // 幾號什麼東西還沒交、還沒訂正（只顯示座號）
 function owesByNo(cid,d){
@@ -1143,19 +1147,19 @@ let CBD=today();
 function cbView(){
  const c=cls(),d=CBD,b=cbPeek(c.id,d),am=cbLines(c.id,d,1),lines=cbLines(c.id,d),o=owesByNo(c.id,d),ss=stus(c);
  const row=(x,i,list)=>{const reg=x.t?ss.filter(s=>isIn(R(x.t,s.id))).length:0,empty=x.t&&!Object.keys(x.t.r).length;
-  return `<div class="cbl${x.hid?' hid':''}"><span class="cbn">${x.hid?'':list.filter((y,j)=>j<=i&&!y.hid).length+'.'}</span><span class="lt">${x.t?`<a href="#" data-a="task" data-id="${x.id}" style="color:inherit;text-decoration:none">${E(x.x)}</a>`:E(x.x)}${x.t?`<small>${x.t.due===d?'今天批改':x.t.due?md(x.t.due)+' 批改':''}${reg?' · 已登記 '+reg+'/'+ss.length:''}</small>`:''}</span>
+  return `<div class="cbl${x.hid?' hid':''}" data-sid="${x.id}"><span class="drag" aria-label="拖曳排序">⋮⋮</span><span class="cbn">${x.hid?'':list.filter((y,j)=>j<=i&&!y.hid).length+'.'}</span><span class="lt">${x.t?`<a href="#" data-a="task" data-id="${x.id}" style="color:inherit;text-decoration:none">${E(x.x)}</a>`:E(x.x)}${x.t?`<small>${x.t.due===d?'今天批改':x.t.due?md(x.t.due)+' 批改':''}${reg?' · 已登記 '+reg+'/'+ss.length:''}</small>`:''}</span>
    ${x.t?(empty?`<button class="cb2" data-a="cbtdel" data-id="${x.id}">✕</button>`:`<button class="cb2" data-a="cbhide" data-id="${x.id}">${x.hid?'顯示':'不顯示'}</button>`):`<button class="cb2" data-a="cbdel" data-k="hw" data-id="${x.id}">✕</button>`}</div>`};
  return head('聯絡簿',E(c.name)+' · '+mdw(d),`<button class="go sm" data-a="proj" data-d="${d}">📺 投影</button>`)+
  `<div class="dbar"><button class="bt" data-a="cbd" data-v="-1">‹</button><input type="date" id="cbdi" value="${d}"><button class="bt" data-a="cbd" data-v="1">›</button>${d!==today()?'<button class="bt" data-a="cbd" data-v="0">今天</button>':''}</div>
  <div class="box"><div class="h3" style="margin-top:0">🌅 早自修 <span class="ps">（今天批改）</span></div>
-  ${am.length?am.map((x,i)=>row(x,i,am)).join(''):'<div class="ps">還沒有</div>'}
+  ${am.length?`<div class="srt" data-k="am">${am.map((x,i)=>row(x,i,am)).join('')}</div>`:'<div class="ps">還沒有</div>'}
   ${cbPicker('am')}
   <div class="hr"></div><div class="h3" style="margin-top:0">📒 今天的作業 <span class="ps">（${md(nextDay(d))} 批改）</span></div>
-  ${lines.length?lines.map((x,i)=>row(x,i,lines)).join(''):'<div class="ps">還沒有</div>'}
+  ${lines.length?`<div class="srt" data-k="hw">${lines.map((x,i)=>row(x,i,lines)).join('')}</div>`:'<div class="ps">還沒有</div>'}
   ${cbPicker('hw')}
   <div class="ps">會自動變成 ${mdw(nextDay(d))} 要批改的項目。</div>
   <div class="hr"></div><div class="h3" style="margin-top:0">🎒 記得帶</div>
-  ${b.br.map(x=>`<div class="cbl"><span class="cbn">・</span><span class="lt">${E(x.x)}</span><button class="cb2" data-a="cbdel" data-k="br" data-id="${x.id}">✕</button></div>`).join('')||'<div class="ps">還沒有</div>'}
+  ${b.br.length?`<div class="srt" data-k="br">${b.br.map(x=>`<div class="cbl" data-sid="${x.id}"><span class="drag" aria-label="拖曳排序">⋮⋮</span><span class="cbn">・</span><span class="lt">${E(x.x)}</span><button class="cb2" data-a="cbdel" data-k="br" data-id="${x.id}">✕</button></div>`).join('')}</div>`:'<div class="ps">還沒有</div>'}
   <div class="add"><input id="cbbr" placeholder="例如：3號 帶同意書、全班帶彩色筆" autocomplete="off"><button class="bt" data-a="cbadd" data-k="br">加入</button></div>
   <div class="hr"></div><div class="h3" style="margin-top:0">⚠️ 還沒交／還沒訂正（自動，只顯示座號）</div>
   ${o.length?o.map(({s,items})=>`<div class="cbl"><span class="cbn">${E(noLabel(s))}</span><span class="lt">${items.map(({t,miss})=>E(tName(t))+(miss?'':'（訂正）')).join('、')}</span></div>`).join(''):'<div class="ps">大家都交了 🎉</div>'}
@@ -2168,6 +2172,23 @@ function hwCSV(cid,sub,from,to){
 
 // ---------- 點擊 ----------
 const PAGE_ACTS=new Set(['go','stu','task']);
+let DRG=null;
+$('app').addEventListener('pointerdown',e=>{
+ const h=e.target.closest('.drag');if(!h)return;const row=h.closest('[data-sid]'),box=row&&row.closest('.srt');if(!box)return;
+ e.preventDefault();row.classList.add('dragging');DRG={row,box,id:e.pointerId};try{h.setPointerCapture(e.pointerId)}catch(x){}
+});
+addEventListener('pointermove',e=>{
+ if(!DRG||e.pointerId!==DRG.id)return;e.preventDefault();
+ const rows=[...DRG.box.querySelectorAll(':scope>[data-sid]')].filter(r=>r!==DRG.row);
+ const after=rows.find(r=>{const b=r.getBoundingClientRect();return e.clientY<b.top+b.height/2});
+ if(after)DRG.box.insertBefore(DRG.row,after);else DRG.box.appendChild(DRG.row);
+},{passive:false});
+const dragEnd=e=>{
+ if(!DRG||e.pointerId!==DRG.id)return;const {row,box}=DRG;DRG=null;row.classList.remove('dragging');
+ const k=box.dataset.k,ids=[...box.querySelectorAll(':scope>[data-sid]')].map(r=>r.dataset.sid),c=cls().id;
+ op(()=>{const b=cbOf(c,CBD);if(k==='br'){b.br.sort((x,y)=>ids.indexOf(x.id)-ids.indexOf(y.id))}else b.o[k]=ids});
+};
+addEventListener('pointerup',dragEnd);addEventListener('pointercancel',dragEnd);
 function cbAdd(k){const i=$('cb'+k),v=i?i.value.trim():'';if(!v&&!((k==='am'||k==='hw'||k==='gr')&&CBP[k].cat))return;if(k==='am'||k==='hw'||k==='gr')cbAddTasks(k,v);else op(()=>cbOf(cls().id,CBD)[k].push({id:nid(),x:v}));setTimeout(()=>{const j=$('cb'+k);if(j)j.focus()},30)}
 function onClick(e){
  const b=e.target.closest('[data-a]');if(!b)return;
