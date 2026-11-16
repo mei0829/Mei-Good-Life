@@ -1184,7 +1184,7 @@ function projView(){
   ${dayNote(d)?`<div class="pjnote">📍 ${E(dayNote(d))}</div>`:''}
   <div class="pjg">
    <section>${am.length?`<h2>🌅 早自修</h2><ol>${am.map(x=>`<li>${E(x.x)}</li>`).join('')}</ol>`:''}
-    <h2>📒 今天的作業</h2>${hw.length?`<ol>${hw.map(x=>`<li>${E(x.t?(isExam(x.t)?exLine(x.t):x.t.sgf?x.x:tName(x.t)):x.x)}</li>`).join('')}</ol>`:'<p class="pje">今天沒有作業</p>'}
+    <h2>📒 今天的作業</h2>${hw.length?`<ol>${hw.map(x=>`<li>${E(x.t?(isExam(x.t)?"考 "+x.t.sub+" "+(x.t.title||x.t.cat):x.t.sgf?x.x:tName(x.t)):x.x)}</li>`).join('')}</ol>`:'<p class="pje">今天沒有作業</p>'}
     ${b.br.length?`<h2>🎒 記得帶</h2><ul>${b.br.map(x=>`<li>${E(x.x)}</li>`).join('')}</ul>`:''}
     ${soon.length||exs.length?`<h2>📅 快要考試</h2><ul>${exs.map(e=>`<li>${mdw(e.d)}　${E(e.n)}${e.x?'（'+E(e.x)+'）':''}</li>`).join('')}${soon.map(t=>`<li>${mdw(t.due)}　${E(tName(t))}</li>`).join('')}</ul>`:''}</section>
    <section>${slipProj(c.id,d)}${(()=>{const bk=t=>t.cat||t.sub,L=o.map(({s,items})=>({s,bs:[...new Set(items.filter(x=>x.miss).map(x=>bk(x.t)))]})).filter(x=>x.bs.length);
