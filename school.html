@@ -1173,12 +1173,13 @@ function projView(){
   ${dayNote(d)?`<div class="pjnote">📍 ${E(dayNote(d))}</div>`:''}
   <div class="pjg">
    <section>${am.length?`<h2>🌅 早自修</h2><ol>${am.map(x=>`<li>${E(x.x)}</li>`).join('')}</ol>`:''}
-    <h2>📒 今天的作業</h2>${hw.length?`<ol>${hw.map(x=>`<li>${E(x.x)}</li>`).join('')}</ol>`:'<p class="pje">今天沒有作業</p>'}
+    <h2>📒 今天的作業</h2>${hw.length?`<ol>${hw.map(x=>`<li>${E(x.t?tName(x.t):x.x)}</li>`).join('')}</ol>`:'<p class="pje">今天沒有作業</p>'}
     ${b.br.length?`<h2>🎒 記得帶</h2><ul>${b.br.map(x=>`<li>${E(x.x)}</li>`).join('')}</ul>`:''}
     ${soon.length||exs.length?`<h2>📅 快要考試</h2><ul>${exs.map(e=>`<li>${mdw(e.d)}　${E(e.n)}${e.x?'（'+E(e.x)+'）':''}</li>`).join('')}${soon.map(t=>`<li>${mdw(t.due)}　${E(tName(t))}</li>`).join('')}</ul>`:''}</section>
-   <section>${slipProj(c.id,d)}<h2>⚠️ 還沒交、還沒訂正</h2>${o.length?`<div class="pjo">${o.map(({s,items})=>`<div><b>${E(noLabel(s))}</b><span>${items.map(({t,miss})=>`<button class="pji${miss?'':' fx'}" data-a="${miss?'pjin':'pjfx'}" data-t="${t.id}" data-s="${s.id}" data-c="${c.id}">${E(tName(t))}${miss?'':'（訂正）'}</button>`).join('')}</span></div>`).join('')}</div>`:'<p class="pje">大家都交了，很棒！🎉</p>'}</section>
+   <section>${slipProj(c.id,d)}${(()=>{const bk=t=>t.cat||t.sub,L=o.map(({s,items})=>({s,bs:[...new Set(items.filter(x=>x.miss).map(x=>bk(x.t)))]})).filter(x=>x.bs.length);
+   return `<h2>🎒 還沒交，記得帶</h2>${L.length?`<div class="pjo">${L.map(({s,bs})=>`<div><b>${E(noLabel(s))}</b><span>${bs.map(n=>`<button class="pji" data-a="pjbk" data-b="${E(n)}" data-s="${s.id}" data-c="${c.id}">帶 ${E(n)}</button>`).join('')}</span></div>`).join('')}</div>`:'<p class="pje">大家都交了，很棒！🎉</p>'}`})()}</section>
   </div>
-  <div class="pjf">老師：點上面的項目可以標成「交了／訂正好了」</div>
+  <div class="pjf">老師：學生交來了，點「帶 ○○」就會標成交了</div>
  </div>`;
 }
 // 下一個上課日（週五出的作業，下週一批改）
@@ -2214,6 +2215,8 @@ function onClick(e){
  if(a==='pjcls')return openS(pjClsSheet);
  if(a==='pjfs'){const el=document.documentElement;try{if(document.fullscreenElement)document.exitFullscreen();else if(el.requestFullscreen)el.requestFullscreen();else if(el.webkitRequestFullscreen)el.webkitRequestFullscreen();else toast('這台裝置不支援全螢幕')}catch(x){}return}
  if(a==='pjedit'){CID=PJC||CID;CBD=PG.d||today();try{localStorage.setItem('sch-cls',CID)}catch(x){}return go({v:'cb'})}
+ if(a==='pjbk'){const c=S.classes.find(x=>x.id===ds.c),s=c&&c.stus.find(x=>x.id===ds.s);if(!s)return;const d=PG.d||today(),L=(TK[ds.c]||[]).filter(t=>!t.sl&&(t.cat||t.sub)===ds.b&&missing(t,s.id,d));
+  op(()=>L.forEach(t=>setR(t,s.id,{s:1,a:d})),noLabel(s)+' '+ds.b+' 交了');return}
  if(a==='pjin'||a==='pjfx'){const t=(TK[ds.c]||[]).find(x=>x.id===ds.t),c=S.classes.find(x=>x.id===ds.c),s=c&&c.stus.find(x=>x.id===ds.s);if(!t||!s)return;
   op(()=>setR(t,s.id,a==='pjin'?{s:1,a:PG.d||today()}:{f:2,fa:today()}),noLabel(s)+' '+tName(t)+(a==='pjin'?' 交了':' 訂正好了'));return}
  if(a==='set')return openS(setSheet);
