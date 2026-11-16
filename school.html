@@ -247,6 +247,26 @@ textarea{min-height:64px;resize:vertical}
 .sbn.sm{min-width:36px;height:32px;font-size:14px;border-radius:8px}
 .li input.ckn{flex:1;min-width:0;border-color:transparent;background:none;padding:6px 4px;font-size:16px}
 .li input.ckn:focus{border-color:var(--line);background:var(--card)}
+/* 上課紀錄 */
+.lpline{display:block;width:100%;text-align:left;border:0;background:var(--tile);border-radius:10px;padding:6px 10px;margin:2px 0 6px;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lpr{align-items:flex-start}
+.lpx{display:block;font-size:14.5px;margin-top:2px;overflow-wrap:anywhere}
+.lpx i{font-style:normal;font-size:11.5px;color:var(--sub);background:var(--tile);border-radius:6px;padding:1px 6px;margin-right:6px}
+.lpx.ok i{background:var(--oks);color:var(--ok)}
+.lpx.none{color:var(--sub);font-size:13px}
+.prevlp{background:var(--tile);border-radius:12px;padding:8px 12px;margin-bottom:12px;font-size:14px}.prevlp .ps{display:block;font-size:12px}
+.t td small{display:block}
+/* 行事曆 */
+.calg{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.calw{text-align:center;font-size:12px;color:var(--sub);padding:2px 0}
+.cald{border:0;background:none;border-radius:12px;padding:5px 0 4px;min-height:48px;display:flex;flex-direction:column;align-items:center;gap:3px}
+.cald b{font-size:15px;font-weight:500;width:28px;height:28px;display:grid;place-items:center;border-radius:50%}
+.cald.tdy b{color:var(--blue);font-weight:700}
+.cald.on b{background:var(--acc);color:var(--on)}
+.cald span{display:flex;gap:3px;height:6px}
+.cald i,.calk i{width:6px;height:6px;border-radius:50%;display:inline-block}
+.calk{margin-top:8px;text-align:center}.calk i{margin:0 3px 0 8px;vertical-align:1px}
+i.r{background:var(--bad)}i.b{background:var(--blue)}i.g{background:var(--ok)}
 /* 班費 */
 .bar2{height:10px;border-radius:99px;background:var(--tile);overflow:hidden;margin-top:12px}.bar2 i{display:block;height:100%;background:var(--blue);border-radius:99px}
 .catr{display:flex;gap:10px;align-items:center;padding:7px 0}.catr span{width:48px;flex:none}.catr b{min-width:70px;text-align:right}
@@ -562,7 +582,7 @@ function render(){
  CID=c.id;
  const v=PG.v;
  document.body.classList.toggle('pjm',v==='proj');
- app.innerHTML=v==='slips'?slipsView():v==='slip'?slipView(PG.id):v==='exam'?examView():v==='forgot'?forgotView():v==='money'?moneyView():v==='proj'?projView():v==='todo'?todoView():v==='tt'?ttView():v==='cb'?cbView():v==='stus'?stusView():v==='stu'?stuView(PG.id):v==='day'?dayView():v==='tasks'?tasksView():v==='task'?taskView(PG.id):v==='grade'?gradeView():v==='fix'?fixView():v==='export'?exportView():homeView();
+ app.innerHTML=v==='lp'?lpView():v==='cal'?calView():v==='slips'?slipsView():v==='slip'?slipView(PG.id):v==='exam'?examView():v==='forgot'?forgotView():v==='money'?moneyView():v==='proj'?projView():v==='todo'?todoView():v==='tt'?ttView():v==='cb'?cbView():v==='stus'?stusView():v==='stu'?stuView(PG.id):v==='day'?dayView():v==='tasks'?tasksView():v==='task'?taskView(PG.id):v==='grade'?gradeView():v==='fix'?fixView():v==='export'?exportView():homeView();
  bindPage();
  status(CL.st||'連線中…');
 }
@@ -573,6 +593,7 @@ function bindPage(){
  const cd_=$('cbdi');if(cd_)cd_.onchange=()=>{if(DT.test(cd_.value)){CBD=cd_.value;render()}};
  ['am','hw','br'].forEach(k=>{const i=$('cb'+k);enter(i,()=>cbAdd(k))});
  const sd_=$('sld');if(sd_)sd_.onchange=()=>{if(DT.test(sd_.value))SLD=sd_.value};
+ const lpi=$('lpdi');if(lpi)lpi.onchange=()=>{if(DT.test(lpi.value)){LPD=lpi.value;render()}};
  const bd=$('bdi');if(bd)bd.onchange=()=>{if(DT.test(bd.value)){BD=bd.value;render()}};
  const gf=$('gf'),gt=$('gt');
  if(gf)gf.onchange=()=>{if(DT.test(gf.value)){GF.from=gf.value;render()}};
@@ -605,7 +626,7 @@ function homeView(){
  const F=[['day','每日繳交追蹤','今天誰沒交','day'],['cb','聯絡簿','早自修、作業、投影','cbk'],['forgot','沒帶紀錄','聯絡簿、作業沒帶','miss'],
   ['exam','考試','出題、影印、考試日','exam'],['todo','我的待辦','學校要做的事','todo'],['tt','課表','調課、外出','cal'],
   ['stus','學生個人檔案','每個人的紀錄','stu'],['tasks','各科作業','習作、考卷、甲本','book'],['grade','成績管理','登記分數','chart'],
-  ['fix','訂正進度','頁數、課次','check'],['export','成績匯出','依日期、科目下載','dl'],['money','班費與經費','班費、學扶花費','coin'],['slips','回條','提早交也能記','slip']];
+  ['fix','訂正進度','頁數、課次','check'],['export','成績匯出','依日期、科目下載','dl'],['money','班費與經費','班費、學扶花費','coin'],['slips','回條','提早交也能記','slip'],['cal','行事曆','哪天有作業、考試','cal'],['lp','上課紀錄','每節上了什麼','book']];
  // 今天要批改：每個班今天要交的（早自修、昨天聯絡簿上的作業…）
  const grade=S.classes.map(x=>({c:x,ts:(TK[x.id]||[]).filter(t=>t.due===d&&!t.sl).sort((a,b)=>(b.m||0)-(a.m||0)||a.t-b.t)})).filter(x=>x.ts.length);
  const owe=ss.map(s=>({s,o:tasks().filter(t=>missing(t,s.id))})).filter(x=>x.o.length);
@@ -778,7 +799,7 @@ function fixPV(o){
  const ex={};Object.keys(o.ex||{}).forEach(d=>{if(!DT.test(d))return;const v=o.ex[d]||{},cells={};Object.keys(v.cells||{}).forEach(i=>{const x=fixCell(v.cells[i]);if(x)cells[i]=x});if(Object.keys(cells).length||v.note)ex[d]={cells,note:String(v.note||'')}});
  const todos=arr(o.todos).filter(t=>t&&t.x).map(t=>({id:t.id||nid(),x:String(t.x),d:DT.test(t.d)?t.d:'',tm:TM.test(t.tm)?t.tm:'',rep:[...new Set(arr(t.rep).map(Number).filter(n=>n>=0&&n<=6))].sort(),
   rm:RMS.some(r=>r[0]===t.rm)?t.rm:'',p:t.p===''||t.p==null||isNaN(+t.p)?'':+t.p,done:!!t.done,dt:t.done&&+t.dt?+t.dt:0,dk:(()=>{const o={},k=t.dk&&typeof t.dk==='object'?t.dk:{};arr(t.dd).forEach(x=>{if(+k[x])o[x]=+k[x]});return o})(),dd:arr(t.dd).filter(x=>DT.test(x)).slice(-80),n:String(t.n||''),t:+t.t||Date.now()}));
- return {per:per.length?per:DEF_PER.map(p=>({...p})),wk,ex,todos,exams:fixExams(o.exams)};
+ return {per:per.length?per:DEF_PER.map(p=>({...p})),wk,ex,todos,exams:fixExams(o.exams),lp:fixLP(o.lp)};
 }
 const PV={t:0,d:fixPV({}),ref:null,busy:false,dirty:false,tm:0,ok:false};
 try{const x=JSON.parse(localStorage.getItem('sch2-pv'));PV.d=fixPV(x.d);PV.t=+x.t||0}catch(e){}
@@ -919,14 +940,15 @@ function cbText(cid,d){
 }
 
 // ---------- 畫面：我的待辦、課表、聯絡簿、上課中（投影）----------
+const lpLine=(d,i)=>{const e=lpGet(d,i);return `<button class="lpline" data-a="lped" data-d="${d}" data-i="${i}">${e?(e.dn?'上了：'+E(e.dn):'預計：'+E(e.pl)):'<span class="ps">＋ 寫這節要上什麼</span>'}</button>`};
 function nowCard(){
  const n=nowInfo(),note=dayNote(n.d),P=PV.d.per;
  if(!hasTT())return `<button class="today" data-a="go" data-v="tt" style="margin-top:0">🗓 先設定課表，這裡就會顯示現在第幾節、下一節是什麼 ›</button>`;
  const c=n.cur>=0?n.cells[n.cur]:null,nx=n.nxt>=0?n.cells[n.nxt]:null;
  const mins=i=>{const [h,m]=P[i].s.split(':').map(Number),x=new Date();x.setHours(h,m,0,0);return Math.max(0,Math.round((x-new Date())/60000))};
- let h=n.cur>=0?`<div class="nw"><span class="pl ${c&&!c.off?'ok':''}">現在</span><b>${E(P[n.cur].n)}</b>${c?' '+E(cellTxt(c)):' 空堂'}<span class="ps">到 ${P[n.cur].e}</span></div>`
+ let h=n.cur>=0?`<div class="nw"><span class="pl ${c&&!c.off?'ok':''}">現在</span><b>${E(P[n.cur].n)}</b>${c?' '+E(cellTxt(c)):' 空堂'}<span class="ps">到 ${P[n.cur].e}</span></div>${c&&!c.off&&c.cid?lpLine(n.d,n.cur):''}`
   :`<div class="nw"><span class="pl">現在</span><b>${n.nxt<0?'今天的課上完了':'下課'}</b></div>`;
- if(n.nxt>=0)h+=`<div class="nw"><span class="pl">下一節</span><b>${E(P[n.nxt].n)}</b> ${nx?E(cellTxt(nx)):'空堂'}<span class="ps">${P[n.nxt].s}（${mins(n.nxt)} 分鐘後）</span></div>`;
+ if(n.nxt>=0)h+=`<div class="nw"><span class="pl">下一節</span><b>${E(P[n.nxt].n)}</b> ${nx?E(cellTxt(nx)):'空堂'}<span class="ps">${P[n.nxt].s}（${mins(n.nxt)} 分鐘後）</span></div>${nx&&!nx.off&&nx.cid?lpLine(n.d,n.nxt):''}`;
  return (note?`<div class="note">📍 今天：${E(note)}</div>`:'')+h;
 }
 function tdRow(t,d){
@@ -1077,6 +1099,7 @@ function perSheet(){
     const mv=m=>{const o={};idx.forEach((p,j)=>{if(p.o>=0&&m[p.o])o[j]=m[p.o]});return o};
     Object.keys(PV.d.wk).forEach(w=>PV.d.wk[w]=mv(PV.d.wk[w]));
     Object.values(PV.d.ex).forEach(e=>e.cells=mv(e.cells));
+    Object.keys(PV.d.lp).forEach(d=>PV.d.lp[d]=mv(PV.d.lp[d]));
     PV.d.todos.forEach(t=>{if(t.p!==''){const j=idx.findIndex(x=>x.o===t.p);t.p=j>=0?j:''}});
     PV.d.per=idx.map(({n,s,e})=>({n,s,e}));
    },'已更新上下課時間');
@@ -1253,6 +1276,106 @@ function slipProj(cid,d){
  const c=S.classes.find(x=>x.id===cid),ss=stus(c),open=(TK[cid]||[]).filter(t=>t.sl&&t.d<=d&&ss.some(s=>!isIn(R(t,s.id))));
  if(!open.length)return '';
  return `<h2>📮 回條還沒交</h2><ul>${open.map(t=>`<li>${E(t.title)}${t.due?'（'+mdw(t.due)+' 截止）':''}：<b class="bad">${E(ss.filter(s=>!isIn(R(t,s.id))).map(s=>s.no!==''?s.no:s.name).join('、'))}</b> 號</li>`).join('')}</ul>`;
+}
+
+// ---------- 上課紀錄：每一節預計要上什麼、實際上了什麼（只有自己看得到：PV.d.lp[日期][第幾節]）----------
+function fixLP(o){
+ const out={};Object.keys(o&&typeof o==='object'?o:{}).forEach(d=>{if(!DT.test(d))return;const v=o[d]||{},m={};
+  Object.keys(v).forEach(i=>{const x=v[i];if(x&&(x.pl||x.dn))m[i]={pl:String(x.pl||''),dn:String(x.dn||''),cid:String(x.cid||''),sub:String(x.sub||'')}});
+  if(Object.keys(m).length)out[d]=m});
+ return out;
+}
+const lpGet=(d,i)=>(PV.d.lp[d]||{})[i]||null;
+const lpCls=x=>(S.classes.find(c=>c.id===x.cid)||{}).name||'';
+// 這一節（d 日、第 i 節）上一次同一班同一科記了什麼
+function lpPrev(d,i,cid,sub){
+ const ds=Object.keys(PV.d.lp).filter(x=>x<=d).sort().reverse();
+ for(const x of ds){const m=PV.d.lp[x];for(const k of Object.keys(m).sort((a,b)=>b-a)){if(x===d&&+k>=i)continue;const e=m[k];if(e.cid===cid&&(!sub||e.sub===sub)&&(e.dn||e.pl))return {d:x,i:+k,e}}}
+ return null;
+}
+function lpSheet(d,i){
+ const P=PV.d.per[i];if(!P)return back();
+ const cell=dayCells(d)[i],old=lpGet(d,i);
+ const D={pl:old?old.pl:'',dn:old?old.dn:'',cid:old&&old.cid||(cell&&cell.cid)||'',sub:old&&old.sub||(cell&&cell.sub)||''};
+ const prev=D.cid?lpPrev(d,i,D.cid,D.sub):null;
+ sheet(`<h3>${mdw(d)} ${E(P.n)}</h3><div class="ps">${P.s}–${P.e}${cell?' · '+E(cellTxt(cell)):' · 空堂'}</div><div style="height:10px"></div>
+  ${prev?`<div class="prevlp"><span class="ps">上次 ${md(prev.d)} ${E((PV.d.per[prev.i]||{}).n||'')}</span>${E(prev.e.dn||prev.e.pl)}</div>`:''}
+  <label class="f"><span>預計要上</span><textarea id="lpp" style="min-height:70px" placeholder="例如：第 5 課 生字、課文朗讀">${E(D.pl)}</textarea></label>
+  <label class="f"><span>實際上了 <button class="bt sm" id="lpsame" style="margin-left:6px">照預計上完了</button></span><textarea id="lpd" style="min-height:70px" placeholder="例如：上到第 2 段，生字還差 3 個">${E(D.dn)}</textarea></label>
+  <div class="foot">${old?'<button class="bt" id="lpdel" style="color:var(--bad)">清除</button>':'<span></span>'}<button class="go" id="lpsv">儲存</button></div>`,p=>{
+  p.querySelector('#lpsame').onclick=e=>{e.preventDefault();const v=p.querySelector('#lpp').value.trim();if(!v)return toast('先寫預計要上的');p.querySelector('#lpd').value=v};
+  if(!old)setTimeout(()=>p.querySelector('#lpp').focus(),60);
+  p.querySelector('#lpsv').onclick=()=>{
+   const pl=p.querySelector('#lpp').value.trim(),dn=p.querySelector('#lpd').value.trim();
+   pop(()=>{const m=PV.d.lp[d]||(PV.d.lp[d]={});if(pl||dn)m[i]={pl,dn,cid:D.cid,sub:D.sub};else delete m[i]},pl||dn?'已儲存':null);back();
+  };
+  const dl_=p.querySelector('#lpdel');if(dl_)dl_.onclick=()=>{pop(()=>{delete (PV.d.lp[d]||{})[i]},'已清除');back()};
+ });
+}
+let LPD=today(),LPM='day',LPS='';
+function lpView(){
+ const P=PV.d.per;
+ let h=head('上課紀錄','每一節預計要上什麼、實際上了什麼 · 只有你看得到')+
+  `<div class="segs" style="margin-top:12px">${[['day','看這一天'],['cls','看一個班上到哪']].map(([v,n])=>`<button data-a="lpm" data-v="${v}" class="${LPM===v?'on':''}">${n}</button>`).join('')}</div>`;
+ if(LPM==='day'){
+  const cells=dayCells(LPD),note=dayNote(LPD);
+  h+=`<div class="dbar"><button class="bt" data-a="lpd" data-v="-1">‹</button><input type="date" id="lpdi" value="${LPD}"><button class="bt" data-a="lpd" data-v="1">›</button>${LPD!==today()?'<button class="bt" data-a="lpd" data-v="0">今天</button>':''}</div>
+   ${note?`<div class="note" style="margin-top:10px">📍 ${E(note)}</div>`:''}
+   <div class="box list" style="padding:2px 12px">${P.map((p,i)=>{const c=cells[i],e=lpGet(LPD,i);if(!c&&!e)return '';
+    return `<button class="lr lpr" data-a="lped" data-d="${LPD}" data-i="${i}"><span class="dt2"><b style="font-size:14px">${E(p.n)}</b><small>${p.s}</small></span><span class="lt"><span class="ps">${c?E(cellTxt(c)):e&&e.cid?E(lpCls(e)+' '+e.sub):'空堂'}</span>
+     ${e?`${e.pl?`<span class="lpx"><i>預計</i>${E(e.pl)}</span>`:''}${e.dn?`<span class="lpx ok"><i>上了</i>${E(e.dn)}</span>`:''}`:'<span class="lpx none">點一下寫這節要上什麼</span>'}</span></button>`}).join('')||'<div class="empty">這天沒有排課。到「課表」把每週的課排好，這裡就會列出每一節。</div>'}</div>`;
+ }else{
+  const c=cls(),subs=[...new Set(Object.values(PV.d.lp).flatMap(m=>Object.values(m)).filter(e=>e.cid===c.id).map(e=>e.sub).filter(Boolean))];
+  if(LPS&&!subs.includes(LPS))LPS='';
+  const L=[];Object.keys(PV.d.lp).sort().reverse().forEach(d=>{const m=PV.d.lp[d];Object.keys(m).sort((a,b)=>b-a).forEach(i=>{const e=m[i];if(e.cid===c.id&&(!LPS||e.sub===LPS))L.push({d,i:+i,e})})});
+  h+=`<div class="row sp" style="margin-top:12px"><button class="clsb" data-a="clspick" style="font-size:18px">${E(c.name)} <span>切換 ▾</span></button></div>
+   ${subs.length>1?`<div class="segs" style="margin-top:8px">${['',...subs].map(v=>`<button data-a="lps" data-v="${E(v)}" class="${LPS===v?'on':''}">${v?E(v):'全部'}</button>`).join('')}</div>`:''}
+   ${L.length?`<div class="box" style="padding:6px 14px"><table class="t"><tbody>${L.map(({d,i,e})=>`<tr data-a="lped" data-d="${d}" data-i="${i}"><td class="n" style="vertical-align:top">${mdw(d)}<small>${E((P[i]||{}).n||'')}${e.sub?' · '+E(e.sub):''}</small></td><td>${e.dn?E(e.dn):`<span class="sub">預計：${E(e.pl)}</span>`}</td></tr>`).join('')}</tbody></table></div>`
+    :'<div class="box empty">這一班還沒有上課紀錄</div>'}`;
+ }
+ return h;
+}
+
+// ---------- 行事曆：哪一天有什麼作業、考試、上課紀錄；點考試看全班成績 ----------
+let CALM=today().slice(0,7),CALD=today();
+function calDay(cid,d){
+ const ts=TK[cid]||[];
+ return {
+  ex:ts.filter(t=>t.g&&tDate(t)===d),
+  due:ts.filter(t=>!t.g&&!t.sl&&t.due===d),
+  out:ts.filter(t=>!t.g&&!t.sl&&t.d===d&&t.due!==d),
+  sl:ts.filter(t=>t.sl&&t.due===d),
+  big:PV.d.exams.filter(e=>e.d===d),
+  lp:Object.keys(PV.d.lp[d]||{}).map(i=>({i:+i,e:PV.d.lp[d][i]})).filter(x=>x.e.cid===cid),
+  td:PV.d.todos.filter(t=>onDay(t,d))
+ };
+}
+function calView(){
+ const c=cls(),[y,m]=CALM.split('-').map(Number),first=new Date(y,m-1,1),days=new Date(y,m,0).getDate();
+ const lead=(first.getDay()+6)%7,cells=[];
+ for(let i=0;i<lead;i++)cells.push('');
+ for(let i=1;i<=days;i++)cells.push(y+'-'+z(m)+'-'+z(i));
+ while(cells.length%7)cells.push('');
+ const x=calDay(c.id,CALD),ss=stus(c);
+ const sec=(t,h)=>h?`<div class="h3">${t}</div>${h}`:'';
+ const tRow=(t,lab)=>{const st=tStats(t,ss);return `<button class="lr" data-a="task" data-id="${t.id}"><span class="lt">${E(tName(t))}<small>${E(t.sub)}${lab?' · '+lab:''}</small></span>${t.g?(st.avg!=null?pill(scCls(st.avg)==='bad'?'bad':scCls(st.avg)==='ok'?'ok':'','平均 '+r1(st.avg)):pill('','還沒登記')):st.miss.length?pill(t.due&&t.due<=today()?'bad':'','未交 '+st.miss.length):pill('ok','全交')}<span class="ch">›</span></button>`};
+ return head('行事曆',E(c.name)+' · 點日期看那天的作業、考試',`<button class="bt sm" data-a="clspick">換班級</button>`)+
+ `<div class="box" style="padding:12px 10px">
+  <div class="row sp" style="margin-bottom:8px"><button class="bt sm" data-a="calm" data-v="-1">‹</button><b style="font-size:18px">${y} 年 ${m} 月</b><button class="bt sm" data-a="calm" data-v="1">›</button></div>
+  <div class="calg">${['一','二','三','四','五','六','日'].map(w=>`<span class="calw">${w}</span>`).join('')}
+   ${cells.map(d=>{if(!d)return '<span></span>';const k=calDay(c.id,d),ex=k.ex.length+k.big.length,hw=k.due.length+k.out.length+k.sl.length,lp=k.lp.length;
+    return `<button class="cald${d===CALD?' on':''}${d===today()?' tdy':''}" data-a="cald" data-v="${d}"><b>${+d.slice(8)}</b><span>${ex?'<i class="r"></i>':''}${hw?'<i class="b"></i>':''}${lp?'<i class="g"></i>':''}</span></button>`}).join('')}</div>
+  <div class="ps calk"><i class="r"></i>考試 <i class="b"></i>作業、回條 <i class="g"></i>上課紀錄${CALM!==today().slice(0,7)?' · <a href="#" data-a="calm" data-v="0">回到這個月</a>':''}</div>
+ </div>
+ <div class="h2" style="margin:16px 2px 4px">${mdw(CALD)}${CALD===today()?'（今天）':''}</div>
+ ${x.big.length?`<div class="box list" style="padding:4px 12px">${x.big.map(e=>`<button class="lr" data-a="exed" data-id="${e.id}"><span class="lt"><b>${E(e.n)}</b><small>${E(e.x)}</small></span>${pill('bad','考試')}</button>`).join('')}</div>`:''}
+ ${sec('考試、小考（點進去看全班成績）',x.ex.length?`<div class="box list" style="padding:4px 12px">${x.ex.map(t=>tRow(t,'')).join('')}</div>`:'')}
+ ${sec('今天要交的作業',x.due.length?`<div class="box list" style="padding:4px 12px">${x.due.map(t=>tRow(t,t.m?'早自修':md(t.d)+' 出')).join('')}</div>`:'')}
+ ${sec('今天出的作業',x.out.length?`<div class="box list" style="padding:4px 12px">${x.out.map(t=>tRow(t,t.due?md(t.due)+' 交':'')).join('')}</div>`:'')}
+ ${sec('回條截止',x.sl.length?`<div class="box list" style="padding:4px 12px">${x.sl.map(t=>`<button class="lr" data-a="slip" data-id="${t.id}"><span class="lt">${E(t.title)}</span>${pill(slipOpen(t,ss)?'warn':'ok','已收 '+ss.filter(s=>isIn(R(t,s.id))).length+'/'+ss.length)}<span class="ch">›</span></button>`).join('')}</div>`:'')}
+ ${sec('上課紀錄',x.lp.length?`<div class="box list" style="padding:4px 12px">${x.lp.map(({i,e})=>`<button class="lr" data-a="lped" data-d="${CALD}" data-i="${i}"><span class="dt2"><b style="font-size:14px">${E((PV.d.per[i]||{}).n||'')}</b></span><span class="lt">${E(e.dn||e.pl)}<small>${E(e.sub)}${e.dn?'':' · 預計'}</small></span></button>`).join('')}</div>`:'')}
+ ${sec('我的待辦',x.td.length?`<div class="box list" style="padding:4px 12px">${x.td.map(t=>tdRow(t,CALD)).join('')}</div>`:'')}
+ ${!x.big.length&&!x.ex.length&&!x.due.length&&!x.out.length&&!x.sl.length&&!x.lp.length&&!x.td.length?'<div class="box empty">這天沒有作業、考試和紀錄</div>':''}`;
 }
 
 // 考試：期中考、期末考…出題（提早三週）、考卷影印
@@ -1963,6 +2086,12 @@ function onClick(e){
  if(a==='back')return goBack();
  if(a==='home'){if(DEPTH>0)history.go(-DEPTH);else{PG={v:'home'};render()}return}
  if(a==='proj'){PJC='';return go({v:'proj',d:ds.d||today()})}
+ if(a==='lped')return openS(()=>lpSheet(ds.d,+ds.i));
+ if(a==='lpm'){LPM=ds.v;return render()}
+ if(a==='lpd'){LPD=ds.v==='0'?today():addD(LPD,+ds.v);return render()}
+ if(a==='lps'){LPS=ds.v;return render()}
+ if(a==='calm'){if(ds.v==='0'){CALM=today().slice(0,7);CALD=today()}else{const [y,m]=CALM.split('-').map(Number),x=new Date(y,m-1+(+ds.v),1);CALM=ymd(x).slice(0,7)}return render()}
+ if(a==='cald'){CALD=ds.v;return render()}
  if(a==='slnew')return openS(()=>slipSheet(null));
  if(a==='sledit')return openS(()=>slipSheet(ds.id));
  if(a==='slip'){SLD=today();return go({v:'slip',id:ds.id})}
