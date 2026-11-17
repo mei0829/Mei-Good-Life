@@ -55,7 +55,7 @@ button.go:disabled{opacity:.5}
 .fs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px}.fs .chip{flex:none}
 .grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}.grid .w{grid-column:1/3}
 .fl{display:block}.fl span{display:block;font-size:12px;color:var(--sub);margin-bottom:2px}
-.ai.z{opacity:.38}.agl{margin-top:10px;border-top:1px solid var(--line)}.ag{padding:8px 0;border-bottom:1px solid var(--line)}.ais{display:flex;flex-wrap:wrap;gap:2px 14px;margin-top:2px}.ai{font-size:13px;color:var(--sub);cursor:pointer}.ai b{font-weight:500;color:var(--ink)}.ai b.neg{color:var(--bad)}.lnk{background:none;border:0;color:var(--acc);font-size:13px;padding:8px 0 0;cursor:pointer}
+.ib{border:0;background:none;color:var(--acc);font-size:16px;padding:0 4px;cursor:pointer;vertical-align:-1px}.ai.z{opacity:.38}.agl{margin-top:10px;border-top:1px solid var(--line)}.ag{padding:8px 0;border-bottom:1px solid var(--line)}.ais{display:flex;flex-wrap:wrap;gap:2px 14px;margin-top:2px}.ai{font-size:13px;color:var(--sub);cursor:pointer}.ai b{font-weight:500;color:var(--ink)}.ai b.neg{color:var(--bad)}.lnk{background:none;border:0;color:var(--acc);font-size:13px;padding:8px 0 0;cursor:pointer}
 .pill{font-size:12px;padding:1px 8px;border-radius:10px;border:1px solid var(--line);color:var(--sub);white-space:nowrap}
 .pill.y{background:color-mix(in srgb,var(--acc) 12%,transparent);color:var(--acc);border-color:transparent}
 .tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:10px 0}
@@ -1794,7 +1794,7 @@ function assetCard(liq){
  const hd=holdAmt(),hin=!!S.holdIn,net=liq+stk-owe-(hin?0:hd);
  return`<div class="card"><div class="sub">我的總資產（已扣掉還沒繳的卡費${hd&&!hin?'、📦 要繳出去的預存':''}）</div><div class="big">${M(net)}</div>
  <div class="tiles"><div><span class="sub">現金＋銀行</span><b>${M(liq)}</b></div><div><span class="sub">股票市值</span><b>${M(stk)}</b></div><div><span class="sub">卡費未繳</span><b>${owe?'−'+M(owe):M(0)}</b></div></div>
- ${(()=>{const sp=liq-hd-owe;return hd?`<div class="note keep" style="margin-top:8px;font-size:14px;color:var(--ink)"><div class="row"><b class="sp">💡 真的可以花的錢</b><b class="num ${sp<0?'neg':''}" style="font-size:20px">${M(sp)}</b></div><details class="tip" style="margin:2px 0 0"><summary>ⓘ 怎麼算的</summary><div>現金＋銀行 ${M(liq)}<br>− 📦 預存（之後要繳的） ${M(hd)}${owe?'<br>− 還沒繳的卡費 '+M(owe):''}<br>預存的錢${hin?'有':'<b>沒有</b>'}算進上面的總資產・<a href="#" data-a="holdin">${hin?'改成不算':'改成要算'}</a></div></details></div>`:''})()}
+ ${(()=>{const sp=liq-hd-owe;return hd?`<div class="note keep" style="margin-top:8px;font-size:14px;color:var(--ink)"><div class="row"><b class="sp">💡 真的可以花的錢 <button class="ib" data-a="spi" aria-label="怎麼算的">ⓘ</button></b><b class="num ${sp<0?'neg':''}" style="font-size:20px">${M(sp)}</b></div>${U.spi?`<div class="sub" style="margin-top:6px;line-height:1.7">現金＋銀行 ${M(liq)}<br>− 📦 預存（之後要繳的） ${M(hd)}${owe?'<br>− 還沒繳的卡費 '+M(owe):''}<br>預存的錢${hin?'有':'<b>沒有</b>'}算進上面的總資產・<a href="#" data-a="holdin">${hin?'改成不算':'改成要算'}</a></div>`:''}</div>`:''})()}
  <input id="acq" data-l="1" placeholder="搜尋帳戶：銀行名稱、代碼（例：822）或帳號" value="${E(U.acq||'')}" style="margin-top:10px" autocomplete="off"><div id="acr">${acctFind(U.acq)}</div>
  ${acctBrief()}
  ${nop?`<div class="sub" style="margin-top:6px">有 ${nop} 檔股票還沒有股價，市值先用成本算。</div>`:''}
@@ -2228,6 +2228,7 @@ const ACT={
   if(add&&!String(o.n||'').includes(tag))o.n=(o.n?o.n+'\n\n':'')+tag+'\n'+add;
   render();toast('填好了，看看沒問題就按「儲存」')},
  iddel:()=>{if(!confirm('刪除這個點子？（不想做可以改成「先放著」）'))return;S.ideas=IDS().filter(y=>y.id!==U.sheet.o.id);U.sheet=null;save();render()},
+ spi:()=>{U.spi=!U.spi;render()},
  az:()=>{U.az=!U.az;render()},
  shopall:()=>{U.shopAll=!U.shopAll;render()},
  cat:i=>{const o=U.sheet.o;o.cat=i;o.catSet=1;if(o.sub&&!subsOf(i).includes(o.sub))o.sub='';render()},
