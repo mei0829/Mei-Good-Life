@@ -782,8 +782,9 @@ function gsearch(q){
  return h||'<div class="sub" style="padding:16px 2px">找不到「'+E(q)+'」。可以換個字試試，例如銀行名、店名、分類、股票代號。</div>';
 }
 function sheetHelp(o){return`<div class="row"><b class="sp" style="font-size:17px">使用說明・搜尋</b><button class="x" data-a="close">×</button></div>
- <input style="margin:8px 0 4px" placeholder="🔍 搜尋整個網站，例：國泰、房租、0050" value="${E(o.q||'')}" data-m="sheet.o.q" data-r="1">
- ${o.q&&String(o.q).trim()?gsearch(o.q):`<div class="sub" style="margin:4px 0 6px">點標題展開。還有不懂的，也可以看「更多 → 新手教學」。</div>`}
+ <input id="hq" type="search" style="margin:8px 0 4px" placeholder="🔍 搜尋整個網站，例：國泰、房租、0050" value="${E(o.q||'')}" autocomplete="off">
+ <div id="hres">${helpBody(o)}</div>`}
+function helpBody(o){return`${o.q&&String(o.q).trim()?gsearch(o.q):`<div class="sub" style="margin:4px 0 6px">點標題展開。還有不懂的，也可以看「更多 → 新手教學」。</div>`}
  ${o.q&&String(o.q).trim()?'':HELP.map(([k,t,,body])=>`<div class="hp"><button data-a="hpk" data-i="${k}"><span>${t}</span><span class="sub">${o.open===k?'▴':'▾'}</span></button>${o.open===k?`<div>${body}</div>`:''}</div>`).join('')}`}
 // 照銀行金額修正：App 算的這期卡費跟銀行帳單不一樣時，補一筆差額（多的記支出、少的記退款），讓總數一樣
 function sheetCycFix(o){const c=A(o.cid),s=c&&cardInfo(c).by[o.close];if(!s)return'<div class="sub">找不到這一期</div>';const v=pAmt(o.v),d=o.v!==''&&isFinite(v)?Math.round((v-s.amt)*100)/100:null;
@@ -2508,9 +2509,12 @@ function field(e){
  if(el.dataset.fee&&!U.sheet.o.feeSet){const o=U.sheet.o,f=calcFee(o);o.fee=f.fee;o.tax=f.tax;const a=$('tfee'),b=$('ttax');if(a)a.value=f.fee;if(b)b.value=f.tax}
  if(el.dataset.g){const o=U.sheet.o;if(p==='sheet.o.shop'){o.shopSet=!!o.shop;document.querySelectorAll('[data-a="shop"]').forEach(b=>b.classList.toggle('on',b.dataset.i===o.shop))}else if(!o.shopSet&&o.type!=='xfer'){const f=shopFind(o.note);if(f!==(o.shop||'')){o.shop=f;const si=$('fshop');if(si)si.value=f;document.querySelectorAll('[data-a="shop"]').forEach(b=>b.classList.toggle('on',b.dataset.i===f))}}
   if(!o.catSet){const g=guess(o.note+' '+(o.shop||''),o.type);if(g&&g!==o.cat){o.cat=g;document.querySelectorAll('[data-a="cat"]').forEach(b=>b.classList.toggle('on',b.dataset.i===g))}}}
- if(el.dataset.r&&(e.type==='input'||el.tagName==='SELECT'||el.type==='checkbox')){KF=e.type==='input';render()}
+ if(el.dataset.r&&(e.type==='input'||el.tagName==='SELECT'||el.type==='checkbox')){if(e.isComposing||el._comp)return;KF=e.type==='input';render()}
 }
-document.addEventListener('input',e=>{if(e.target.id==='acq'){U.acq=e.target.value;const r=$('acr');if(r)r.innerHTML=acctFind(U.acq);return}if(e.target.id==='nwq'){NW.kw=e.target.value;NW.lim=40;$('nwl').innerHTML=nwList();return}if(e.target.type!=='checkbox'&&e.target.tagName!=='SELECT'&&!e.target.dataset.l)field(e)});
+// 打注音、拼音選字時不要重畫，不然字會被吃掉；選完字再更新
+document.addEventListener('compositionstart',e=>{if(e.target&&e.target.dataset)e.target._comp=1});
+document.addEventListener('compositionend',e=>{const el=e.target;if(!el||!el.dataset)return;el._comp=0;if(el.id==='acq'||el.id==='hq'){el.dispatchEvent(new Event('input',{bubbles:true}));return}if(el.dataset.m)field({target:el,type:'input'})});
+document.addEventListener('input',e=>{if(e.target.id==='hq'){if(e.isComposing||e.target._comp)return;U.sheet.o.q=e.target.value;const r=$('hres');if(r)r.innerHTML=helpBody(U.sheet.o);return}if(e.target.id==='acq'){U.acq=e.target.value;const r=$('acr');if(r)r.innerHTML=acctFind(U.acq);return}if(e.target.id==='nwq'){NW.kw=e.target.value;NW.lim=40;$('nwl').innerHTML=nwList();return}if(e.target.type!=='checkbox'&&e.target.tagName!=='SELECT'&&!e.target.dataset.l)field(e)});
 document.addEventListener('change',async e=>{
  const el=e.target;
  if(el.id==='impf'&&el.files[0]){const f=el.files[0];if(/^image\//.test(f.type)){U.imp.file=f;U.imp.text=''}else if(/\.xlsx?$/i.test(f.name)){toast('請先用 Excel 另存成 CSV 再匯入')}else{U.imp.file=null;U.imp.text=await readFile(f);impParse()}render();return}
