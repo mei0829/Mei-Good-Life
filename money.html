@@ -55,7 +55,7 @@ button.go:disabled{opacity:.5}
 .fs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px}.fs .chip{flex:none}
 .grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}.grid .w{grid-column:1/3}
 .fl{display:block}.fl span{display:block;font-size:12px;color:var(--sub);margin-bottom:2px}
-.sbar{display:flex;height:16px;border-radius:8px;overflow:hidden;background:var(--bg);margin:6px 0 6px}.sbar i{display:block;height:100%}.dot{width:10px;height:10px;border-radius:3px;margin-right:8px;flex:none}.ib{border:0;background:none;color:var(--acc);font-size:16px;padding:0 4px;cursor:pointer;vertical-align:-1px}.ai.z{opacity:.38}.agl{margin-top:10px;border-top:1px solid var(--line)}.ag{padding:8px 0;border-bottom:1px solid var(--line)}.ais{display:flex;flex-wrap:wrap;gap:2px 14px;margin-top:2px}.ai{font-size:13px;color:var(--sub);cursor:pointer}.ai b{font-weight:500;color:var(--ink)}.ai b.neg{color:var(--bad)}.lnk{background:none;border:0;color:var(--acc);font-size:13px;padding:8px 0 0;cursor:pointer}
+.vbars{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0 2px;text-align:center}.vb b{font-size:14px}.vt{height:120px;display:flex;align-items:flex-end;justify-content:center;border-bottom:1px solid var(--line);margin:4px 0 6px}.vt i{display:block;width:56%;min-height:2px;border-radius:6px 6px 0 0}.vn{font-size:13px;font-weight:600}.sbar{display:flex;height:16px;border-radius:8px;overflow:hidden;background:var(--bg);margin:6px 0 6px}.sbar i{display:block;height:100%}.dot{width:10px;height:10px;border-radius:3px;margin-right:8px;flex:none}.ib{border:0;background:none;color:var(--acc);font-size:16px;padding:0 4px;cursor:pointer;vertical-align:-1px}.ai.z{opacity:.38}.agl{margin-top:10px;border-top:1px solid var(--line)}.ag{padding:8px 0;border-bottom:1px solid var(--line)}.ais{display:flex;flex-wrap:wrap;gap:2px 14px;margin-top:2px}.ai{font-size:13px;color:var(--sub);cursor:pointer}.ai b{font-weight:500;color:var(--ink)}.ai b.neg{color:var(--bad)}.lnk{background:none;border:0;color:var(--acc);font-size:13px;padding:8px 0 0;cursor:pointer}
 .pill{font-size:12px;padding:1px 8px;border-radius:10px;border:1px solid var(--line);color:var(--sub);white-space:nowrap}
 .pill.y{background:color-mix(in srgb,var(--acc) 12%,transparent);color:var(--acc);border-color:transparent}
 .tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:10px 0}
@@ -1804,13 +1804,11 @@ function assetCard(liq){
  return`<div class="card">
  <div class="row"><b class="sp" style="font-size:15px">💡 彈性運用 <button class="ib" data-a="spi" aria-label="怎麼算的">ⓘ</button></b><span class="big ${sp<0?'neg':''}" style="font-size:28px">${M(sp)}</span></div>
  ${U.spi?`<div class="sub" style="margin-top:4px;line-height:1.7">現金＋銀行 ${M(liq)}${hd?'<br>− 📦 預存（之後要繳的） '+M(hd):''}${owe?'<br>− 還沒繳的卡費 '+M(owe):''}${hd?`<br>預存的錢${hin?'有':'<b>沒有</b>'}算進總資產・<a href="#" data-a="holdin">${hin?'改成不算':'改成要算'}</a>`:''}</div>`:''}
- <div class="sub" style="margin-top:10px">現金＋銀行 ${M(liq)} 是這樣分的</div>
- <div class="sbar">${seg(owe,'var(--bad)')}${seg(hd,'var(--amber)')}${seg(Math.max(0,sp),'var(--acc)')}</div>
- ${owe?lg('var(--bad)','卡費要繳',owe):''}${hd?lg('var(--amber)','📦 預存（要繳的）',hd):''}${lg('var(--acc)',sp<0?'不夠，還差':'可以彈性運用',Math.abs(sp),sp<0?'<span class="neg" style="margin-left:4px">⚠︎</span>':'')}
+ ${(()=>{const gap=Math.max(0,T-sv),B=[['可以彈性運用',sp,'var(--acc)',sp<0?'不夠 '+M(-sp):''],['預存還差',gap,'var(--amber)',T?'已存 '+M(sv)+' / '+M(T):'還沒設存錢目標'],['卡費要繳',owe,'var(--bad)',owe?'':'都繳清了']],mx=Math.max(1,...B.map(b=>Math.max(0,b[1])));
+  return`<div class="vbars">${B.map(([n,v,c,x])=>`<div class="vb"><b class="num ${v<0?'neg':''}">${M(v)}</b><div class="vt"><i style="height:${Math.max(0,v)/mx*100}%;background:${c}"></i></div><div class="vn">${n}</div><div class="sub">${x}</div></div>`).join('')}</div>`})()}
  <div style="border-top:1px solid var(--line);margin:12px 0 0;padding-top:10px">
   <div class="row"><span class="sp"><b>這個月已經花了</b></span><b class="num">${M(spent)}</b></div>
   ${cap?`${pbar(spent,cap,spent>cap?'var(--bad)':'var(--acc)')}<div class="row sub" style="margin-top:2px"><span class="sp">${bud?'預算 '+M(bud):'收入 '+M(inc)}</span><span class="${spent>cap?'neg':''}">${spent>cap?'超過 '+M(spent-cap):(bud?'還能花 ':'還剩 ')+M(cap-spent)}</span></div>`:`<div class="sub">到「預算」設每月預算，就能看到還能花多少。</div>`}
-  ${T?`<div class="row" style="margin-top:10px"><span class="sp"><b>這個月存錢</b></span><b class="num">${M(sv)} <span class="sub">/ ${M(T)}</span></b></div>${pbar(sv,T,'var(--ok)')}<div class="row sub" style="margin-top:2px"><span class="sp">目標 ${M(T)}</span><span>${sv>=T?'✓ 存到了':'還沒存到 '+M(T-sv)}</span></div>`:''}
  </div>
  <button class="lnk" data-a="netshow">${U.netShow?'收起總資產 ▴':'總資產（含股票）▾'}</button>
  ${U.netShow?`<div style="margin-top:6px"><div class="sub">總資產（已扣未繳費用${hd&&!hin?'&amp;預存':''}）</div><div class="big">${M(net)}</div>
