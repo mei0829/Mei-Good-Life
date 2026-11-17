@@ -322,7 +322,7 @@ function vHome(){
   ${I.credit>0.5?`<div class="sub">溢繳 ${M(I.credit)}：多繳的錢，${md(I.cur)} 結帳時會自動扣抵</div>`:''}
   ${pend.length?`<div class="sub">… ${pend.length} 筆還沒入帳（${M(pend.reduce((s,t)=>s+(t.type==='in'?-t.amt:t.amt),0))}）</div>`:''}
   ${I.billed.map(s=>`<div class="sub">${md(s.close)} 帳單 ${M(s.left)}，${s.due<today()?'<span class="late">已過繳款日 '+md(s.due)+'</span>':md(s.due)+' 前要繳'}</div>`).join('')}
-  ${I.billed.length?`<button class="go q" style="margin-top:6px" data-a="paycard" data-i="${c.id}">記錄繳卡費</button>`:''}</div>`}).join('');
+  <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap">${I.billed.length?`<button class="go q" data-a="paycard" data-i="${c.id}">記錄繳卡費</button>`:''}<button class="go q" data-a="cardback" data-i="${c.id}">＋ 點數／回饋折抵</button></div></div>`}).join('');
  return h+`<button class="fab" data-a="addtx" aria-label="記一筆">＋</button>`;
 }
 
