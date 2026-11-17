@@ -166,7 +166,7 @@ const addM=(s,n,day)=>{const d=pd(s);return ymd(d.getFullYear(),d.getMonth()+n,d
 
 // 預設分類與自動分類規則（關鍵字不分大小寫，越上面越優先）
 const OUT=['餐飲','交通','停車費','購物','日用品','居家','房貸','電信網路','水電瓦斯','保險','醫療','娛樂','學習','稅費','其他'];
-const INC=['薪資','副業','家人贊助','獎金','退款','利息','其他收入'];
+const INC=['薪資','副業','家人贊助','獎金','退款','刷卡回饋','利息','其他收入'];
 const RULES=[['停車','停車費'],['路邊','停車費'],['PARKING','停車費'],['加油','交通'],['中油','交通'],['台塑石油','交通'],['高鐵','交通'],['台鐵','交通'],['臺鐵','交通'],['捷運','交通'],['悠遊卡','交通'],['一卡通','交通'],['UBER','交通'],['大車隊','交通'],['ETC','交通'],['遠通','交通'],['UBER EATS','餐飲'],['FOODPANDA','餐飲'],['統一超商','餐飲'],['7-ELEVEN','餐飲'],['全家','餐飲'],['萊爾富','餐飲'],['OK超商','餐飲'],['星巴克','餐飲'],['麥當勞','餐飲'],['全聯','日用品'],['家樂福','日用品'],['好市多','日用品'],['COSTCO','日用品'],['屈臣氏','日用品'],['康是美','日用品'],['IKEA','居家'],['中華電信','電信網路'],['台灣大哥大','電信網路'],['遠傳','電信網路'],['電信','電信網路'],['台灣電力','水電瓦斯'],['電費','水電瓦斯'],['水費','水電瓦斯'],['自來水','水電瓦斯'],['瓦斯','水電瓦斯'],['人壽','保險'],['產險','保險'],['保險','保險'],['診所','醫療'],['醫院','醫療'],['藥局','醫療'],['NETFLIX','娛樂'],['SPOTIFY','娛樂'],['YOUTUBE','娛樂'],['APPLE.COM','娛樂'],['GOOGLE','娛樂'],['威秀','娛樂'],['蝦皮','購物'],['MOMO','購物'],['PCHOME','購物'],['博客來','學習'],['稅','稅費'],['監理','稅費'],['薪資','薪資'],['薪轉','薪資'],['利息','利息']];
 const DEF=()=>({accts:[{id:'cash',name:'現金',type:'cash',init:0},{id:'bank',name:'銀行帳戶',type:'bank',init:0},{id:'card1',name:'信用卡',type:'card',init:0,close:5,due:20,since:today()}],tx:[],bills:[],cats:{out:OUT.slice(),in:INC.slice()},rules:RULES.map(([k,c])=>({k,c})),living:null,keep:0,lastAcct:'cash',perk:{extra:'',q:'',amt:'',sum:null,cache:{}},fx:{USD:32,d:'',auto:0},plan:{income:'',from:'',items:[],done:''},payees:[],trades:[],prices:{},fee:{disc:1,min:20},budget:{total:0,cats:{}},calc:{p:100000,c:5000,r:6,y:20,goal:3000000},skin:'',mode:'auto',guideOff:false});
 let S;try{const r=localStorage.getItem('money-v1');S=Object.assign(DEF(),r?JSON.parse(r):{})}catch(e){S=DEF()}
@@ -177,6 +177,7 @@ const normAcct=()=>S.accts.forEach(a=>{if(a.type!=='card'&&(a.excl||a.book)){a.e
 S.bills.forEach(b=>{const a=S.accts.find(x=>x.id===b.acct);if(b.auto&&a&&a.type==='cash'){b.auto=false;delete b.autoRec}});
 // 舊資料：要繳的錢身上留著過時的「預存」連結（以前從預存改過來的），清掉免得被當成放錯的預存
 S.bills.forEach(b=>{if(b.kind!=='save'&&b.link){const p=S.bills.find(x=>x.id===b.link);if(!p||p.fb!==b.id)delete b.link}});
+if(!S.cats.in.includes('刷卡回饋'))S.cats.in.push('刷卡回饋');
 if(!S.cats.in.includes('副業'))S.cats.in.splice(Math.max(0,S.cats.in.indexOf('薪資')+1),0,'副業');
 if(!S.cats.in.includes('家人贊助'))S.cats.in.splice(Math.max(0,S.cats.in.indexOf('薪資')+1),0,'家人贊助');
 if(!S.cats.out.includes('房貸'))S.cats.out.splice(Math.max(0,S.cats.out.indexOf('居家')+1),0,'房貸');
@@ -613,7 +614,7 @@ function vCard(){
  let h=`<button class="back" data-a="tab" data-i="home">‹ 總覽</button><h1>${E(c.name)}</h1>
  ${cards.length>1?`<div class="fs">${cards.map(x=>`<button class="chip ${x.id===c.id?'on':''}" data-a="card" data-i="${x.id}">${E(x.name)}</button>`).join('')}</div>`:''}
  ${I.credit>0.5?`<div class="note keep" style="font-size:14px;color:var(--ink)"><b>溢繳 ${M(I.credit)}</b>：繳的錢比已出帳的帳單多。會在 ${md(I.cur)} 結帳時自動扣抵下一期。<br><span class="sub">如果你沒有多繳，通常是上一期有消費漏記，或某筆的入帳日算到下一期了，對一下銀行帳單就會找到。</span></div>`:''}
- ${(()=>{const x=cardSplit(c),bd=I.billed.filter(s=>s.left>0.5).map(s=>s.due).sort()[0];return`<div class="card"><div class="row"><div class="sp"><div class="sub">已出帳・還沒繳</div><div class="big ${x.due>=0.5?'neg':''}">${M(x.due)}</div><div class="sub">${x.due>=0.5&&bd?(bd<t0?'<span class="late">已過繳款日 '+md(bd)+'</span>':md(bd)+' 前要繳'):'目前沒有要繳的'}</div></div><div style="text-align:right"><div class="sub">未出帳（還在累積）</div><div class="big">${M(x.unb)}</div><div class="sub">${md(I.cur)} 結帳</div></div></div>${x.due>=0.5?`<button class="go q" style="margin-top:8px" data-a="paycard" data-i="${c.id}">記錄繳卡費</button>`:''}</div>`})()}
+ ${(()=>{const x=cardSplit(c),bd=I.billed.filter(s=>s.left>0.5).map(s=>s.due).sort()[0];return`<div class="card"><div class="row"><div class="sp"><div class="sub">已出帳・還沒繳</div><div class="big ${x.due>=0.5?'neg':''}">${M(x.due)}</div><div class="sub">${x.due>=0.5&&bd?(bd<t0?'<span class="late">已過繳款日 '+md(bd)+'</span>':md(bd)+' 前要繳'):'目前沒有要繳的'}</div></div><div style="text-align:right"><div class="sub">未出帳（還在累積）</div><div class="big">${M(x.unb)}</div><div class="sub">${md(I.cur)} 結帳</div></div></div>${x.due>=0.5?`<button class="go q" style="margin-top:8px" data-a="paycard" data-i="${c.id}">記錄繳卡費</button>`:''} <button class="go q" style="margin-top:8px" data-a="cardback" data-i="${c.id}">＋ 點數／回饋折抵</button></div>`})()}
  <div class="note" data-t="一筆刷卡會經過哪些階段？"><b>一筆刷卡會經過 4 個階段</b><div class="sub" style="margin-top:6px;line-height:1.9">
  <span class="st pending">… 未入帳</span> 你刷了、也記了，銀行還沒收到（通常 1～3 天）<br>
  <span class="st open">○ 未出帳</span> 銀行已經入帳，等結帳日（每月 ${c.close} 號）<br>
@@ -734,6 +735,7 @@ const HELP=[
  ['idea','賺錢點子筆記',['idea'],`「更多 → <b>賺錢點子</b>」：想到、看到能賺錢的方法，在黃色便條打一句話按「記下」就好。<br>點進去可以補預估每月可賺、要先花多少、每週幾小時（會算時薪，跟正職比）、下一步、筆記。<br>進度：想法 → 研究中 → 進行中 → 有在賺；不做的改「先放著」。上面會顯示進行中的點子每月預估可以多賺多少。<br>不知道值不值得做？點進去按「<b>🔎 請 AI 幫我研究這個點子</b>」：AI 會上網查行情，告訴你大概能賺多少、要先花多少、每週要幾小時、怎麼開始、要注意什麼。看完按「<b>把結果填進下面</b>」，數字和下一步就會自動填好，再按「儲存」。`],
  ['check','對帳便條（每週看一次真實帳戶）',['check','home'],`「更多 → <b>對帳便條</b>」：像便條紙一樣列出所有帳戶。打開網銀 App，看過一個、數字對了就點一下打勾；點錯再點一下就取消。<br>數字不對就按「更新餘額」改成真的數字。<br>全部勾完會自動記下檢核時間，下面有檢核紀錄。超過 7 天沒對帳，總覽會出現黃色便條提醒。`],
  ['trip','旅遊、買東西要預存（單次目標）',['bills'],`想為一次旅遊、一個大東西先存錢：<br>1. 設定 → 帳戶 → 新增一個帳戶（例如「國泰 旅遊」，網銀子帳戶最好），勾「<b>📦 預存帳戶</b>」，這筆錢就不會被當成可以花的。<br>2. 固定收支 → 新增「<b>旅遊基金</b>」：從薪水帳戶轉到旅遊帳戶、每次存多少、<b>目標金額</b>、<b>存到哪天</b>（出發日）。<br>3. 進度條會顯示存了多少，還會算「還有幾次、每次要存多少」，不夠會提醒你。<br>4. 出發後在旅遊帳戶記花費，那時才算支出。玩完把這個固定項目刪掉就好。`],
+ ['cashback','信用卡點數折抵、現金回饋怎麼記？',['tx','card'],`帳單上「點數折抵」「現金回饋」這種，會讓卡費變少：<br>到那張卡的頁面按「<b>＋ 點數／回饋折抵</b>」（或記一筆<b>收入</b>，帳戶選那張信用卡，分類選「<b>刷卡回饋</b>」）。<br>金額填折抵了多少元，日期填帳單上折抵的那天（通常是結帳日），就會從那一期卡費扣掉。<br>回饋會算在收入裡的「刷卡回饋」，月底可以看這個月賺了多少回饋。<br>點數還沒拿去折抵之前不用記。`],
  ['inst','刷卡分期怎麼記？每期金額怎麼改？',['tx'],`記一筆刷卡時，金額填<b>總金額</b>，按「<b>＋ 這筆是分期付款</b>」，選幾期（3、6、12…），會自動拆成每個月一筆，第 1 期吸收除不盡的零頭。<br>每一期的<b>日期和金額都可以改</b>，跟銀行帳單不一樣就直接改那一期；按「重新平均分配」可以重算。<br>之後在記帳頁點任何一期，會打開整筆分期，可以一起改所有期；刪除會刪掉全部期。<br>每期會算進那個月的卡費和支出，所以每個月只算那一期的錢。<br>（在「固定收支」記的分期也可以：改金額會套用到之後每一期；單一期不一樣，就在記帳頁改那一筆。）`],
  ['vary','停車費、電費這種金額不固定的，怎麼記？',['bills'],`<b>不用每次停車都記。</b>停車費是政府代扣、每個月扣一次，這樣做：<br>1. 固定收支 → 停車費：金額填<b>大概的月平均</b>（例如 1,500），勾「<b>金額每次不一樣</b>」。<br>2. 這個平均金額會被算進「未來要準備多少錢」，網站會<b>自動幫你預留</b>，不用另外轉帳存。<br>3. 真的扣款後（看信用卡或銀行 App），按「<b>已扣款，填實際金額</b>」，輸入真的扣了多少和<b>扣款日</b>（預設是這期的日子，提早或延後扣的話改成真的那天），就記好了。<br>4. 從哪個帳戶扣就選哪個（例如中油卡），錢就從那裡算。<br>⚠︎ 如果你是<b>每次停車自己付</b>（繳費機、App），那就每次記一筆、<b>不要</b>加固定項目，避免重複；想控制就到「預算」幫停車費設上限。`],
  ['excl','🔒 不算進總資產 去哪了？（已合併到 📒 獨立帳本）',['set','book','home'],`以前的「🔒 不算進總資產」已經合併到「<b>📒 獨立帳本</b>」，原本勾 🔒 的帳戶都自動變成獨立帳本。<br>勾了 📒 的帳戶：<b>不算進總資產</b>、彈性運用的錢，<b>收支也另外記</b>，不混進記帳統計、預算、圖表，在「更多 → 獨立帳本」看。<br>適合：爸媽給的錢、代管的錢、副業專用帳戶。`],
@@ -1522,13 +1524,14 @@ function instField(o){if(!o.inst)return`<div style="margin-top:8px"><button clas
  <div class="row" style="margin-top:6px"><span class="sub sp" id="instsum">${instSumTxt(o)}</span><button class="go q" data-a="instEven">重新平均分配</button></div></div>`}
 const instSumTxt=o=>{const s=instSum(o),a=pAmt(o.amt)||0;return'合計 '+M(s)+(a&&Math.abs(s-a)>=0.5?'（跟上面的金額差 '+M(s-a)+'，例如利息）':'')};
 function sheetTx(o){
- const cs=S.cats[o.type==='in'?'in':'out'],x=o.type==='xfer',inc=o.type==='in',cd=o.type==='out'&&isCard(A(o.acct)),badInc=inc&&isCard(A(o.acct))&&o.cat!=='退款';
- const acs=(k,lbl)=>`<label class="fl"><span>${lbl}</span><select data-m="sheet.o.${k}" data-r="1">${S.accts.filter(a=>!(inc&&k==='acct'&&isCard(a)&&a.id!==o.acct)).map(a=>`<option value="${a.id}" ${o[k]===a.id?'selected':''}>${E(nm(a))}</option>`).join('')}</select></label>`;
+ const cs=S.cats[o.type==='in'?'in':'out'],x=o.type==='xfer',inc=o.type==='in',cd=o.type==='out'&&isCard(A(o.acct)),badInc=inc&&isCard(A(o.acct))&&o.cat!=='退款'&&o.cat!=='刷卡回饋';
+ const acs=(k,lbl)=>`<label class="fl"><span>${lbl}</span><select data-m="sheet.o.${k}" data-r="1">${S.accts.filter(a=>!(inc&&k==='acct'&&isCard(a)&&a.id!==o.acct&&o.cat!=='刷卡回饋'&&o.cat!=='退款')).map(a=>`<option value="${a.id}" ${o[k]===a.id?'selected':''}>${E(nm(a))}</option>`).join('')}</select></label>`;
  return`<div class="row"><b class="sp" style="font-size:17px">${o.id?'編輯':'記一筆'}</b><button class="x" data-a="close">×</button></div>
  <div class="chips" style="margin:8px 0">${[['out','支出'],['in','收入'],['xfer','轉帳／繳卡費']].map(([k,n])=>`<button class="chip ${o.type===k?'on':''}" data-a="ty" data-i="${k}">${n}</button>`).join('')}</div>
  <input class="amt" id="famt" inputmode="decimal" placeholder="0" value="${E(o.amt)}" data-m="sheet.o.amt" data-hr="1"><div class="sub" id="fhrs" style="text-align:right;min-height:18px;margin-top:-4px">${hrsLine(o)}</div>
  <div class="grid">${x?acs('acct','從')+acs('to','轉到'):acs('acct','帳戶')}<label class="fl"><span>${cd?'消費日（刷卡那天）':inc?(o.cat==='薪資'?'薪資入帳日':'入帳日'):'日期'}</span><input type="date" value="${o.d}" data-m="sheet.o.d" data-cn="1"></label>${cd?`<label class="fl"><span>銀行入帳日（還沒就空著）</span><input type="date" value="${o.pd||''}" data-m="sheet.o.pd" data-cn="1"></label><div class="fl" style="align-self:end">${o.pd?'<button class="go q" data-a="pdclr">清除入帳日</button>':'<button class="go q" data-a="pdset">銀行已入帳</button>'}</div>`:x?'':'<span></span>'}</div>
- ${badInc?'<div class="note" style="border-color:var(--bad)">⚠︎ 收入不會進信用卡。薪資請把「帳戶」改成薪水匯進去的銀行帳戶。</div>':''}
+ ${badInc?'<div class="note" style="border-color:var(--bad)">⚠︎ 收入不會進信用卡。薪資請把「帳戶」改成薪水匯進去的銀行帳戶。（信用卡的點數折抵、現金回饋，分類選「刷卡回饋」）</div>':''}
+ ${inc&&isCard(A(o.acct))&&o.cat==='刷卡回饋'?'<div class="note keep" style="margin-top:8px">這筆會從這張卡的帳單扣掉。日期填帳單上折抵的那天（通常是結帳日），金額填折抵了多少元。</div>':''}
  ${cd?`<div class="note" id="cardnote" style="margin-top:8px">${cardNote(o)}</div>
  <div class="row" style="gap:8px;margin-top:8px;align-items:flex-end"><label class="fl sp"><span>手續費（選填，例如海外刷卡、分期）</span><input inputmode="decimal" value="${E(o.fee||'')}" data-m="sheet.o.fee" data-fe="1" placeholder="0"></label><button class="go q" data-a="fee15">海外 1.5%</button></div>
  <div class="sub" id="feetot" style="text-align:right">${feeTot(o)}</div>
@@ -2228,6 +2231,7 @@ const ACT={
   if(add&&!String(o.n||'').includes(tag))o.n=(o.n?o.n+'\n\n':'')+tag+'\n'+add;
   render();toast('填好了，看看沒問題就按「儲存」')},
  iddel:()=>{if(!confirm('刪除這個點子？（不想做可以改成「先放著」）'))return;S.ideas=IDS().filter(y=>y.id!==U.sheet.o.id);U.sheet=null;save();render()},
+ cardback:i=>openTx({type:'in',amt:'',acct:i,to:'',cat:'刷卡回饋',catSet:1,d:today(),note:'點數折抵'}),
  spi:()=>{U.spi=!U.spi;render()},
  az:()=>{U.az=!U.az;render()},
  shopall:()=>{U.shopAll=!U.shopAll;render()},
