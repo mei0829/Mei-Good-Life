@@ -55,7 +55,7 @@ button.go:disabled{opacity:.5}
 .fs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px}.fs .chip{flex:none}
 .grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}.grid .w{grid-column:1/3}
 .fl{display:block}.fl span{display:block;font-size:12px;color:var(--sub);margin-bottom:2px}
-.ib{border:0;background:none;color:var(--acc);font-size:16px;padding:0 4px;cursor:pointer;vertical-align:-1px}.ai.z{opacity:.38}.agl{margin-top:10px;border-top:1px solid var(--line)}.ag{padding:8px 0;border-bottom:1px solid var(--line)}.ais{display:flex;flex-wrap:wrap;gap:2px 14px;margin-top:2px}.ai{font-size:13px;color:var(--sub);cursor:pointer}.ai b{font-weight:500;color:var(--ink)}.ai b.neg{color:var(--bad)}.lnk{background:none;border:0;color:var(--acc);font-size:13px;padding:8px 0 0;cursor:pointer}
+.sbar{display:flex;height:16px;border-radius:8px;overflow:hidden;background:var(--bg);margin:6px 0 6px}.sbar i{display:block;height:100%}.dot{width:10px;height:10px;border-radius:3px;margin-right:8px;flex:none}.ib{border:0;background:none;color:var(--acc);font-size:16px;padding:0 4px;cursor:pointer;vertical-align:-1px}.ai.z{opacity:.38}.agl{margin-top:10px;border-top:1px solid var(--line)}.ag{padding:8px 0;border-bottom:1px solid var(--line)}.ais{display:flex;flex-wrap:wrap;gap:2px 14px;margin-top:2px}.ai{font-size:13px;color:var(--sub);cursor:pointer}.ai b{font-weight:500;color:var(--ink)}.ai b.neg{color:var(--bad)}.lnk{background:none;border:0;color:var(--acc);font-size:13px;padding:8px 0 0;cursor:pointer}
 .pill{font-size:12px;padding:1px 8px;border-radius:10px;border:1px solid var(--line);color:var(--sub);white-space:nowrap}
 .pill.y{background:color-mix(in srgb,var(--acc) 12%,transparent);color:var(--acc);border-color:transparent}
 .tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:10px 0}
@@ -1795,15 +1795,33 @@ function acctBrief(){
 }
 function assetCard(liq){
  const hs=holdings().filter(h=>h.sh>0),stk=hs.reduce((s,h)=>s+conv(h.val,h.cur,'TWD'),0),owe=S.accts.filter(isCard).reduce((s,c)=>s+cardInfo(c).owe,0),nop=hs.filter(h=>h.px==null).length;
- const hd=holdAmt(),hin=!!S.holdIn,net=liq+stk-owe-(hin?0:hd);
- return`<div class="card"><div class="sub">總資產（已扣未繳費用${hd&&!hin?'&amp;預存':''}）</div><div class="big">${M(net)}</div>
+ const hd=holdAmt(),hin=!!S.holdIn,net=liq+stk-owe-(hin?0:hd),sp=liq-hd-owe;
+ // 這個月：花了多少、預算（沒設就用收入）、存錢目標
+ const m=today().slice(0,7),spent=Object.values(spentBy(m)).reduce((a,b)=>a+b,0),bud=+S.budget.total||0,inc=bud?0:(wInc()||Math.round(billPM('in'))),cap=bud||inc,T=saveTarget(),sv=savedMonth(m);
+ const seg=(v,c)=>v>0.5?`<i style="width:${v/Math.max(liq,owe+hd,1)*100}%;background:${c}"></i>`:'';
+ const lg=(c,n,v,x)=>`<div class="row" style="margin-top:4px"><span class="dot" style="background:${c}"></span><span class="sp">${n}</span><b class="num">${M(v)}</b>${x||''}</div>`;
+ const pbar=(v,max,c)=>`<div class="bar" style="height:10px;margin-top:4px"><i style="width:${max?Math.min(100,v/max*100):0}%;background:${c}"></i></div>`;
+ return`<div class="card">
+ <div class="row"><b class="sp" style="font-size:15px">💡 彈性運用 <button class="ib" data-a="spi" aria-label="怎麼算的">ⓘ</button></b><span class="big ${sp<0?'neg':''}" style="font-size:28px">${M(sp)}</span></div>
+ ${U.spi?`<div class="sub" style="margin-top:4px;line-height:1.7">現金＋銀行 ${M(liq)}${hd?'<br>− 📦 預存（之後要繳的） '+M(hd):''}${owe?'<br>− 還沒繳的卡費 '+M(owe):''}${hd?`<br>預存的錢${hin?'有':'<b>沒有</b>'}算進總資產・<a href="#" data-a="holdin">${hin?'改成不算':'改成要算'}</a>`:''}</div>`:''}
+ <div class="sub" style="margin-top:10px">現金＋銀行 ${M(liq)} 是這樣分的</div>
+ <div class="sbar">${seg(owe,'var(--bad)')}${seg(hd,'var(--amber)')}${seg(Math.max(0,sp),'var(--acc)')}</div>
+ ${owe?lg('var(--bad)','卡費要繳',owe):''}${hd?lg('var(--amber)','📦 預存（要繳的）',hd):''}${lg('var(--acc)',sp<0?'不夠，還差':'可以彈性運用',Math.abs(sp),sp<0?'<span class="neg" style="margin-left:4px">⚠︎</span>':'')}
+ <div style="border-top:1px solid var(--line);margin:12px 0 0;padding-top:10px">
+  <div class="row"><span class="sp"><b>這個月已經花了</b></span><b class="num">${M(spent)}</b></div>
+  ${cap?`${pbar(spent,cap,spent>cap?'var(--bad)':'var(--acc)')}<div class="row sub" style="margin-top:2px"><span class="sp">${bud?'預算 '+M(bud):'收入 '+M(inc)}</span><span class="${spent>cap?'neg':''}">${spent>cap?'超過 '+M(spent-cap):(bud?'還能花 ':'還剩 ')+M(cap-spent)}</span></div>`:`<div class="sub">到「預算」設每月預算，就能看到還能花多少。</div>`}
+  ${T?`<div class="row" style="margin-top:10px"><span class="sp"><b>這個月存錢</b></span><b class="num">${M(sv)} <span class="sub">/ ${M(T)}</span></b></div>${pbar(sv,T,'var(--ok)')}<div class="row sub" style="margin-top:2px"><span class="sp">目標 ${M(T)}</span><span>${sv>=T?'✓ 存到了':'還沒存到 '+M(T-sv)}</span></div>`:''}
+ </div>
+ <button class="lnk" data-a="netshow">${U.netShow?'收起總資產 ▴':'總資產（含股票）▾'}</button>
+ ${U.netShow?`<div style="margin-top:6px"><div class="sub">總資產（已扣未繳費用${hd&&!hin?'&amp;預存':''}）</div><div class="big">${M(net)}</div>
  <div class="tiles"><div><span class="sub">現金＋銀行</span><b>${M(liq)}</b></div><div><span class="sub">股票市值</span><b>${M(stk)}</b></div><div><span class="sub">卡費未繳</span><b>${owe?'−'+M(owe):M(0)}</b></div></div>
- ${(()=>{const sp=liq-hd-owe;return hd?`<div class="note keep" style="margin-top:8px;font-size:14px;color:var(--ink)"><div class="row"><b class="sp">💡 彈性運用 <button class="ib" data-a="spi" aria-label="怎麼算的">ⓘ</button></b><b class="num ${sp<0?'neg':''}" style="font-size:20px">${M(sp)}</b></div>${U.spi?`<div class="sub" style="margin-top:6px;line-height:1.7">現金＋銀行 ${M(liq)}<br>− 📦 預存（之後要繳的） ${M(hd)}${owe?'<br>− 還沒繳的卡費 '+M(owe):''}<br>預存的錢${hin?'有':'<b>沒有</b>'}算進上面的總資產・<a href="#" data-a="holdin">${hin?'改成不算':'改成要算'}</a></div>`:''}</div>`:''})()}
- <input id="acq" data-l="1" placeholder="搜尋帳戶：銀行名稱、代碼（例：822）或帳號" value="${E(U.acq||'')}" style="margin-top:10px" autocomplete="off"><div id="acr">${acctFind(U.acq)}</div>
+ ${nop?`<div class="sub" style="margin-top:6px">有 ${nop} 檔股票還沒有股價，市值先用成本算。</div>`:''}${hs.length?`<button class="go q" style="margin-top:6px" data-a="pxnow">更新股價</button>`:''}</div>`:''}
+ </div>
+ <div class="card"><b>帳戶</b>
+ <input id="acq" data-l="1" placeholder="搜尋帳戶：銀行名稱、代碼（例：822）或帳號" value="${E(U.acq||'')}" style="margin-top:8px" autocomplete="off"><div id="acr">${acctFind(U.acq)}</div>
  ${acctBrief()}
- ${nop?`<div class="sub" style="margin-top:6px">有 ${nop} 檔股票還沒有股價，市值先用成本算。</div>`:''}
  ${S.accts.filter(a=>!isCard(a)&&bal(a)<-0.5).map(a=>`<div class="note" style="border-color:var(--bad)">⚠︎ <b>${E(a.name)}</b> 顯示 ${MA(a)}，這通常不是真的欠錢，而是還沒填這個帳戶「現在實際有多少錢」，網站從 0 開始算，扣掉繳出去的錢就變負的。按下面「更新銀行餘額」填網銀 App 上看到的數字就會正確。</div>`).join('')}
- <div class="row" style="gap:6px;margin-top:8px"><button class="go q" data-a="recon">更新銀行餘額</button>${hs.length?`<button class="go q" data-a="pxnow">更新股價</button>`:''}</div></div>`;
+ <div class="row" style="gap:6px;margin-top:8px"><button class="go q" data-a="recon">更新銀行餘額</button></div></div>`;
 }
 function sheetStart(o){
  const cards=S.accts.filter(isCard),bank=S.accts.filter(a=>!isCard(a));
@@ -2233,6 +2251,7 @@ const ACT={
   render();toast('填好了，看看沒問題就按「儲存」')},
  iddel:()=>{if(!confirm('刪除這個點子？（不想做可以改成「先放著」）'))return;S.ideas=IDS().filter(y=>y.id!==U.sheet.o.id);U.sheet=null;save();render()},
  cardback:i=>openTx({type:'in',amt:'',acct:i,to:'',cat:'刷卡回饋',catSet:1,d:today(),note:'點數折抵'}),
+ netshow:()=>{U.netShow=!U.netShow;render()},
  spi:()=>{U.spi=!U.spi;render()},
  az:()=>{U.az=!U.az;render()},
  shopall:()=>{U.shopAll=!U.shopAll;render()},
