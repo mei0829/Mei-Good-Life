@@ -1645,7 +1645,7 @@ function renderNow(){
  CI={};LM=null;normAcct();$('tip').style.display='none';$('eye').textContent='•••• 已隱藏・點兩下顯示';$('eye').classList.toggle('on',HIDE);$('eye').setAttribute('aria-label',HIDE?'顯示金額':'隱藏金額');
  $('app').innerHTML=`<div class="row" style="gap:10px;padding-right:44px;min-height:32px;margin-top:calc(16px + env(safe-area-inset-top,0px))">${U.tab==='trip'&&tripOf(U.trip)?'<button class="back" data-a="tripx">‹ 所有旅行</button>':sub?'<button class="back" data-a="tab" data-i="more">‹ 更多</button>':'<a class="back" href="./" style="text-decoration:none">‹ 首頁</a>'}<span class="sp"></span><b class="today">今天 ${todayLab()}</b></div>`+V[U.tab]();
  $('nav').innerHTML=TABS.map(([k,i,n])=>`<button class="${U.tab===k||(k==='more'&&sub)||(k==='stock'&&STK.some(x=>x[0]===U.tab))?'on':''}" data-a="tab" data-i="${k}"><b>${i}</b>${n}</button>`).join('');
- const sh=U.sheet,SH={cline:sheetCline,freset:sheetFReset,binfo:sheetBillInfo,envp:sheetEnv,catx:sheetCat,stk:sheetStk,tsp:sheetSp,trip:sheetTrip,idea:sheetIdea,broker:sheetBroker,pay:sheetPay,acctv:sheetAcctV,iou:sheetIou,iback:sheetIback,help:sheetHelp,cyc:sheetCyc,pcard:sheetPCard,pitem:sheetPItem,payee:sheetPayee,start:sheetStart,tx:sheetTx,bill:sheetBill,acct:sheetAcct,trade:sheetTrade,cap:sheetCap,cycfix:sheetCycFix,sellx:sheetSellX,recon:sheetRecon,hold:sheetHold};$('sheet').innerHTML=sh?`<div class="sheet" data-a="bg"><div>${SH[sh.k](sh.o)}</div></div>`:'';
+ const sh=U.sheet,SH={fund:sheetFund,cline:sheetCline,freset:sheetFReset,binfo:sheetBillInfo,envp:sheetEnv,catx:sheetCat,stk:sheetStk,tsp:sheetSp,trip:sheetTrip,idea:sheetIdea,broker:sheetBroker,pay:sheetPay,acctv:sheetAcctV,iou:sheetIou,iback:sheetIback,help:sheetHelp,cyc:sheetCyc,pcard:sheetPCard,pitem:sheetPItem,payee:sheetPayee,start:sheetStart,tx:sheetTx,bill:sheetBill,acct:sheetAcct,trade:sheetTrade,cap:sheetCap,cycfix:sheetCycFix,sellx:sheetSellX,recon:sheetRecon,hold:sheetHold};$('sheet').innerHTML=sh?`<div class="sheet" data-a="bg"><div>${SH[sh.k](sh.o)}</div></div>`:'';
  calmNotes();window.scrollTo(0,y);
  document.querySelectorAll('[data-entry]').forEach(el=>{const k=el.dataset.entry,P=S.perk||{},r=k==='sum'?P.sum&&P.sum.r:k==='idea'?(((U.sheet||{}).o||{}).ai||{}).r:(P.cache[pkKey(P.q,P.amt)]||{}).r,html=r&&r._entry;if(html){try{el.attachShadow({mode:'open'}).innerHTML=html}catch(e){}}});
  if(am){const f=document.querySelector(`[data-m="${am}"]`);if(f&&f.tagName!=='SELECT'){f.focus();try{f.setSelectionRange(cp,cp)}catch(e){}}}
@@ -1805,12 +1805,35 @@ function fundGauge(){const ps=S.bills.filter(b=>b.fb&&S.bills.some(x=>x.id===b.f
  // 照進度今天該存到：從開始存（這一輪開始或建立這個項目那天，取比較晚的）到要用那天，平均分配
  const born=id=>{const t=parseInt(String(id||'').slice(0,8),36);return t>1e12&&t<4e12?iso(new Date(t)):''},t0=today(),dd=(a,b)=>(pd(b)-pd(a))/864e5;
  const expOf=(need,st,due)=>{if(!due||!st)return null;if(due<=t0)return need;if(st>=t0)return 0;return Math.round(need*dd(st,t0)/Math.max(1,dd(st,due)))};
- const it=ps.map(p=>{const I=fundInfo(p),fb=S.bills.find(x=>x.id===p.fb),from=addM(p.next,-(+p.freq||12),p.day),b0=born(fb&&fb.id),st=b0&&b0>from?b0:from;return{n:p.name,got:Math.min(I.got,I.need),need:I.need,d:p.next,exp:expOf(I.need,st,p.next)}}).concat(gs.map(b=>{const I=saveInfo(b);return{n:b.name,got:Math.min(I.v,I.g),need:I.g,d:b.end||'',exp:expOf(I.g,born(b.id),b.end)}}));
+ const it=ps.map(p=>{const I=fundInfo(p),fb=S.bills.find(x=>x.id===p.fb),from=addM(p.next,-(+p.freq||12),p.day),b0=born(fb&&fb.id),st=b0&&b0>from?b0:from;return{k:p.id,n:p.name,got:Math.min(I.got,I.need),need:I.need,d:p.next,exp:expOf(I.need,st,p.next),per:fb?+fb.amt:0,to:fb&&fb.to,fbid:fb&&fb.id,rep:+p.freq||0}}).concat(gs.map(b=>{const I=saveInfo(b);return{k:b.id,n:b.name,got:Math.min(I.v,I.g),need:I.g,d:b.end||'',exp:expOf(I.g,born(b.id),b.end),per:+b.amt||0,to:b.to,fbid:b.id,goal:1}}));
  if(!it.length)return`<div class="note keep" style="margin-top:10px">還沒有設定預存。到「固定收支」編輯年繳費（保險、牌照稅…），選「📦 每個月先存一點」，或新增「旅遊基金」設目標金額，這裡就會顯示存了多少、還差多少。</div>`;
  const got=it.reduce((a,x)=>a+x.got,0),need=it.reduce((a,x)=>a+x.need,0);
  const ex=it.filter(x=>x.exp!=null),eT=ex.reduce((a,x)=>a+x.exp,0),eG=ex.reduce((a,x)=>a+x.got,0),lagT=Math.max(0,eT-eG);
  const lag=x=>x.exp==null?'':x.got+0.5>=x.exp?`<span style="color:var(--ok)">照進度該存到 ${M(x.exp)}・✓ 有跟上</span>`:`照進度該存到 ${M(x.exp)}・<span class="neg">落後 ${M(x.exp-x.got)}</span>`;
- return saveGauge(got,need,'預存（要繳的錢）')+(ex.length?`<div class="sub" style="text-align:center;margin-top:2px">照進度，今天應該存到 ${M(eT)}${lagT>=0.5?'，<span class="neg">落後 '+M(lagT)+'</span>':'，✓ 有跟上'}</div>`:'')+`<div style="margin-top:8px">${it.sort((a,b)=>(a.d||'9')<(b.d||'9')?-1:1).map(x=>`<div style="padding:4px 0;font-size:13px;border-bottom:1px dashed var(--line)"><div class="row"><span class="sp">${E(x.n)}${x.d?`<span class="sub"> · ${x.d.slice(0,4)!==today().slice(0,4)?x.d.slice(0,4)+'/':''}${+x.d.slice(5,7)}/${+x.d.slice(8,10)} 要用</span>`:''}</span><span class="num">${M(x.got)} <span class="sub">/ ${M(x.need)}</span></span></div>${x.exp!=null?`<div class="sub" style="text-align:right">${lag(x)}</div>`:''}</div>`).join('')}</div>`}
+ return saveGauge(got,need,'預存（要繳的錢）')+(ex.length?`<div class="sub" style="text-align:center;margin-top:2px">照進度，今天應該存到 ${M(eT)}${lagT>=0.5?'，<span class="neg">落後 '+M(lagT)+'</span>':'，✓ 有跟上'}</div>`:'')+`<div style="margin-top:8px">${it.sort((a,b)=>(a.d||'9')<(b.d||'9')?-1:1).map(x=>{const o=U.fx===x.k,base=x.exp==null?x.need:x.exp,ok=x.got+0.5>=base,ds=x.d?(x.d.slice(0,4)!==t0.slice(0,4)?x.d.slice(0,4)+'/':'')+(+x.d.slice(5,7))+'/'+(+x.d.slice(8,10)):'';
+  return`<div style="padding:5px 0;font-size:13px;border-bottom:1px dashed var(--line)"><div class="row" data-a="fx" data-i="${x.k}" style="cursor:pointer"><span class="sp">${E(x.n)}${ds?`<span class="sub"> · ${ds} 要用</span>`:''} <span class="sub">${o?'▴':'▾'}</span></span><span class="num ${ok?'':'neg'}">${M(x.got)}</span><span class="sub num" style="margin-left:3px">/ ${M(base)}</span></div>
+  ${o?`<div style="background:var(--bg);border-radius:10px;padding:8px 10px;margin-top:6px">
+   <div class="row"><span class="sp sub">要用的總金額</span><b class="num">${M(x.need)}</b></div>
+   <div class="row"><span class="sp sub">要用的日期</span><span>${ds||'沒設'}${x.rep?`<span class="sub">（${fqName(x.rep)}一次）</span>`:''}</span></div>
+   <div class="row"><span class="sp sub">已存</span><span class="num">${M(x.got)}</span></div>
+   ${x.exp!=null?`<div class="row"><span class="sp sub">照進度今天該存到</span><span class="num">${M(x.exp)}</span></div><div class="row"><span class="sp sub">${ok?'進度':'落後'}</span><span class="${ok?'':'neg'}">${ok?'✓ 有跟上':M(x.exp-x.got)}</span></div>`:''}
+   <div class="row"><span class="sp sub">還差（到要用那天）</span><span class="num">${M(Math.max(0,x.need-x.got))}</span></div>
+   <div class="row"><span class="sp sub">每次存</span><span class="num">${M(x.per)}</span></div>
+   <div class="row"><span class="sp sub">存在哪個帳戶</span><span>${A(x.to)?E(nm(A(x.to)))+' '+MA(A(x.to)):'沒設'}</span></div>
+   <div class="row" style="gap:6px;margin-top:8px;justify-content:flex-end"><button class="go q" data-a="paybill" data-i="${x.fbid}">存一筆</button><button class="go q" data-a="fedit" data-i="${x.k}">編輯</button></div></div>`:''}</div>`}).join('')}</div>`}
+// 編輯預存：總金額、要用的日期、多久一次、存在哪個帳戶、從哪個帳戶轉出、名稱、備註
+function fundObj(k){const p=S.bills.find(x=>x.id===k);if(!p)return null;if(p.fb){const fb=S.bills.find(x=>x.id===p.fb)||{};return{k,goal:0,name:p.name,need:String(p.amt),d:p.next,rep:+p.freq||0,to:fb.to||'',from:fb.acct||'',note:p.note||''}}return{k,goal:1,name:p.name,need:String(p.goal||''),d:p.end||'',rep:0,to:p.to||'',from:p.acct||'',note:p.note||''}}
+function sheetFund(o){const ac=S.accts.filter(a=>!isCard(a));return`<div class="row"><b class="sp" style="font-size:17px">編輯預存</b><button class="x" data-a="close">×</button></div>
+ <div class="grid"><label class="fl w"><span>名稱</span><input value="${E(o.name)}" data-m="sheet.o.name"></label>
+ <label class="fl"><span>要用的總金額</span><input inputmode="numeric" value="${E(o.need)}" data-m="sheet.o.need"></label>
+ <label class="fl"><span>要用的日期</span><input type="date" value="${o.d}" data-m="sheet.o.d"></label>
+ ${o.goal?'':`<label class="fl w"><span>多久要用一次</span><select data-m="sheet.o.rep" data-n="1">${[[0,'只有這一次'],[12,'每年'],[6,'每半年'],[3,'每 3 個月'],[2,'每 2 個月']].map(([v,n])=>`<option value="${v}" ${+o.rep===v?'selected':''}>${n}</option>`).join('')}</select></label>`}
+ <label class="fl"><span>存在哪個帳戶</span><select data-m="sheet.o.to">${ac.map(a=>`<option value="${a.id}" ${o.to===a.id?'selected':''}>${a.hold?'📦 ':''}${E(nm(a))}</option>`).join('')}</select></label>
+ <label class="fl"><span>從哪個帳戶轉出</span><select data-m="sheet.o.from">${ac.map(a=>`<option value="${a.id}" ${o.from===a.id?'selected':''}>${E(nm(a))}</option>`).join('')}</select></label>
+ <label class="fl w"><span>備註</span><input value="${E(o.note)}" data-m="sheet.o.note" placeholder="例：大會報名費、要繳給誰"></label></div>
+ <div class="sub" style="margin-top:6px">儲存後，每次要存的金額會依「還差多少 ÷ 離要用的日子還剩幾次」自動重算。</div>
+ <div class="row" style="margin-top:14px;gap:8px"><button class="go r" data-a="fdel">刪除</button><span class="sp"></span><button class="go" data-a="fsave">儲存</button></div>`}
+
 function saveGauge(sv,T,title){if(!T)return`<div class="sub" style="margin:12px 0">到「我的錢一覽」設定每月想存多少，這裡就會顯示預留存款進度。</div>`;if(!T)return`<div class="sub" style="margin:12px 0">到「我的錢一覽」設定每月想存多少，這裡就會顯示預留存款進度。</div>`;
  const p=Math.max(0,Math.min(1,sv/T)),cx=110,cy=104,r=82,pt=a=>[cx+r*Math.cos(Math.PI*(1-a)),cy-r*Math.sin(Math.PI*(1-a))],[x1,y1]=pt(0),[x2,y2]=pt(1),[xp,yp]=pt(p),na=Math.PI*(1-p),nl=r-22;
  const arc=(a,b)=>{const[ax,ay]=pt(a),[bx,by]=pt(b);return`M${ax.toFixed(1)},${ay.toFixed(1)}A${r},${r} 0 0 1 ${bx.toFixed(1)},${by.toFixed(1)}`},col=p>=1?'var(--ok)':'var(--amber)';
@@ -2306,6 +2329,13 @@ const ACT={
  cardback:i=>openTx({type:'in',amt:'',acct:i,to:'',cat:'刷卡回饋',catSet:1,d:today(),note:'點數折抵'}),
  clbig:()=>{U.sheet={k:'cline',o:{}};render()},
  budshow:()=>{U.budShow=!U.budShow;render()},
+ fx:i=>{U.fx=U.fx===i?'':i;render()},
+ fedit:i=>{const o=fundObj(i);if(o){U.sheet={k:'fund',o};render()}},
+ fsave:()=>{const o=U.sheet.o,p=S.bills.find(x=>x.id===o.k),need=pAmt(o.need);if(!p)return;if(!String(o.name||'').trim())return toast('請輸入名稱');if(!(need>0))return toast('請輸入總金額');if(!o.d)return toast('請選要用的日期');if(o.to===o.from)return toast('存放和轉出要選不同帳戶');
+  const nm0=o.name.trim();if(o.goal){Object.assign(p,{name:nm0,goal:need,end:o.d,to:o.to,acct:o.from,note:(o.note||'').trim()})}
+  else{Object.assign(p,{name:nm0,amt:need,next:o.d,day:+o.d.slice(8,10),freq:+o.rep||0,note:(o.note||'').trim()});const fb=S.bills.find(x=>x.id===p.fb);if(fb)Object.assign(fb,{name:'預存・'+nm0,to:o.to,acct:o.from})}
+  fundSync();U.sheet=null;save();render();toast('已更新')},
+ fdel:()=>{const o=U.sheet.o,p=S.bills.find(x=>x.id===o.k);if(!p)return;if(!confirm(o.goal?'刪除這個存錢項目？（已經存的錢不會動）':'刪除這個預存？「'+p.name+'」本身也會一起刪掉（已經存的錢和紀錄不會動）'))return;S.bills=S.bills.filter(x=>x.id!==p.id&&x.id!==p.fb);U.sheet=null;U.fx='';save();render()},
  netshow:()=>{U.netShow=!U.netShow;render()},
  spi:()=>{U.spi=!U.spi;render()},
  az:()=>{U.az=!U.az;render()},
