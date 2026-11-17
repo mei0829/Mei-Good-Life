@@ -1795,6 +1795,11 @@ function acctBrief(){
 }
 // 預留存款儀表：這個月存了多少／目標，指針指到百分比
 // 預存儀表：年繳費、保險這種「每個月先存一點」的項目，加起來存了多少／到時候要繳多少
+// 點「這個月已經花了」展開：每個分類花了多少、預算多少
+function budBreak(m){const sp=spentBy(m),bc=S.budget.cats||{},ks=[...new Set(Object.keys(sp).concat(Object.keys(bc).filter(c=>+bc[c]>0)))].sort((a,b)=>(sp[b]||0)-(sp[a]||0));
+ const csum=ks.reduce((a,c)=>a+(+bc[c]||0),0),tot=+S.budget.total||0;
+ return`<div style="margin-top:10px">${ks.map(c=>{const v=sp[c]||0,b=+bc[c]||0,over=b&&v>b;return`<div style="margin:7px 0"><div class="row"><span class="sp">${E(c)}</span><span class="num ${over?'neg':''}">${M(v)}</span><span class="sub" style="width:92px;text-align:right">${b?'/ '+M(b):'沒設預算'}</span></div>${b?`<div class="bar" style="height:6px"><i style="width:${Math.min(100,v/b*100)}%;background:${over?'var(--bad)':'var(--acc)'}"></i></div>`:''}</div>`}).join('')||'<div class="sub">這個月還沒有支出。</div>'}
+ <div class="sub" style="margin-top:6px">分類預算加起來 ${M(csum)}${tot?'・總預算 '+M(tot):''}・<a href="#" data-a="tab" data-i="budget">到預算頁修改 ›</a></div></div>`}
 function fundGauge(){const ps=S.bills.filter(b=>b.fb&&S.bills.some(x=>x.id===b.fb)),tos=new Set(ps.map(p=>(S.bills.find(x=>x.id===p.fb)||{}).to));
  const gs=S.bills.filter(b=>b.kind==='save'&&!b.link&&+b.goal>0&&!tos.has(b.to)&&A(b.to));
  const it=ps.map(p=>{const I=fundInfo(p);return{n:p.name,got:Math.min(I.got,I.need),need:I.need,d:p.next}}).concat(gs.map(b=>{const I=saveInfo(b);return{n:b.name,got:Math.min(I.v,I.g),need:I.g,d:b.end||''}}));
@@ -1851,8 +1856,9 @@ function assetCard(liq){
  ${fundGauge()}
  ${cardLine()}
  <div style="border-top:1px solid var(--line);margin:12px 0 0;padding-top:10px">
-  <div class="row"><span class="sp"><b>這個月已經花了</b></span><b class="num">${M(spent)}</b></div>
+  <div class="row" data-a="budshow" style="cursor:pointer"><span class="sp"><b>這個月已經花了</b> <span class="sub">${U.budShow?'▴':'各分類 ▾'}</span></span><b class="num">${M(spent)}</b></div>
   ${cap?`${pbar(spent,cap,spent>cap?'var(--bad)':'var(--acc)')}<div class="row sub" style="margin-top:2px"><span class="sp">${bud?'預算 '+M(bud):'收入 '+M(inc)}</span><span class="${spent>cap?'neg':''}">${spent>cap?'超過 '+M(spent-cap):(bud?'還能花 ':'還剩 ')+M(cap-spent)}</span></div>`:`<div class="sub">到「預算」設每月預算，就能看到還能花多少。</div>`}
+  ${U.budShow?budBreak(m):''}
  </div>
  <button class="lnk" data-a="netshow">${U.netShow?'收起總資產 ▴':'總資產（含股票）▾'}</button>
  ${U.netShow?`<div style="margin-top:6px"><div class="sub">總資產（已扣未繳費用${hd&&!hin?'&amp;預存':''}）</div><div class="big">${M(net)}</div>
@@ -2294,6 +2300,7 @@ const ACT={
  iddel:()=>{if(!confirm('刪除這個點子？（不想做可以改成「先放著」）'))return;S.ideas=IDS().filter(y=>y.id!==U.sheet.o.id);U.sheet=null;save();render()},
  cardback:i=>openTx({type:'in',amt:'',acct:i,to:'',cat:'刷卡回饋',catSet:1,d:today(),note:'點數折抵'}),
  clbig:()=>{U.sheet={k:'cline',o:{}};render()},
+ budshow:()=>{U.budShow=!U.budShow;render()},
  netshow:()=>{U.netShow=!U.netShow;render()},
  spi:()=>{U.spi=!U.spi;render()},
  az:()=>{U.az=!U.az;render()},
