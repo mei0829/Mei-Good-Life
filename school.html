@@ -364,7 +364,7 @@ function fixMeta(o){
  const classes=o.classes.filter(c=>c&&c.name).map(c=>({id:c.id||nid(),name:String(c.name),kind:c.kind==='sup'?'sup':'',stus:arr(c.stus).filter(s=>s&&s.name).map(s=>({id:s.id||nid(),no:numOr(s.no),name:String(s.name)}))}));
  let subs=[...new Set(arr(o.subs).map(s=>String(s).trim()).filter(Boolean))];if(!subs.length)subs=DEF_SUBS.slice();
  const seen=new Set();
- let cats=arr(o.cats).filter(c=>c&&c.n&&!seen.has(c.n)&&seen.add(c.n)).map(c=>({n:String(c.n),s:String(c.s||'其他'),g:c.g?1:0}));
+ let cats=arr(o.cats).filter(c=>c&&c.n&&!seen.has(c.n)&&seen.add(c.n)).map(c=>({n:String(c.n),s:String(c.s||'其他'),g:c.g?1:0,nf:c.nf?1:0}));
  if(!cats.length)cats=DEF_CATS.map(c=>({...c}));
  return {classes,subs,cats};
 }
@@ -381,7 +381,7 @@ function fixRec(r){
 }
 // 分數 → 訂正：不到滿分「待訂正」、滿分「完成」（真的訂正完成的不會被改回去）
 function fixAuto(t,sid,c){
- if(c===''||c==null||isNaN(+c))return {};
+ if(t.nf||c===''||c==null||isNaN(+c))return {};
  const r=R(t,sid);
  if(+c>=t.full)return {f:2,fa:r.f===2&&r.fa?r.fa:today()};
  if(r.f===2&&r.c!==undefined&&r.c<t.full)return {};
@@ -391,7 +391,7 @@ function fixTasks(a){
  return arr(a).filter(t=>t&&(t.cat||t.title)).map(t=>{
   const r={};Object.keys(t.r&&typeof t.r==='object'?t.r:{}).forEach(k=>{const x=fixRec(t.r[k]);if(Object.keys(x).length)r[k]=x});
   return {id:t.id||nid(),sub:String(t.sub||'其他'),cat:String(t.cat||''),title:String(t.title||''),d:DT.test(t.d)?t.d:today(),due:DT.test(t.due)?t.due:'',
-   g:t.g?1:0,full:+t.full>0?+t.full:100,note:t.note||'',m:t.m?1:0,sl:t.sl?1:0,gd:DT.test(t.gd)?t.gd:'',ex:t.ex!=null?(t.ex?1:0):(t.g&&/考|測驗/.test(String(t.cat||'')+String(t.title||''))?1:0),pts:arr(t.pts).map(String),pg:String(t.pg||''),sgf:String(t.sgf||''),sgt:String(t.sgt||''),op:arr(t.op).map(String).filter(Boolean).slice(0,6),r,af:1,t:+t.t||Date.now(),u:+t.u||Date.now()};
+   g:t.g?1:0,full:+t.full>0?+t.full:100,note:t.note||'',m:t.m?1:0,sl:t.sl?1:0,gd:DT.test(t.gd)?t.gd:'',ex:t.ex!=null?(t.ex?1:0):(t.g&&/考|測驗/.test(String(t.cat||'')+String(t.title||''))?1:0),pts:arr(t.pts).map(String),pg:String(t.pg||''),sgf:String(t.sgf||''),nf:t.nf?1:0,sgt:String(t.sgt||''),op:arr(t.op).map(String).filter(Boolean).slice(0,6),r,af:1,t:+t.t||Date.now(),u:+t.u||Date.now()};
  }).map((x,i)=>{const o=arr(a).filter(t=>t&&(t.cat||t.title))[i];if(!o.af)Object.keys(x.r).forEach(k=>{const r=x.r[k];if(r.c!==undefined&&!r.f){if(r.c>=x.full){r.f=2;r.fa=r.a||today()}else r.f=1}});return x});
 }
 let S=fixMeta({classes:[]}),TK={};
@@ -438,7 +438,7 @@ const isIn=r=>r.s===1||r.s===2;
 // 到了這天還沒交（d 預設今天）
 const isTot=t=>!!(t.pts&&t.pts.length);
 const missing=(t,sid,d)=>!isTot(t)&&!(t.g&&t.ex)&&!isIn(R(t,sid))&&!!t.due&&t.due<=(d||today());
-const fixing=(t,sid)=>R(t,sid).f===1;
+const fixing=(t,sid)=>!t.nf&&R(t,sid).f===1;
 function setR(t,sid,p){
  const r=fixRec({...R(t,sid),...p});
  if(Object.keys(r).length)t.r[sid]=r;else delete t.r[sid];
@@ -454,7 +454,7 @@ function tStats(t,ss){
  const o={n:ss.length,inn:0,late:0,miss:[],fix:[],fixed:0,sc:[]};
  ss.forEach(s=>{const r=R(t,s.id),k=stOf(t,s.id);
   if(k==='ok'||k==='late'||k==='x')o.inn++;if(k==='late')o.late++;
-  if(!isIn(r))o.miss.push(s);if(r.f===1)o.fix.push(s);if(r.f===2)o.fixed++;
+  if(!isIn(r))o.miss.push(s);if(r.f===1&&!t.nf)o.fix.push(s);if(r.f===2)o.fixed++;
   if(r.c!==undefined)o.sc.push(r.c);});
  o.avg=o.sc.length?o.sc.reduce((a,b)=>a+b,0)/o.sc.length:null;
  return o;
@@ -769,12 +769,13 @@ function taskView(id){
   <div class="stats">${XM?(()=>{const sc=ss.filter(s=>R(t,s.id).c!==undefined).length;
    return `<button class="st1" data-a="tf2" data-v="all"><b>${sc}<small style="font-size:16px">/${A.n}</small></b><span>已登記成績</span></button>`+(SG?`<button class="st2" data-a="tf2" data-v="sg"><b>${ss.filter(s=>isIn(R(SG,s.id))).length}<small style="font-size:16px">/${A.n}</small></b><span>訂簽收回</span></button>`:`<button class="st2"><b>${A.avg!=null?r1(A.avg):'—'}</b><span>平均</span></button>`)})():isTot(t)?(()=>{const P=t.pts.map(task).filter(Boolean),all=ss.filter(s=>P.every(x=>isIn(R(x,s.id)))).length,sc=ss.filter(s=>R(t,s.id).c!==undefined).length;
    return `<button class="st1"><b>${sc}<small style="font-size:16px">/${A.n}</small></b><span>已打總分</span></button><button class="st2"><b>${all}<small style="font-size:16px">/${A.n}</small></b><span>每一次都交了</span></button>`})()
-   :`<button class="st1" data-a="tf2" data-v="all"><b>${A.inn}<small style="font-size:16px">/${A.n}</small></b><span>已交</span></button><button class="st2" data-a="tf2" data-v="miss"><b>${A.miss.length}</b><span>尚未繳交</span></button>`}<button class="st3" data-a="tf2" data-v="fix"><b>${A.fix.length}</b><span>${A.avg!=null?'待訂正 · 平均 '+r1(A.avg):'待訂正'}</span></button></div>
+   :`<button class="st1" data-a="tf2" data-v="all"><b>${A.inn}<small style="font-size:16px">/${A.n}</small></b><span>已交</span></button><button class="st2" data-a="tf2" data-v="miss"><b>${A.miss.length}</b><span>尚未繳交</span></button>`}${t.nf?`<button class="st3" style="background:var(--tile)"><b style="color:var(--ink)">${A.avg!=null?r1(A.avg):'—'}</b><span>${A.avg!=null?'平均':'不用訂正'}</span></button>`:`<button class="st3" data-a="tf2" data-v="fix"><b>${A.fix.length}</b><span>${A.avg!=null?'待訂正 · 平均 '+r1(A.avg):'待訂正'}</span></button>`}</div>
   <div class="acts">${t.g?`<button class="go" data-a="kp" data-id="${id}">🧮 輸入分數</button>`:''}${A.miss.length&&!isTot(t)&&!XM?`<button class="bt" data-a="allin" data-t="${id}">其他人都交了</button>`:''}</div>
   ${t.g&&scs.length?`<div class="bands">${BANDS.map(([n],i)=>{const k=ss.filter(s=>bandOf(s)===i).length;return `<button data-a="band" data-v="${i}" class="${BD===i?'on':''}${i===5&&k?' low':''}"><b>${k}</b><span>${n}</span></button>`}).join('')}</div>
    <div class="ps" style="margin-top:6px">共 ${scs.length} 人有分數${scs.length<ss.length?'（'+(ss.length-scs.length)+' 人還沒登記）':''} · 平均 ${r1(scs.reduce((a,b)=>a+b,0)/scs.length)} · 最高 ${r1(Math.max(...scs))} · 最低 ${r1(Math.min(...scs))}${t.full!==100?'（換算成 100 分）':''}${BD>=0?' · <a href="#" data-a="band" data-v="'+BD+'">顯示全部</a>':''}</div>
    <div class="segs" style="margin-top:10px">${[['no','依座號'],['desc','分數高→低'],['asc','分數低→高']].map(([v,n])=>`<button data-a="tso" data-v="${v}" class="${SO===v?'on':''}">${n}</button>`).join('')}</div>`:''}
-  <div class="segs" style="margin-top:14px">${(XM?[['all','全部'],['fix','尚未訂正'],...(SG?[['sg','訂簽還沒收回']]:[])]:isTot(t)?[['all','全部'],['fix','尚未訂正']]:[['all','全部'],['miss','尚未繳交'],['fix','尚未訂正']]).map(([v,n])=>`<button data-a="tf2" data-v="${v}" class="${f===v?'on':''}">${n}</button>`).join('')}</div>
+  <div class="segs" style="margin-top:14px">${(XM?[['all','全部'],['fix','尚未訂正'],...(SG?[['sg','訂簽還沒收回']]:[])]:isTot(t)?[['all','全部'],['fix','尚未訂正']]:[['all','全部'],['miss','尚未繳交'],['fix','尚未訂正']]).filter(([v])=>!(t.nf&&v==='fix')).map(([v,n])=>`<button data-a="tf2" data-v="${v}" class="${f===v?'on':''}">${n}</button>`).join('')}</div>
+  ${!XM&&!t.sgf?`<div class="row" style="margin-top:8px"><button class="bt sm${t.nf?' on':''}" data-a="nftog" data-id="${id}">${t.nf?'✓ 這份不用訂正':'這份不用訂正'}</button></div>`:''}
   ${(()=>{const P=isTot(t)?t.pts.map(task).filter(Boolean):[],par=t.pg?task(t.pg):null;
    if(P.length)return `<div class="prt">這是 ${P.length} 次作業合起來的總分：${P.map((x,k)=>`<a href="#" data-a="task" data-id="${x.id}">第 ${k+1} 次 ${E(x.title||tName(x))}${x.due?'（'+md(x.due)+'）':''}</a>`).join('、')}<button class="cb2" data-a="unmerge" data-id="${id}">取消合併</button></div>`;
    if(par)return `<div class="prt">這是「<a href="#" data-a="task" data-id="${par.id}">${E(tName(par))}</a>」的第 ${par.pts.indexOf(t.id)+1} 次，分數在總分那裡打。</div>`;
@@ -782,11 +783,11 @@ function taskView(id){
    if(ex)return `<div class="prt">這是「<a href="#" data-a="task" data-id="${ex.id}">${E(tName(ex))}</a>」發回去訂簽的。交回來的人，考卷的訂正會自動變成「完成」。</div>`;
    if(t.g)return sg?`<div class="prt">📤 已發回訂簽：${md(sg.d)} 發回 · ${sg.due?mdw(sg.due)+' 交回':''} · 已收 ${ss.filter(s=>isIn(R(sg,s.id))).length}/${ss.length}　<a href="#" data-a="task" data-id="${sg.id}">看訂簽名單 ›</a></div>`:`<button class="bt" data-a="sgnew" data-id="${id}" style="margin-top:10px;width:100%">📤 發回訂簽（帶回家訂正、簽名）</button>`;
    return !t.g&&!t.sl?`<button class="bt sm" data-a="merge" data-id="${id}" style="margin-top:10px">把好幾次作業合併成一個分數</button>`:'';})()}
-  <div class="tw"><table class="t"><thead><tr><th>座號</th><th>姓名</th>${XM?'':`<th>${isTot(t)?'各次':'繳交'}</th>`}${t.g?'<th>分數</th>':''}<th>訂正</th>${t.sgt&&task(t.sgt)?'<th>訂簽</th>':''}</tr></thead><tbody>
+  <div class="tw"><table class="t"><thead><tr><th>座號</th><th>姓名</th>${XM?'':`<th>${isTot(t)?'各次':'繳交'}</th>`}${t.g?'<th>分數</th>':''}${t.nf?'':'<th>訂正</th>'}${t.sgt&&task(t.sgt)?'<th>訂簽</th>':''}</tr></thead><tbody>
   ${rows.map(s=>{const r=R(t,s.id);return `<tr><td class="n">${z2(s.no)}</td><td><button class="lk" data-a="rec" data-t="${id}" data-s="${s.id}">${E(s.name)}${r.f&&r.p?`<small>${E(r.p)}</small>`:''}${r.n?`<small style="color:var(--sub)">📝 ${E(r.n)}</small>`:''}</button></td>
    ${XM?'':`<td>${isTot(t)?`<span class="ptm">${t.pts.map(task).filter(Boolean).map((x,k)=>{const q=R(x,s.id);return `<i class="${isIn(q)?'y':missing(x,s.id)?'n':''}" title="第 ${k+1} 次">${k+1}</i>`}).join('')}</span>`:`<button class="cell" data-a="tog" data-t="${id}" data-s="${s.id}">${subPill(t,s.id)}</button>`}</td>`}
    ${t.g?`<td><button class="cell" data-a="kp" data-id="${id}" data-s="${s.id}"><b class="${r.c!==undefined?scCls(r.c/t.full*100):'sub'}">${r.c!==undefined?r.c:'—'}</b></button></td>`:''}
-   <td><button class="cell" data-a="cfx" data-t="${id}" data-s="${s.id}">${fixPill(t,s.id)}</button></td>${t.sgt&&task(t.sgt)?`<td><button class="cell" data-a="tog" data-t="${t.sgt}" data-s="${s.id}">${isIn(R(task(t.sgt),s.id))?pill('ok','交回'):missing(task(t.sgt),s.id)?pill('bad','沒交'):pill('','還沒')}</button></td>`:''}</tr>`}).join('')||`<tr><td colspan="5" class="empty">沒有符合的學生</td></tr>`}
+   ${t.nf?'':`<td><button class="cell" data-a="cfx" data-t="${id}" data-s="${s.id}">${fixPill(t,s.id)}</button></td>`}${t.sgt&&task(t.sgt)?`<td><button class="cell" data-a="tog" data-t="${t.sgt}" data-s="${s.id}">${isIn(R(task(t.sgt),s.id))?pill('ok','交回'):missing(task(t.sgt),s.id)?pill('bad','沒交'):pill('','還沒')}</button></td>`:''}</tr>`}).join('')||`<tr><td colspan="5" class="empty">沒有符合的學生</td></tr>`}
   </tbody></table></div></div>
   <div class="ps">${XM?"點分數用計算機登記；點「訂正」「訂簽」就能切換；點名字可以寫訂正哪幾題、備註。":"點「已交／未交」「訂正」就能切換；點名字可以改交的日期、寫訂正哪幾頁、聯絡簿、免交。"}</div>
   <button class="bt wide" data-a="tcopy" data-id="${id}" style="margin-top:12px">＋ 再出一份類似的（例如下一課）</button>`;
@@ -1238,7 +1239,7 @@ function cbAddTasks(k,text){
  const P=CBP[k],cat=P.sub&&P.cat?S.cats.find(c=>c.n===P.cat&&c.s===P.sub):null;
  if(cat){
   const c=cls(),items=String(text).split(/\n|、|，|,|；|;/).map(s=>s.trim()).filter(Boolean),now=Date.now(),L=items.length?items:[''];
-  op(()=>L.forEach((x,i)=>(TK[c.id]||(TK[c.id]=[])).push({id:nid(),sub:cat.s,cat:cat.n,title:x,d:CBD,due:k==='am'||k==='gr'?CBD:nextDay(CBD),g:cat.g,ex:cat.g&&/考|測驗/.test(cat.n)?1:0,full:100,note:'',m:k==='am'?1:0,r:{},af:1,t:now+i,u:now})),
+  op(()=>L.forEach((x,i)=>(TK[c.id]||(TK[c.id]=[])).push({id:nid(),sub:cat.s,cat:cat.n,title:x,d:CBD,due:k==='am'||k==='gr'?CBD:nextDay(CBD),g:cat.g,nf:cat.nf||0,ex:cat.g&&/考|測驗/.test(cat.n)?1:0,full:100,note:'',m:k==='am'?1:0,r:{},af:1,t:now+i,u:now})),
    L.length>1?'已加入 '+L.length+' 項':'已加入「'+cat.n+(L[0]?' '+L[0]:'')+'」');
   CBV[k]='';return;
  }
@@ -2005,6 +2006,7 @@ function taskEdit(id,pre){
    <label class="f" style="${st.split?'display:none':''}"><span>繳交日</span><input id="edu" type="date" value="${E(D.due)}"></label></div>
   <div class="quick" style="margin:-6px 0 12px;${st.split?'display:none':''}">${[['今天',0],['明天',1],['後天',2],['下週一',(8-pd(today()).getDay())%7||7]].map(([n,d])=>`<button data-dd="${d}">${n}交</button>`).join('')}<button data-dd="x">不設定</button></div>
   ${st.split?'':`<button class="tg${D.g?' on':''}" id="eg"><i>${D.g?'✓':''}</i><span>要打分數</span></button>`}
+  <button class="tg${D.nf?' on':''}" id="enf"><i>${D.nf?'✓':''}</i><span>不用訂正（練習、抄寫，看過就好）</span></button>
   ${D.g&&!st.split?`<button class="tg${D.ex?' on':''}" id="eex"><i>${D.ex?'✓':''}</i><span>這是考試、小考（會出現在「快要考試」、行事曆的考試）</span></button>`:''}
   <label class="f" style="${D.g||st.split?'':'display:none'}"><span>滿分</span><input id="ef" type="number" inputmode="decimal" min="1" value="${E(D.full)}"></label>
   <label class="f"><span>備註</span><textarea id="en" placeholder="例如：要家長簽名">${E(D.note)}</textarea></label>
@@ -2012,10 +2014,11 @@ function taskEdit(id,pre){
   const md_=p.querySelector('[data-mode=ex]');if(md_)md_.onclick=()=>{pull(p);const top=STK[STK.length-1];top.fn=()=>examEdit(null,{sub:D.sub});refresh(top.fn)};
   p.querySelectorAll('[data-pc]').forEach(b=>b.onclick=()=>{pull(p);const c=b.dataset.pc;st.cs=st.cs.includes(c)?st.cs.filter(x=>x!==c):[...st.cs,c];refresh(draw)});
   p.querySelectorAll('[data-ps]').forEach(b=>b.onclick=()=>{pull(p);if(D.sub!==b.dataset.ps){D.sub=b.dataset.ps;if(S.cats.some(c=>c.n===D.cat))D.cat=''}refresh(draw)});
-  p.querySelectorAll('[data-pk]').forEach(b=>b.onclick=()=>{p.querySelector('#ec').value='';pull(p);const c=S.cats.find(x=>x.n===b.dataset.pk);D.cat=c.n;D.g=c.g;D.ex=c.g&&/考|測驗/.test(c.n)?1:0;refresh(draw)});
+  p.querySelectorAll('[data-pk]').forEach(b=>b.onclick=()=>{p.querySelector('#ec').value='';pull(p);const c=S.cats.find(x=>x.n===b.dataset.pk);D.cat=c.n;D.g=c.g;D.nf=c.nf||0;D.ex=c.g&&/考|測驗/.test(c.n)?1:0;refresh(draw)});
   p.querySelector('#ec').oninput=e=>{if(e.target.value.trim())p.querySelectorAll('[data-pk].on').forEach(b=>b.classList.remove('on'))};
   p.querySelectorAll('[data-dd]').forEach(b=>b.onclick=()=>{pull(p);D.due=b.dataset.dd==='x'?'':addD(today(),+b.dataset.dd);refresh(draw)});
   const eg=p.querySelector('#eg');if(eg)eg.onclick=()=>{pull(p);D.g=D.g?0:1;if(!D.g)D.ex=0;refresh(draw)};
+  const enf=p.querySelector('#enf');if(enf)enf.onclick=()=>{pull(p);D.nf=D.nf?0:1;refresh(draw)};
   const eex=p.querySelector('#eex');if(eex)eex.onclick=()=>{pull(p);D.ex=D.ex?0:1;refresh(draw)};
   const esp=p.querySelector('#esp');if(esp)esp.onclick=()=>{pull(p);st.split=!st.split;refresh(draw)};
   const epad=p.querySelector('#epad');if(epad)epad.onclick=()=>{pull(p);const l=st.parts[st.parts.length-1];st.parts.push({t:'',due:l&&l.due?nextDay(l.due):addD(today(),1)});refresh(draw)};
@@ -2026,7 +2029,7 @@ function taskEdit(id,pre){
    if(!st.cs.length){toast('請選班級');return}
    try{localStorage.setItem('sch-sub',JSON.stringify({sub:D.sub,cat:D.cat}))}catch(e){}
    const now=Date.now();
-   if(old){op(()=>{const x=task(id);Object.assign(x,{sub:D.sub,cat:D.cat,title:D.title,d:D.d,due:D.due,g:D.g,ex:D.g&&D.ex?1:0,full:D.full,note:D.note,u:now})},'已儲存');return back()}
+   if(old){op(()=>{const x=task(id);Object.assign(x,{sub:D.sub,cat:D.cat,title:D.title,d:D.d,due:D.due,g:D.g,ex:D.g&&D.ex?1:0,nf:D.nf?1:0,full:D.full,note:D.note,u:now})},'已儲存');return back()}
    if(st.split){
     const P=st.parts.filter(x=>x.t);if(P.length<2)return toast('請填至少兩次的範圍');
     const last=P.map(x=>x.due||D.d).sort().pop(),name=D.title||P.map(x=>x.t).join('、');
@@ -2037,7 +2040,7 @@ function taskEdit(id,pre){
     return back();
    }
    const ids=[];
-   op(()=>st.cs.forEach(c=>{const nid_=nid();ids.push(nid_);(TK[c]||(TK[c]=[])).push({id:nid_,sub:D.sub,cat:D.cat,title:D.title,d:D.d,due:D.due,g:D.g,ex:D.g&&D.ex?1:0,full:D.full,note:D.note,r:{},af:1,t:now,u:now})}),st.cs.length>1?'已出給 '+st.cs.length+' 個班':'已出作業「'+tName(D)+'」');
+   op(()=>st.cs.forEach(c=>{const nid_=nid();ids.push(nid_);(TK[c]||(TK[c]=[])).push({id:nid_,sub:D.sub,cat:D.cat,title:D.title,d:D.d,due:D.due,g:D.g,ex:D.g&&D.ex?1:0,nf:D.nf?1:0,full:D.full,note:D.note,r:{},af:1,t:now,u:now})}),st.cs.length>1?'已出給 '+st.cs.length+' 個班':'已出作業「'+tName(D)+'」');
    if(pre&&pre._kp&&D.g&&st.cs.length===1&&st.cs[0]===cls().id)return kpSheet(ids[0]);
    back();
   };
@@ -2206,7 +2209,7 @@ function setSheet(){
   </div>
   <h2><span>作業種類（出作業時可以直接點選）</span></h2>
   <div class="card">
-   ${S.cats.map((k,i)=>`<div class="li"><input class="ckn" data-ckn="${i}" value="${E(k.n)}" aria-label="作業種類名稱"><select data-cks="${i}" style="width:auto">${[...new Set([...S.subs,k.s])].map(s=>`<option${s===k.s?' selected':''}>${E(s)}</option>`).join('')}</select><button class="cb2${k.g?' on':''}" data-ckg="${i}">${k.g?'✓ 打分數':'不打分數'}</button><button data-ckd="${i}" aria-label="刪除">✕</button></div>`).join('')}
+   ${S.cats.map((k,i)=>`<div class="li"><input class="ckn" data-ckn="${i}" value="${E(k.n)}" aria-label="作業種類名稱"><select data-cks="${i}" style="width:auto">${[...new Set([...S.subs,k.s])].map(s=>`<option${s===k.s?' selected':''}>${E(s)}</option>`).join('')}</select><button class="cb2${k.g?' on':''}" data-ckg="${i}">${k.g?'✓ 打分數':'不打分數'}</button><button class="cb2${k.nf?' on':''}" data-cknf="${i}">${k.nf?'✓ 不訂正':'要訂正'}</button><button data-ckd="${i}" aria-label="刪除">✕</button></div>`).join('')}
    <div class="add"><input id="nck" placeholder="例如：數學考卷、日記、閱讀單" autocomplete="off"><select id="ncks" style="flex:none;width:auto">${S.subs.map(s=>`<option>${E(s)}</option>`).join('')}</select><button class="bt" id="nckb">加入</button></div>
   </div>
   ${famHTML()}
@@ -2258,6 +2261,7 @@ function setSheet(){
    op(()=>{k.n=v;Object.values(TK).forEach(L=>L.forEach(t=>{if(t.cat===old&&t.sub===k.s){t.cat=v;n++}}));['am','hw'].forEach(x=>{if(CBP[x].cat===old)CBP[x].cat=v});cbpSave()},'已改成「'+v+'」'+(n?'，'+n+' 份作業也一起改':''));
   });
   p.querySelectorAll('[data-cks]').forEach(sel=>sel.onchange=()=>{op(()=>{S.cats[+sel.dataset.cks].s=sel.value})});
+  p.querySelectorAll('[data-cknf]').forEach(b=>b.onclick=()=>{op(()=>{const k=S.cats[+b.dataset.cknf];k.nf=k.nf?0:1},S.cats[+b.dataset.cknf].nf?'改成要訂正':'「'+S.cats[+b.dataset.cknf].n+'」以後出的都不用訂正');again()});
   p.querySelectorAll('[data-ckg]').forEach(b=>b.onclick=()=>{op(()=>{const k=S.cats[+b.dataset.ckg];k.g=k.g?0:1});again()});
   p.querySelectorAll('[data-ckd]').forEach(b=>b.onclick=()=>{const k=S.cats[+b.dataset.ckd];op(()=>{S.cats=S.cats.filter(x=>x!==k)},'已移除「'+k.n+'」（原本的作業不會刪）');again()});
   const ak=()=>{const v=p.querySelector('#nck').value.trim();if(!v)return;if(S.cats.some(k=>k.n===v))return toast('已經有「'+v+'」了');op(()=>S.cats.push({n:v,s:p.querySelector('#ncks').value,g:/考|測驗/.test(v)?1:0}));again()};
@@ -2355,6 +2359,7 @@ function onClick(e){
   op(()=>setR(t,s.id,same?{s:0,o:''}:{s:1,a:SLD,o:t.op.length?SLO:''}),same?sLabel(s)+' 改回還沒交':null);return}
  if(a==='slcopy'){const t=task(ds.id),ss=stus(cls()),m=ss.filter(x=>!isIn(R(t,x.id)));return openS(()=>textSheet('回條還沒交',`${cls().name}　${t.title}${t.due?'（'+mdw(t.due)+' 截止）':''}\n還沒交：${m.map(x=>x.no!==''?x.no+' 號':x.name).join('、')}`))}
  if(a==='gtask'){CID=ds.c;try{localStorage.setItem('sch-cls',CID)}catch(x){}return go({v:'task',id:ds.id})}
+ if(a==='nftog'){const t=task(ds.id);if(!t)return;const was=t.nf;op(()=>{t.nf=was?0:1},was?'這份要訂正':'這份不用訂正了');return}
  if(a==='trk'){TRK=ds.v;return render()}
  if(a==='exq')return openS(()=>examEdit(null));
  if(a==='exs'){EXS=ds.v;return render()}
