@@ -1807,20 +1807,24 @@ function fundGauge(){const ps=S.bills.filter(b=>b.fb&&S.bills.some(x=>x.id===b.f
  const expOf=(need,st,due)=>{if(!due||!st)return null;if(due<=t0)return need;if(st>=t0)return 0;return Math.round(need*dd(st,t0)/Math.max(1,dd(st,due)))};
  const it=ps.map(p=>{const I=fundInfo(p),fb=S.bills.find(x=>x.id===p.fb),from=addM(p.next,-(+p.freq||12),p.day),b0=born(fb&&fb.id),st=b0&&b0>from?b0:from;return{k:p.id,n:p.name,got:Math.min(I.got,I.need),need:I.need,d:p.next,exp:expOf(I.need,st,p.next),per:fb?+fb.amt:0,to:fb&&fb.to,fbid:fb&&fb.id,rep:+p.freq||0}}).concat(gs.map(b=>{const I=saveInfo(b);return{k:b.id,n:b.name,got:Math.min(I.v,I.g),need:I.g,d:b.end||'',exp:expOf(I.g,born(b.id),b.end),per:+b.amt||0,to:b.to,fbid:b.id,goal:1}}));
  if(!it.length)return`<div class="note keep" style="margin-top:10px">還沒有設定預存。到「固定收支」編輯年繳費（保險、牌照稅…），選「📦 每個月先存一點」，或新增「旅遊基金」設目標金額，這裡就會顯示存了多少、還差多少。</div>`;
- const got=it.reduce((a,x)=>a+x.got,0),need=it.reduce((a,x)=>a+x.need,0);
- const ex=it.filter(x=>x.exp!=null),eT=ex.reduce((a,x)=>a+x.exp,0),eG=ex.reduce((a,x)=>a+x.got,0),lagT=Math.max(0,eT-eG);
- const lag=x=>x.exp==null?'':x.got+0.5>=x.exp?`<span style="color:var(--ok)">照進度該存到 ${M(x.exp)}・✓ 有跟上</span>`:`照進度該存到 ${M(x.exp)}・<span class="neg">落後 ${M(x.exp-x.got)}</span>`;
- return saveGauge(got,need,'預存（要繳的錢）')+(ex.length?`<div class="sub" style="text-align:center;margin-top:2px">照進度，今天應該存到 ${M(eT)}${lagT>=0.5?'，<span class="neg">落後 '+M(lagT)+'</span>':'，✓ 有跟上'}</div>`:'')+`<div style="margin-top:8px">${it.sort((a,b)=>(a.d||'9')<(b.d||'9')?-1:1).map(x=>{const o=U.fx===x.k,base=x.exp==null?x.need:x.exp,ok=x.got+0.5>=base,ds=x.d?(x.d.slice(0,4)!==t0.slice(0,4)?x.d.slice(0,4)+'/':'')+(+x.d.slice(5,7))+'/'+(+x.d.slice(8,10)):'';
-  return`<div style="padding:5px 0;font-size:13px;border-bottom:1px dashed var(--line)"><div class="row" data-a="fx" data-i="${x.k}" style="cursor:pointer"><span class="sp">${E(x.n)}${ds?`<span class="sub"> · ${ds} 要用</span>`:''} <span class="sub">${o?'▴':'▾'}</span></span><span class="num ${ok?'':'neg'}">${M(x.got)}</span><span class="sub num" style="margin-left:3px">/ ${M(base)}</span></div>
+ // 進度看「預存帳戶」裡現在真的有多少錢；各項目照要用的日期排，累計到那天總共要有多少
+ it.sort((a,b)=>(a.d||'9')<(b.d||'9')?-1:1);
+ const accs=[...new Set(S.accts.filter(a=>a.hold&&!a.excl&&!isCard(a)).map(a=>a.id).concat(it.map(x=>x.to).filter(id=>A(id)&&!A(id).excl&&!isCard(A(id)))))];
+ const H=accs.reduce((a,id)=>a+Math.max(0,conv(bal(A(id)),A(id).cur,'TWD')),0);let rem=H,cum=0;
+ it.forEach(x=>{cum+=x.need;x.cum=cum;x.cov=Math.min(x.need,Math.max(0,rem));rem-=x.need});
+ const need=cum,eT=it.reduce((a,x)=>a+(x.exp||0),0),lagT=Math.max(0,eT-H);
+ return saveGauge(H,need,'預存（要繳的錢）')+`<div class="sub" style="text-align:center;margin-top:2px">預存帳戶現在有 ${M(H)}（${accs.map(id=>E(A(id).name)).join('、')||'還沒有'}）</div>`+(eT?`<div class="sub" style="text-align:center">照進度，今天應該存到 ${M(eT)}${lagT>=0.5?'，<span class="neg">落後 '+M(lagT)+'</span>':'，✓ 有跟上'}</div>`:'')+`<div style="margin-top:8px">${it.map(x=>{const o=U.fx===x.k,ok=H+0.5>=x.cum,ds=x.d?(x.d.slice(0,4)!==t0.slice(0,4)?x.d.slice(0,4)+'/':'')+(+x.d.slice(5,7))+'/'+(+x.d.slice(8,10)):'';
+  return`<div style="padding:6px 0;font-size:13px;border-bottom:1px dashed var(--line)"><div data-a="fx" data-i="${x.k}" style="cursor:pointer"><div class="row"><span class="sp"><b>${ds||'—'}</b> ${E(x.n)} <span class="sub">${o?'▴':'▾'}</span></span><span class="num">${M(x.need)}</span></div>
+  <div class="row sub"><span class="sp">到這天累計要有 ${M(x.cum)}</span><span class="${ok?'':'neg'}">${ok?'✓ 已備齊':'還差 '+M(x.cum-H)}</span></div></div>
   ${o?`<div style="background:var(--bg);border-radius:10px;padding:8px 10px;margin-top:6px">
-   <div class="row"><span class="sp sub">要用的總金額</span><b class="num">${M(x.need)}</b></div>
+   <div class="row"><span class="sp sub">要用的金額</span><b class="num">${M(x.need)}</b></div>
    <div class="row"><span class="sp sub">要用的日期</span><span>${ds||'沒設'}${x.rep?`<span class="sub">（${fqName(x.rep)}一次）</span>`:''}</span></div>
-   <div class="row"><span class="sp sub">已存</span><span class="num">${M(x.got)}</span></div>
-   ${x.exp!=null?`<div class="row"><span class="sp sub">照進度今天該存到</span><span class="num">${M(x.exp)}</span></div><div class="row"><span class="sp sub">${ok?'進度':'落後'}</span><span class="${ok?'':'neg'}">${ok?'✓ 有跟上':M(x.exp-x.got)}</span></div>`:''}
-   <div class="row"><span class="sp sub">還差（到要用那天）</span><span class="num">${M(Math.max(0,x.need-x.got))}</span></div>
-   <div class="row"><span class="sp sub">每次存</span><span class="num">${M(x.per)}</span></div>
-   <div class="row"><span class="sp sub">存在哪個帳戶</span><span>${A(x.to)?E(nm(A(x.to)))+' '+MA(A(x.to)):'沒設'}</span></div>
-   <div class="row" style="gap:6px;margin-top:8px;justify-content:flex-end"><button class="go q" data-a="paybill" data-i="${x.fbid}">存一筆</button><button class="go q" data-a="fedit" data-i="${x.k}">編輯</button></div></div>`:''}</div>`}).join('')}</div>`}
+   <div class="row"><span class="sp sub">預存帳戶裡分給這筆的</span><span class="num">${M(x.cov)}</span></div>
+   ${x.exp!=null?`<div class="row"><span class="sp sub">照進度今天該存到</span><span class="num">${M(x.exp)}</span></div>`:''}
+   <div class="row"><span class="sp sub">建議每次存</span><span class="num">${M(x.per)}</span></div>
+   <div class="row"><span class="sp sub">存在哪個帳戶</span><span>${A(x.to)?E(nm(A(x.to))):'沒設'}</span></div>
+   <div class="row" style="gap:6px;margin-top:8px;justify-content:flex-end"><button class="go q" data-a="paybill" data-i="${x.fbid}">存一筆</button><button class="go q" data-a="fedit" data-i="${x.k}">編輯</button></div></div>`:''}</div>`}).join('')}</div>
+ <div class="note" data-t="這裡怎麼算？">上面的進度＝你的「📦 預存帳戶」（和各項目指定的存放帳戶）現在加起來有多少錢，除以全部要用的金額。<br>下面照要用的日期排，「到這天累計要有」是從現在到那天，所有項目加起來要準備的錢；預存帳戶的錢先分給最早要用的。<br>直接把錢轉進預存帳戶就好，不用一筆一筆對應項目。</div>`}
 // 編輯預存：總金額、要用的日期、多久一次、存在哪個帳戶、從哪個帳戶轉出、名稱、備註
 function fundObj(k){const p=S.bills.find(x=>x.id===k);if(!p)return null;if(p.fb){const fb=S.bills.find(x=>x.id===p.fb)||{};return{k,goal:0,name:p.name,need:String(p.amt),d:p.next,rep:+p.freq||0,to:fb.to||'',from:fb.acct||'',note:p.note||''}}return{k,goal:1,name:p.name,need:String(p.goal||''),d:p.end||'',rep:0,to:p.to||'',from:p.acct||'',note:p.note||''}}
 function sheetFund(o){const ac=S.accts.filter(a=>!isCard(a));return`<div class="row"><b class="sp" style="font-size:17px">編輯預存</b><button class="x" data-a="close">×</button></div>
