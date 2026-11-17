@@ -1768,6 +1768,13 @@ async function askAI(prompt,file,search){const sm=window.claude&&await claude.us
 
 // ── 總資產、對帳、截圖辨識、股價 ──
 // 總覽的帳戶清單：依銀行分組、金額大的在前，$0 的先收起來
+// 搜尋帳戶：打銀行名稱、代碼（822）、帳戶名稱或帳號，列出符合的，點了看明細／編輯
+function acctFind(q){q=String(q||'').trim().toLowerCase();if(!q)return'';const qd=q.replace(/\D/g,'');
+ const codeOf=a=>a.code||((BANKS.find(b=>a.group&&(b[1]===a.group||b[1].replace('銀行','')===String(a.group).replace('銀行','')))||[])[0])||'';
+ const xs=S.accts.filter(a=>{const t=((a.group||'')+' '+a.name+' '+(a.official||'')).toLowerCase(),c=codeOf(a),no=String(a.no||'').replace(/\D/g,'');
+  return t.includes(q)||(qd&&(c===qd||(qd.length>=3&&no.includes(qd))))||(BANKS.some(b=>b[0]===qd&&String(a.group||'').includes(b[1].replace('銀行',''))))});
+ if(!xs.length)return'<div class="sub" style="padding:8px 2px">找不到符合的帳戶。</div>';
+ return`<div class="card" style="margin:8px 0 0;padding:4px 12px">${xs.map(a=>{const c=codeOf(a);return`<div class="ar" data-a="${isCard(a)?'card':'acctv'}" data-i="${a.id}"><div class="sp"><div>${E(nm(a))}</div><div class="sub">${c?'('+c+') ':''}${isCard(a)?'信用卡':a.type==='cash'?'現金':'銀行'}${a.no?' · '+E(tail5(a.no)):''}${a.last4?' · 末四碼 '+E(a.last4):''}</div></div><div style="text-align:right"><b class="num">${isCard(a)?(()=>{const x=cardSplit(a);return x.due>=0.5?'未繳 '+M(x.due):x.unb>=0.5?'未出帳 '+M(x.unb):'已繳清'})():MA(a)}</b><div class="sub">看明細 ›</div></div></div>`}).join('')}</div>`}
 function acctBrief(){
  const v=a=>isCard(a)?-cardInfo(a).owe:conv(bal(a),a.cur,'TWD'),zero=a=>isCard(a)?(()=>{const x=cardSplit(a);return x.due+x.unb<0.5})():Math.abs(v(a))<0.5;
  const gs={},ord=[];S.accts.forEach(a=>{const k=a.excl?'\u0000x':a.hold&&!isCard(a)?'\u0000h':a.type!=='cash'&&a.group||'\u0000'+a.id;if(!gs[k]){gs[k]=[];ord.push(k)}gs[k].push(a)});
@@ -1788,6 +1795,7 @@ function assetCard(liq){
  return`<div class="card"><div class="sub">我的總資產（已扣掉還沒繳的卡費${hd&&!hin?'、📦 要繳出去的預存':''}）</div><div class="big">${M(net)}</div>
  <div class="tiles"><div><span class="sub">現金＋銀行</span><b>${M(liq)}</b></div><div><span class="sub">股票市值</span><b>${M(stk)}</b></div><div><span class="sub">卡費未繳</span><b>${owe?'−'+M(owe):M(0)}</b></div></div>
  ${(()=>{const sp=liq-hd-owe;return hd?`<div class="note keep" style="margin-top:8px;font-size:14px;color:var(--ink)"><div class="row"><b class="sp">💡 真的可以花的錢</b><b class="num ${sp<0?'neg':''}" style="font-size:20px">${M(sp)}</b></div><details class="tip" style="margin:2px 0 0"><summary>ⓘ 怎麼算的</summary><div>現金＋銀行 ${M(liq)}<br>− 📦 預存（之後要繳的） ${M(hd)}${owe?'<br>− 還沒繳的卡費 '+M(owe):''}<br>預存的錢${hin?'有':'<b>沒有</b>'}算進上面的總資產・<a href="#" data-a="holdin">${hin?'改成不算':'改成要算'}</a></div></details></div>`:''})()}
+ <input id="acq" data-l="1" placeholder="搜尋帳戶：銀行名稱、代碼（例：822）或帳號" value="${E(U.acq||'')}" style="margin-top:10px" autocomplete="off"><div id="acr">${acctFind(U.acq)}</div>
  ${acctBrief()}
  ${nop?`<div class="sub" style="margin-top:6px">有 ${nop} 檔股票還沒有股價，市值先用成本算。</div>`:''}
  ${S.accts.filter(a=>!isCard(a)&&bal(a)<-0.5).map(a=>`<div class="note" style="border-color:var(--bad)">⚠︎ <b>${E(a.name)}</b> 顯示 ${MA(a)}，這通常不是真的欠錢，而是還沒填這個帳戶「現在實際有多少錢」，網站從 0 開始算，扣掉繳出去的錢就變負的。按下面「更新銀行餘額」填網銀 App 上看到的數字就會正確。</div>`).join('')}
@@ -2497,7 +2505,7 @@ function field(e){
   if(!o.catSet){const g=guess(o.note+' '+(o.shop||''),o.type);if(g&&g!==o.cat){o.cat=g;document.querySelectorAll('[data-a="cat"]').forEach(b=>b.classList.toggle('on',b.dataset.i===g))}}}
  if(el.dataset.r&&(e.type==='input'||el.tagName==='SELECT'||el.type==='checkbox')){KF=e.type==='input';render()}
 }
-document.addEventListener('input',e=>{if(e.target.id==='nwq'){NW.kw=e.target.value;NW.lim=40;$('nwl').innerHTML=nwList();return}if(e.target.type!=='checkbox'&&e.target.tagName!=='SELECT'&&!e.target.dataset.l)field(e)});
+document.addEventListener('input',e=>{if(e.target.id==='acq'){U.acq=e.target.value;const r=$('acr');if(r)r.innerHTML=acctFind(U.acq);return}if(e.target.id==='nwq'){NW.kw=e.target.value;NW.lim=40;$('nwl').innerHTML=nwList();return}if(e.target.type!=='checkbox'&&e.target.tagName!=='SELECT'&&!e.target.dataset.l)field(e)});
 document.addEventListener('change',async e=>{
  const el=e.target;
  if(el.id==='impf'&&el.files[0]){const f=el.files[0];if(/^image\//.test(f.type)){U.imp.file=f;U.imp.text=''}else if(/\.xlsx?$/i.test(f.name)){toast('請先用 Excel 另存成 CSV 再匯入')}else{U.imp.file=null;U.imp.text=await readFile(f);impParse()}render();return}
