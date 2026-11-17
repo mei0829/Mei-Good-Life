@@ -1792,7 +1792,7 @@ function acctBrief(){
 function assetCard(liq){
  const hs=holdings().filter(h=>h.sh>0),stk=hs.reduce((s,h)=>s+conv(h.val,h.cur,'TWD'),0),owe=S.accts.filter(isCard).reduce((s,c)=>s+cardInfo(c).owe,0),nop=hs.filter(h=>h.px==null).length;
  const hd=holdAmt(),hin=!!S.holdIn,net=liq+stk-owe-(hin?0:hd);
- return`<div class="card"><div class="sub">我的總資產（已扣掉還沒繳的卡費${hd&&!hin?'、📦 要繳出去的預存':''}）</div><div class="big">${M(net)}</div>
+ return`<div class="card"><div class="sub">總資產（已扣未繳費用${hd&&!hin?'&amp;預存':''}）</div><div class="big">${M(net)}</div>
  <div class="tiles"><div><span class="sub">現金＋銀行</span><b>${M(liq)}</b></div><div><span class="sub">股票市值</span><b>${M(stk)}</b></div><div><span class="sub">卡費未繳</span><b>${owe?'−'+M(owe):M(0)}</b></div></div>
  ${(()=>{const sp=liq-hd-owe;return hd?`<div class="note keep" style="margin-top:8px;font-size:14px;color:var(--ink)"><div class="row"><b class="sp">💡 真的可以花的錢 <button class="ib" data-a="spi" aria-label="怎麼算的">ⓘ</button></b><b class="num ${sp<0?'neg':''}" style="font-size:20px">${M(sp)}</b></div>${U.spi?`<div class="sub" style="margin-top:6px;line-height:1.7">現金＋銀行 ${M(liq)}<br>− 📦 預存（之後要繳的） ${M(hd)}${owe?'<br>− 還沒繳的卡費 '+M(owe):''}<br>預存的錢${hin?'有':'<b>沒有</b>'}算進上面的總資產・<a href="#" data-a="holdin">${hin?'改成不算':'改成要算'}</a></div>`:''}</div>`:''})()}
  <input id="acq" data-l="1" placeholder="搜尋帳戶：銀行名稱、代碼（例：822）或帳號" value="${E(U.acq||'')}" style="margin-top:10px" autocomplete="off"><div id="acr">${acctFind(U.acq)}</div>
