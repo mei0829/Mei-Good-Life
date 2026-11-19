@@ -147,6 +147,13 @@ textarea{min-height:72px;resize:vertical}
 .cvp .hero{width:120px;flex:none;margin:0;border-radius:12px}
 .cvp .hero .mot{font-size:20px;letter-spacing:2px}
 
+/* 唯讀分享：只能看 */
+.ro [data-a=pay],.ro [data-a=trip],.ro [data-a=back],.ro .dadd,.ro .add,.ro [data-a=packren],.ro [data-a=packdel],.ro [data-a=packreset],.ro .packown,.ro .dn,.ro #st,.ro .wiki{display:none!important}
+.ro .ck input{pointer-events:none}
+.ro .it{cursor:default}
+.robar{background:var(--soft);color:var(--acc);border-radius:14px;padding:8px 12px;font-size:13.5px;margin:4px 0 10px}
+.shr{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:12px}
+.shr input{font-size:13px}
 #sheet{position:fixed;inset:0;z-index:50;display:none}
 #sheet.on{display:block}
 #sheet .bk{position:absolute;inset:0;background:rgba(0,0,0,.35)}
@@ -173,7 +180,8 @@ textarea{min-height:72px;resize:vertical}
 <div id="auth" data-title="旅遊行程" data-only="admin"></div>
 <div id="app"></div><div id="sheet"></div><div id="toast"></div>
 <input type="file" id="impf" accept="application/json,.json" style="display:none">
-<script type="module" src="auth.js"></script>
+<script>window.SHARE=(location.search.match(/[?&]s=([A-Za-z0-9_-]{16,64})/)||[])[1]||"";if(window.SHARE)document.documentElement.classList.add("ro")</script>
+<script type="module">import(window.SHARE?"./share-view.js":"./auth.js")</script>
 <script type="text/plain" id="app-src">
 const E=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const $=id=>document.getElementById(id);
@@ -220,14 +228,16 @@ function fixTrip(t){
    te:/^\d{2}:\d{2}$/.test(i.te||'')?i.te:'',trans:i.trans||'',stay:i.stay||'',free:!!i.free,gift:!!i.gift,chk:!!i.chk,alt:!!i.alt,
    ll:Array.isArray(i.ll)&&i.ll.length===2&&i.ll.every(n=>isFinite(+n)&&n!==null&&n!=='')?[+i.ll[0],+i.ll[1]]:null,st:i.st||''})),
   pack:arr(t.pack).filter(p=>p&&p.n).map(p=>({id:p.id||nid(),n:String(p.n),on:!!p.on,...(p.t?{t:String(p.t)}:{})})),
-  theme:/^[a-z]{2}$/.test(t.theme||'')?t.theme:'',cv:+t.cv||0,u:+t.u||Date.now()};
+  theme:/^[a-z]{2}$/.test(t.theme||'')?t.theme:'',cv:+t.cv||0,share:/^[A-Za-z0-9_-]{16,64}$/.test(t.share||'')?t.share:'',u:+t.u||Date.now()};
 }
 function fix(o){if(!o||!Array.isArray(o.trips))throw new Error('bad');o.trips=o.trips.filter(Boolean).map(fixTrip);o.imp=arr(o.imp).map(String);o.patches=arr(o.patches).map(String);o.tpl=Array.isArray(o.tpl)?o.tpl.map(x=>String(x).trim()).filter(Boolean):PACK.slice();return o}
 let S=null,T=0;
-try{S=fix(JSON.parse(localStorage.getItem(KEY)));T=+localStorage.getItem(KT)||0}catch(e){S=null}
+const RO=!!window.SHARE;  // 唯讀分享（另一半用連結打開）
+if(RO){try{S=fix({trips:[window.SHARED.trip]})}catch(e){S=null}}
+else try{S=fix(JSON.parse(localStorage.getItem(KEY)));T=+localStorage.getItem(KT)||0}catch(e){S=null}
 if(!S){S={trips:[],imp:[],tpl:PACK.slice()};T=0}
 const trip=id=>S.trips.find(t=>t.id===id);
-const VIEW=()=>{const m=location.hash.match(/^#t=(.+)$/);return m&&trip(decodeURIComponent(m[1]))||null};
+const VIEW=()=>{if(RO)return S.trips[0]||null;const m=location.hash.match(/^#t=(.+)$/);return m&&trip(decodeURIComponent(m[1]))||null};
 let TAB='plan';try{TAB=localStorage.getItem('trip-tab')||'plan'}catch(e){}
 // 同一天的行程：有時間的照時間排，沒填時間的放最後（照加入的順序）
 function dayItems(t,d){const xs=t.items.filter(i=>i.d===d&&!i.alt);return xs.map((x,k)=>[x,k]).sort((a,b)=>(a[0].tm||'99')<(b[0].tm||'99')?-1:(a[0].tm||'99')>(b[0].tm||'99')?1:a[1]-b[1]).map(a=>a[0])}
@@ -239,18 +249,43 @@ const spent=t=>t.items.reduce((s,i)=>s+(+i.cost||0),0);
 // ---------- 儲存：先存手機，再存到自己的私人雲端（data/users/{uid}/trip，只有自己看得到）----------
 const CL={ref:null,col:null,tm:0,busy:false,again:false,dirty:false,pending:null,st:''};
 function status(t){CL.st=t;const s=$('st');if(s)s.textContent=S.trips.length+' 趟旅行 · '+t}
-function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(S));localStorage.setItem(KT,String(T))}catch(e){}}
-function commit(){T=Date.now();saveLocal();render();CL.dirty=true;status('同步中…');clearTimeout(CL.tm);CL.tm=setTimeout(cloudPush,700)}
+function saveLocal(){if(RO)return;try{localStorage.setItem(KEY,JSON.stringify(S));localStorage.setItem(KT,String(T))}catch(e){}}
+function commit(){if(RO)return render();T=Date.now();saveLocal();render();CL.dirty=true;status('同步中…');clearTimeout(CL.tm);CL.tm=setTimeout(cloudPush,700)}
 async function cloudPush(){
  if(!CL.ref){status(CL.st.startsWith('⚠︎')?CL.st:'⚠︎ 沒有連到雲端，資料只存在這支手機');return}
  if(CL.busy){CL.again=true;return}
  CL.busy=true;CL.dirty=false;
- try{await CL.ref.set({j:JSON.stringify(S),t:T});status('✓ 已同步')}
+ try{await CL.ref.set({j:JSON.stringify(S),t:T});status('✓ 已同步');pushShares()}
  catch(e){CL.dirty=true;status('⚠︎ 還沒同步，變更先存在這支手機，連上網路會再試')}
  CL.busy=false;
  if(CL.again){CL.again=false;cloudPush()}
 }
 const busyUI=()=>$('sheet').classList.contains('on');
+// ---------- 唯讀分享給另一半：shares/{代碼}，知道連結的人可以看（不用登入），只有自己能改 ----------
+// 分享出去的內容不含花費、預算；自己換的封面圖片也不會分享（用國家主題的封面）
+const SH={last:{},err:''};
+function shareData(t){
+ const x=JSON.parse(JSON.stringify(t));
+ delete x.budget;delete x.cv;delete x.share;
+ x.items=x.items.map(i=>{const y={...i};delete y.cost;return y});
+ return x;
+}
+const newShareId=()=>{const a=new Uint8Array(18);crypto.getRandomValues(a);return Array.from(a,b=>'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'[b&63]).join('')};
+const shareURL=id=>location.origin+location.pathname+'?s='+id;
+async function pushShares(){
+ if(RO||!CL.sh)return;
+ for(const t of S.trips){
+  if(!t.share)continue;
+  const j=JSON.stringify(shareData(t));
+  if(SH.last[t.share]===j)continue;
+  try{await CL.sh.doc(t.share).set({owner:CL.uid,j,t:Date.now()});SH.last[t.share]=j;SH.err=''}
+  catch(e){SH.err=e&&e.code==='permission-denied'?'分享還沒開通：要先到 Firebase 更新規則（看設定說明）':'分享還沒更新，連上網路會再試'}
+ }
+}
+async function closeShare(id){
+ if(!CL.sh||!id)return;
+ try{await CL.sh.doc(id).set({owner:CL.uid,off:1,j:'',t:Date.now()});delete SH.last[id]}catch(e){toast('關閉分享沒有成功，請確認網路後再試')}
+}
 function onCloud(d){
  if(!d){if(!T)T=Date.now();CL.dirty=true;return cloudPush()}  // 雲端還沒有：把手機上的放上去
  const ct=+d.t||0;
@@ -281,7 +316,7 @@ async function cloudInit(){
  try{
   const db=await claude.use('db'),us=await claude.use('user'),uid=us&&await us.id();
   if(!db||!uid)return status('⚠︎ 沒有連到雲端（請重新登入），資料只存在這支手機');
-  CL.col=db.collection('data/users/'+uid);CL.ref=CL.col.doc('trip');
+  CL.col=db.collection('data/users/'+uid);CL.ref=CL.col.doc('trip');CL.uid=uid;CL.sh=db.collection('shares');
   status('連線中…');
   onCloud(await CL.ref.get());
   importMoney();
@@ -565,10 +600,11 @@ function listPage(){
  <button class="tplbtn" data-a="tpl"><img src="${DUCK('backpack')}" alt=""><span><b>行李清單公定版</b><small>${S.tpl.length} 項・新的旅行會先複製一份，之後各自編輯</small></span><span class="sub">編輯 ›</span></button>
  ${S.trips.length?sec('now','旅行中')+sec('soon','即將出發')+sec('plan','還在想')+sec('past','去過的地方'):`<div class="empty"><img class="duck" src="${DUCK('read')}" alt="">還沒有旅行<br>按上面的按鈕，開始規劃第一趟吧</div>`}`;
 }
-const TABS=[['plan','行程'],['map','地圖'],['pack','準備清單'],['cost','花費']];
+const TABS=[['plan','行程'],['map','地圖'],['pack','準備清單'],['cost','花費']].filter(x=>!RO||x[0]!=='cost');
 function tripPage(t){
  const p=phase(t),th=themeOf(t);
- return `<div class="top" style="align-items:center"><a class="home" href="#" data-a="back">‹ 全部旅行</a><div class="row"><button class="bt" data-a="pay" aria-label="記帳">💰 記帳</button><button class="bt" data-a="trip" aria-label="編輯旅行">⋯</button></div></div>
+ if(RO&&TAB==='cost')TAB='plan';
+ return `${RO?`<div class="robar">👀 這是分享給你看的行程（只能看、不能改），對方修改後這裡會自動更新${window.SHARED&&window.SHARED.t?'・最後更新 '+new Date(window.SHARED.t).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):''}</div>`:''}<div class="top" style="align-items:center"><a class="home" href="#" data-a="back">‹ 全部旅行</a><div class="row"><button class="bt" data-a="pay" aria-label="記帳">💰 記帳</button><button class="bt" data-a="trip" aria-label="編輯旅行">⋯</button></div></div>
  ${hero(t)}
  <div class="tcard">${th.n?`<div class="fl">${th.flag} ${E(th.n)}</div>`:''}<h1>${E(t.name)}</h1>
  <div class="sub" style="margin-top:2px">${t.dest?'📍 '+E(t.dest)+' · ':''}${E(range(t))} · <span class="tag ${p.k==='past'||p.k==='plan'?'g':''}">${E(p.txt)}</span></div>${/東京|tokyo/i.test((t.dest||'')+' '+t.name)?'<a class="bt" href="tokyo.html" style="display:inline-block;margin-top:8px;text-decoration:none">📖 打開東京旅行手帳</a>':''}</div>
@@ -702,7 +738,7 @@ function packTab(t){
   <div class="bar"><i style="width:${n?on/n*100:0}%"></i></div></div>
  <div class="add"><input id="pin" placeholder="要帶的東西、出發前要做的事" autocomplete="off" enterkeyhint="done"><button class="go" data-a="packadd">加入</button></div>
  ${t.pack.map(p=>`<div class="ck ${p.on?'on':''}"><label><input type="checkbox" data-pk="${p.id}" ${p.on?'checked':''}><span>${E(p.n)}</span></label><button data-a="packren" data-id="${p.id}" aria-label="改名">✎</button><button data-a="packdel" data-id="${p.id}" aria-label="刪除">✕</button></div>`).join('')||'<div class="empty">清單是空的</div>'}
- <div class="card sub" style="margin-top:14px">這份清單只屬於這趟旅行，改了不會影響公定版和其他旅行。
+ <div class="card sub packown" style="margin-top:14px">這份清單只屬於這趟旅行，改了不會影響公定版和其他旅行。
   <div class="row" style="margin-top:8px"><button class="bt" data-a="packfill" ${miss?'':'disabled style="opacity:.5"'}>從公定版補上缺少的${miss?'（'+miss+' 項）':''}</button><button class="bt" data-a="packsave">把這份存成公定版</button><button class="bt" data-a="tpl">看公定版</button></div></div>`;
 }
 function costTab(t){
@@ -750,7 +786,11 @@ function tripSheet(id){
   ${t?`<div class="f"><span class="sub" style="display:block;margin-bottom:4px">封面圖片</span><div class="cvp">${hero(t)}<div class="row"><button class="bt" id="tcv">換成自己的圖片</button>${t.cv?'<button class="bt" id="tcvx">用預設的</button>':''}</div></div></div>`:''}
   <label class="f"><span>備註</span><textarea id="tm" placeholder="航班、訂房代號、同行的人…">${E(t?t.memo:'')}</textarea></label>
   <div id="tmsg" class="sub bad" style="min-height:18px"></div>
-  ${t?`<div class="row" style="margin-bottom:6px"><button class="bt" id="tcp">複製成文字（貼到 LINE）</button><button class="bt" id="tdup">複製一份</button></div>`:''}
+  ${t?`<div class="shr"><b>分享給另一半（只能看）</b><div class="sub" style="margin:4px 0 8px">對方用連結打開就能看行程、地圖、準備清單，不用登入、不能修改；你改了會自動更新。花費和預算不會分享。</div>
+   ${t.share?`<div class="row" style="flex-wrap:nowrap"><input id="tshu" readonly value="${E(shareURL(t.share))}" style="flex:1"><button class="go" id="tshc">複製</button></div>
+   ${SH.err?`<div class="sub bad" style="margin-top:6px">${E(SH.err)}</div>`:''}
+   <div class="row" style="margin-top:8px"><button class="bt" id="tshn">換一個新連結</button><button class="bt bad" id="tshx">關閉分享</button></div>`:'<button class="bt" id="tsho">🔗 建立分享連結</button>'}</div>
+   <div class="row" style="margin-bottom:6px"><button class="bt" id="tcp">複製成文字（貼到 LINE）</button><button class="bt" id="tdup">複製一份</button></div>`:''}
   <div class="foot">${t?'<button class="bt bad" id="tdel">刪除這趟旅行</button>':'<span></span>'}<button class="go" id="tok">${t?'儲存':'建立'}</button></div>`,p=>{
   const ts=p.querySelector('#ts'),te=p.querySelector('#te');
   ts.onchange=()=>{if(ts.value&&(!te.value||te.value<ts.value))te.value=ts.value};
@@ -772,6 +812,15 @@ function tripSheet(id){
    }
   };
   if(!t)return;
+  // 分享給另一半：建立、複製、換新連結（舊的失效）、關閉
+  const sho=p.querySelector('#tsho');
+  if(sho)sho.onclick=()=>{if(!CL.sh)return toast('要連上雲端才能分享');const id=newShareId();op(()=>{trip(t.id).share=id});tripSheet(t.id);toast('已建立分享連結，按「複製」傳給對方')};
+  const shc=p.querySelector('#tshc');
+  if(shc)shc.onclick=async()=>{const u=shareURL(t.share);try{await navigator.clipboard.writeText(u);toast('已複製連結，可以貼到 LINE 給對方')}catch(e){const i=p.querySelector('#tshu');i.select();prompt('複製這個連結：',u)}};
+  const shn=p.querySelector('#tshn');
+  if(shn)shn.onclick=()=>{if(!confirm('換一個新連結？舊的連結會失效，要把新的連結再傳給對方。'))return;const old=t.share,id=newShareId();closeShare(old);op(()=>{trip(t.id).share=id});tripSheet(t.id);toast('已換新連結')};
+  const shx=p.querySelector('#tshx');
+  if(shx)shx.onclick=()=>{if(!confirm('關閉分享？對方就看不到了（之後可以再建立新的連結）。'))return;const old=t.share;closeShare(old);op(()=>{trip(t.id).share=''});tripSheet(t.id);toast('已關閉分享')};
   // 自己的封面：縮小後存到雲端（只有自己看得到），這支手機也留一份
   p.querySelector('#tcv').onclick=()=>{
    const f=document.createElement('input');f.type='file';f.accept='image/*';
@@ -788,10 +837,11 @@ function tripSheet(id){
   if(cx)cx.onclick=()=>{delete COVER[t.id];IDB.del(t.id).catch(()=>{});if(CL.col)CL.col.doc('p_tc_'+t.id).set({d:'',at:Date.now()}).catch(()=>{});op(()=>{trip(t.id).cv=0},'已改回預設封面');closeSheet()};
   p.querySelector('#tdel').onclick=()=>{
    if(!confirm('刪除「'+t.name+'」和裡面所有行程？'))return;
+   if(t.share)closeShare(t.share);
    op(()=>{S.trips=S.trips.filter(x=>x.id!==t.id)},'已刪除「'+t.name+'」');goTrip('');
   };
   p.querySelector('#tdup').onclick=()=>{
-   const n=fixTrip({...JSON.parse(JSON.stringify(t)),id:nid(),name:t.name+'（複製）',u:Date.now()});
+   const n=fixTrip({...JSON.parse(JSON.stringify(t)),id:nid(),name:t.name+'（複製）',share:'',u:Date.now()});
    n.items.forEach(i=>{i.id=nid();i.done=false});n.pack.forEach(x=>{x.id=nid();x.on=false});
    op(()=>S.trips.push(n),'已複製一份');goTrip(n.id);
   };
@@ -892,6 +942,7 @@ function onClick(e){
  if(e.target.closest('[data-stop]'))return;  // 點地圖連結、完成打勾：不要打開編輯
  const b=e.target.closest('[data-a]');if(!b)return;
  const a=b.dataset.a,t=VIEW();
+ if(RO&&!['tab','mf','mfocus','jump'].includes(a))return;
  if(a==='open')return goTrip(b.dataset.id);
  if(a==='back'){e.preventDefault();return goTrip('')}
  if(a==='newtrip')return tripSheet();
@@ -918,11 +969,12 @@ function onClick(e){
 $('app').addEventListener('click',onClick);
 // 行程完成打勾
 $('app').addEventListener('change',e=>{
- const c=e.target.closest('[data-done]'),t=VIEW();if(!c||!t)return;
+ const c=e.target.closest('[data-done]'),t=VIEW();if(!c||!t||RO)return;
  op(()=>{const x=trip(t.id).items.find(y=>y.id===c.dataset.done);if(x)x.done=c.checked});
 });
 $('app').addEventListener('change',e=>{
  const c=e.target.closest('[data-pk]'),t=VIEW();if(!c||!t)return;
+ if(RO){c.checked=!c.checked;return}
  op(()=>{const x=trip(t.id).pack.find(y=>y.id===c.dataset.pk);if(x)x.on=c.checked});
 });
 $('app').addEventListener('keydown',e=>{if(e.target.id==='pin'&&e.key==='Enter'&&!e.isComposing){e.preventDefault();const b=document.querySelector('[data-a="packadd"]');if(b)b.click()}});
@@ -936,8 +988,14 @@ function goTrip(id){
 }
 addEventListener('hashchange',shown);
 
-render();
-cloudInit();
+if(RO){
+ window.onShared=d=>{if(!d){$('app').innerHTML='<div class="card gone" style="text-align:center;padding:40px 16px">這個分享已經關閉了。</div>';return}try{S=fix({trips:[d.trip]})}catch(e){return}if(busyUI())return;const y=scrollY;render();scrollTo(0,y)};
+ document.title=(S.trips[0]?S.trips[0].name+'｜':'')+'旅遊行程';
+ render();
+}else{
+ render();
+ cloudInit();
+}
 </script>
 </body>
 </html>
